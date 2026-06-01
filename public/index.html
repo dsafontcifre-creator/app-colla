@@ -456,15 +456,10 @@ let evType = "comida";
 let currentSection = null;
 let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:false};
 
-// ───────────────────────── DATOS POR DEFECTO (seed) ────────────────────
-// Solo se suben a Firestore la primera vez, si la colección está vacía.
-const SEED = {
-  events: [],
-  compras: [],
-  turns: GROUPS.map((g,i)=>({id:i+1,week:"Por definir (sept.)",group:g.id,note:"",done:false})),
-  quotas: [],
-  shopping: [],
-};
+// ───────────────────────── TURNOS POR DEFECTO (solo memoria) ───────────
+// La app NUNCA escribe datos automáticamente en Firebase. Si la colección
+// turns está vacía, se muestran los 11 grupos por defecto sin guardarlos.
+const DEFAULT_TURNS = GROUPS.map((g,i)=>({id:i+1,week:"Por definir (sept.)",group:g.id,note:"",done:false}));
 
 // ───────────────────────── FIRESTORE SYNC ──────────────────────────────
 let DB = null;
@@ -495,7 +490,7 @@ async function fbDelete(coll, id){
 function setLocal(coll, arr){
   if(coll==="events") events = arr;
   if(coll==="compras") compras = arr;
-  if(coll==="turns") turns = arr;
+  if(coll==="turns") turns = arr.length ? arr : DEFAULT_TURNS;
   if(coll==="quotas") quotas = arr;
   if(coll==="shopping") shopping = arr;
 }
@@ -518,19 +513,10 @@ function subscribeAll(){
   });
 }
 
-// Primera vez: si una colección llega vacía, sube el seed
-let seeded = {};
-async function maybeSeed(coll, empty){
-  if(empty && !seeded[coll]){
-    seeded[coll] = true;
-    for(const item of SEED[coll]){ await fbSet(coll, item); }
-  }
-}
-
+// La app NO siembra datos automáticamente. Firebase manda siempre.
 function allReady(){ return COLLECTIONS.every(c=>dataReady[c]); }
 
 function onData(coll, empty){
-  maybeSeed(coll, empty);
   if(allReady()){
     document.getElementById('loader').style.display='none';
     // Si ya estamos logueados y en una sección, re-render en vivo
