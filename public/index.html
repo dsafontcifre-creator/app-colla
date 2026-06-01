@@ -249,7 +249,7 @@ textarea.inp{height:100px;}
 <div class="section" id="sec-compra">
   <div class="sec-header">
     <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
-    <div class="sec-title">Compra</div>
+    <div class="sec-title">Lista de la compra</div>
   </div>
   <div class="sec-body" id="body-compra"></div>
   <button class="fab" onclick="openModal('modalShop')">+</button>
@@ -459,33 +459,11 @@ let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:fa
 // ───────────────────────── DATOS POR DEFECTO (seed) ────────────────────
 // Solo se suben a Firestore la primera vez, si la colección está vacía.
 const SEED = {
-  events: [
-    {id:1,title:"Paella valenciana",type:"comida",date:"2026-06-21",time:"14:00",description:"Paella valenciana + postre",attendees:[1,2,3,4,5,6],expenses:[{id:1,who:"David",what:"Arroz y verduras",amount:34},{id:2,who:"Carla",what:"Carne y conejo",amount:28}],agenda:"",polls:[{id:1,title:"¿Qué menú preferís?",multi:false,open:true,options:[{id:1,text:"Paella valenciana",votes:["David","Carmen","Inma"]},{id:2,text:"Paella con pulpo",votes:["Carla","Diego","Roky","Edu"]},{id:3,text:"Me da igual",votes:["Maria"]}]}]},
-    {id:2,title:"Cena de verano",type:"cena",date:"2026-07-12",time:"21:00",description:"Traed algo para beber.",attendees:[1,2,5,7,8],expenses:[],agenda:"",polls:[]},
-    {id:3,title:"Reunión de colla",type:"reunion",date:"2026-06-26",time:"20:30",description:"Reunión ordinaria.",attendees:[1,2,3,4,5,6,7,8],expenses:[],agenda:"1. Cuotas pendientes\n2. Organización fiesta julio\n3. Reparación baño\n4. Ruegos y preguntas",polls:[]},
-  ],
-  compras: [
-    {id:1,who:"Inma",what:"Lejía y bayetas",amount:8.4,date:"2026-05-10",reintegrated:true,confirmedBy:"Edu"},
-    {id:2,who:"David",what:"Papel de cocina x4",amount:6.8,date:"2026-05-14",reintegrated:false,confirmedBy:null},
-    {id:3,who:"Carla",what:"Detergente loza",amount:4.95,date:"2026-05-16",reintegrated:false,confirmedBy:null},
-  ],
-  turns: [
-    {id:1,week:"Por definir (sept.)",group:1,note:"",done:false},
-    {id:2,week:"Por definir (sept.)",group:2,note:"",done:false},
-    {id:3,week:"Por definir (sept.)",group:3,note:"",done:false},
-    {id:4,week:"Por definir (sept.)",group:4,note:"",done:false},
-    {id:5,week:"Por definir (sept.)",group:5,note:"",done:false},
-    {id:6,week:"Por definir (sept.)",group:6,note:"",done:false},
-  ],
-  quotas: [
-    {id:1,concept:"Cuota mensual",amount:20,month:"Mayo 2026",payments:MEMBERS.map(m=>({name:m.name,selfDeclared:true,confirmedByTreasurer:m.id<16}))},
-    {id:2,concept:"Cuota mensual",amount:20,month:"Junio 2026",payments:MEMBERS.map(m=>({name:m.name,selfDeclared:[1,2,5,9].includes(m.id),confirmedByTreasurer:[1,2].includes(m.id)}))},
-  ],
-  shopping: [
-    {id:1,text:"Papel higiénico",done:false,addedBy:"Inma"},
-    {id:2,text:"Bombilla terraza",done:false,addedBy:"Carmen"},
-    {id:3,text:"Lejía",done:true,addedBy:"David"},
-  ],
+  events: [],
+  compras: [],
+  turns: GROUPS.map((g,i)=>({id:i+1,week:"Por definir (sept.)",group:g.id,note:"",done:false})),
+  quotas: [],
+  shopping: [],
 };
 
 // ───────────────────────── FIRESTORE SYNC ──────────────────────────────
@@ -712,7 +690,7 @@ function renderSection(key){
 const MENU_ITEMS = [
   {key:"eventos",label:"Eventos",num:"01"},
   {key:"caja",label:"Caja",num:"02"},
-  {key:"compra",label:"Compra",num:"03"},
+  {key:"compra",label:"La compra",num:"03"},
   {key:"turnos",label:"Turnos",num:"04"},
   {key:"cuotas",label:"Cuotas",num:"05"},
   {key:"colla",label:"Colla",num:"06"},
@@ -844,7 +822,17 @@ function renderEvDetail(){
       <div style="font-size:11px;color:var(--faint);margin-top:4px">Entre ${ev.attendees.length} asistentes</div>`;
     }
   }
+  html += `<div class="divider" style="margin-top:24px"></div>
+    <button class="btn-ghost" style="width:100%;border-color:rgba(192,57,43,.4);color:var(--neg);letter-spacing:2px" onclick="deleteEvento(${ev.id})">Eliminar evento</button>`;
   document.getElementById('body-evdetail').innerHTML = html;
+}
+
+function deleteEvento(evId){
+  const ev = events.find(e=>e.id===evId);
+  if(!ev) return;
+  if(!confirm(`¿Eliminar "${ev.title}"?\n\nSe borrará para toda la colla y no se puede deshacer.`)) return;
+  fbDelete('events', evId);
+  goSection('eventos');
 }
 
 function renderPollHTML(p, evId){
@@ -1118,7 +1106,8 @@ function saveTurnNote(){
 // ═══════════════════════════════ CUOTAS ══════════════════════════════
 function renderCuotas(){
   let html = '';
-  if(ME===TREASURER) html += `<div style="font-size:12px;color:var(--accentD);background:rgba(127,255,0,.13);border:1px solid rgba(127,255,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:16px">Modo tesorero activo · Puedes confirmar pagos</div>`;
+  if(ME===TREASURER) html += `<div style="font-size:12px;color:var(--accentD);background:rgba(127,255,0,.13);border:1px solid rgba(127,255,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:16px">Modo tesorero activo · Puedes crear cuotas y confirmar pagos</div>`;
+  if(quotas.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:14px">${ME===TREASURER?'No hay cuotas todavía. Crea la primera con el botón de abajo.':'No hay cuotas activas. El tesorero las creará cuando toque.'}</div>`;
   quotas.forEach(q=>{
     const confirmed = q.payments.filter(p=>p.confirmedByTreasurer).length;
     const declared = q.payments.filter(p=>p.selfDeclared).length;
@@ -1126,7 +1115,10 @@ function renderCuotas(){
     html += `<div style="margin-bottom:24px">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px">
         <div><span class="lbl">${q.month}</span><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text)">${q.concept} · ${q.amount} €</div></div>
-        ${tag(confirmed+'/'+MEMBERS.length,pct===100?'#3d8000':'#c07800')}
+        <div style="display:flex;gap:8px;align-items:center">
+          ${tag(confirmed+'/'+MEMBERS.length,pct===100?'#3d8000':'#c07800')}
+          ${ME===TREASURER?`<button class="shop-del" style="font-size:18px;color:var(--neg)" onclick="deleteQuota(${q.id})" title="Eliminar cuota">×</button>`:''}
+        </div>
       </div>
       <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
       <div style="font-size:10px;color:var(--faint);margin-bottom:12px;letter-spacing:1px">${declared} declarados · ${confirmed} confirmados</div>
@@ -1151,7 +1143,29 @@ function renderCuotas(){
       </div>
     </div>`;
   });
+  if(ME===TREASURER){
+    html += `<button class="btn-dashed" onclick="addQuota()">+ Crear cuota mensual</button>`;
+  }
   document.getElementById('body-cuotas').innerHTML = html;
+}
+function addQuota(){
+  const concept = prompt("Concepto de la cuota:", "Cuota mensual");
+  if(concept===null) return;
+  const amountStr = prompt("Importe en € por miembro:", "20");
+  if(amountStr===null) return;
+  const amount = parseFloat(amountStr); if(isNaN(amount)) return;
+  const month = prompt("Mes / periodo:", new Date().toLocaleDateString("es-ES",{month:"long",year:"numeric"}));
+  if(month===null) return;
+  const nextId = (quotas.reduce((m,q)=>Math.max(m,q.id),0))+1;
+  fbSet('quotas', {
+    id: nextId, concept: concept.trim()||"Cuota", amount, month: month.trim(),
+    payments: MEMBERS.map(m=>({name:m.name,selfDeclared:false,confirmedByTreasurer:false})),
+  });
+}
+function deleteQuota(qid){
+  const q=quotas.find(x=>x.id===qid); if(!q) return;
+  if(!confirm(`¿Eliminar la cuota "${q.concept} · ${q.month}"?\n\nNo se puede deshacer.`)) return;
+  fbDelete('quotas', qid);
 }
 function doDeclarePaid(qid,name){
   const q=quotas.find(x=>x.id===qid); if(!q) return;
