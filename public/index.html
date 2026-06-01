@@ -2,9 +2,15 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>La Colla</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#141410"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="La Colla"/>
+<title>Colla Farem Curt</title>
+<link rel="manifest" href='data:application/manifest+json,{"name":"Colla Farem Curt","short_name":"La Colla","start_url":".","display":"standalone","background_color":"%23f2ede2","theme_color":"%23141410","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 rx=%27110%27 fill=%27%23141410%27/%3E%3Ctext x=%27256%27 y=%27330%27 font-family=%27Arial Black,sans-serif%27 font-size=%27300%27 font-weight=%27900%27 fill=%27%237fff00%27 text-anchor=%27middle%27%3EC%3C/text%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}'/>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23141410'/%3E%3Ctext x='256' y='330' font-family='Arial Black,sans-serif' font-size='300' font-weight='900' fill='%237fff00' text-anchor='middle'%3EC%3C/text%3E%3C/svg%3E"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -14,11 +20,41 @@
   --line:#e4ddd0;--neg:#c0392b;--warn:#c07800;--warnL:#fff4e0;
   --black:#141410;
 }
-body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);max-width:480px;margin:0 auto;min-height:100vh;}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);max-width:480px;margin:0 auto;min-height:100vh;-webkit-tap-highlight-color:transparent;}
 ::-webkit-scrollbar{display:none;}
 input,textarea,select{outline:none;font-family:'DM Sans',sans-serif;}
 input:focus,textarea:focus{border-color:var(--accentD)!important;}
 textarea{resize:none;}
+
+/* LOGIN / ¿QUIÉN ERES? */
+#gate{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;max-width:480px;margin:0 auto;overflow-y:auto;}
+.gate-header{background:var(--paper);border-bottom:1px solid var(--border);padding:44px 28px 30px;}
+.gate-body{flex:1;padding:24px 22px 60px;}
+.gate-q{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;margin-bottom:4px;color:var(--text);}
+.gate-sub{font-size:12px;color:var(--muted);margin-bottom:22px;letter-spacing:.3px;}
+.who-grid{display:flex;flex-direction:column;gap:8px;}
+.who-group{margin-bottom:4px;}
+.who-group-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);margin:14px 0 8px;}
+.who-btn{width:100%;display:flex;align-items:center;gap:13px;background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:13px 15px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .14s;text-align:left;}
+.who-btn:hover{border-color:var(--accentD);transform:translateX(3px);}
+.who-btn:active{transform:scale(.98);}
+.who-name{font-size:15px;color:var(--text);font-weight:500;flex:1;}
+.who-tre{font-size:8px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--accentD);background:rgba(127,255,0,.16);padding:3px 7px;border-radius:4px;}
+
+/* PIN */
+.pin-box{background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:26px 22px;margin-top:8px;}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin:20px 0 24px;}
+.pin-dot{width:15px;height:15px;border-radius:50%;border:2px solid var(--border);transition:all .15s;}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pin-key{aspect-ratio:1.6;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.pin-key:active{background:var(--accent);color:var(--black);transform:scale(.95);}
+.pin-key.fn{font-size:13px;letter-spacing:1px;font-family:'DM Sans',sans-serif;color:var(--muted);}
+.pin-err{color:var(--neg);font-size:12px;text-align:center;margin-top:14px;height:16px;letter-spacing:.3px;}
+
+/* SYNC BANNER */
+#syncBar{position:fixed;top:0;left:50%;transform:translateX(-50%);background:var(--black);color:var(--accent);font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:7px 18px;border-radius:0 0 10px 10px;z-index:900;opacity:0;transition:opacity .3s;pointer-events:none;font-weight:700;}
+#syncBar.show{opacity:1;}
 
 /* MENU */
 .menu{min-height:100vh;background:var(--bg);display:flex;flex-direction:column;}
@@ -27,6 +63,11 @@ textarea{resize:none;}
 .logo-row{display:flex;align-items:center;gap:10px;}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--text);letter-spacing:3px;line-height:1;}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px;}
+.menu-user{margin-top:14px;display:flex;align-items:center;gap:9px;}
+.menu-user-txt{font-size:11px;color:var(--muted);letter-spacing:.3px;}
+.menu-user-txt b{color:var(--text);font-weight:700;}
+.menu-switch{margin-left:auto;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);background:none;border:1px solid var(--border);border-radius:5px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.menu-switch:hover{border-color:var(--accentD);color:var(--accentD);}
 .menu-list{flex:1;padding:0 28px;}
 .menu-row{border-bottom:1px solid var(--line);padding:22px 0;display:flex;align-items:baseline;gap:16px;cursor:pointer;}
 .menu-row:hover .menu-num,.menu-row:hover .menu-label,.menu-row:hover .menu-arrow{color:var(--accent)!important;}
@@ -95,7 +136,7 @@ textarea.inp{height:100px;}
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(20,20,16,.55);display:flex;align-items:flex-end;z-index:300;display:none;}
 .modal-overlay.open{display:flex;}
-.modal-box{background:var(--paper);border-radius:14px 14px 0 0;padding:24px;width:100%;max-height:90vh;overflow-y:auto;border-top:4px solid var(--accent);}
+.modal-box{background:var(--paper);border-radius:14px 14px 0 0;padding:24px;width:100%;max-width:480px;margin:0 auto;max-height:90vh;overflow-y:auto;border-top:4px solid var(--accent);}
 .modal-title{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--text);margin-bottom:20px;letter-spacing:1px;}
 .modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;}
 
@@ -144,17 +185,43 @@ textarea.inp{height:100px;}
 
 /* WARN CARD */
 .warn-card{background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:16px;margin-bottom:10px;}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--bg);z-index:1100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;max-width:480px;margin:0 auto;}
+.spin{width:38px;height:38px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.load-txt{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);}
 </style>
 </head>
 <body>
 
+<!-- ═══════════════════════════════ LOADER ═════════════════════════════ -->
+<div id="loader"><div class="spin"></div><div class="load-txt">Conectando…</div></div>
+
+<!-- ═══════════════════════════════ SYNC BAR ════════════════════════════ -->
+<div id="syncBar">Sincronizado</div>
+
+<!-- ═══════════════════════════════ GATE ═══════════════════════════════ -->
+<div id="gate" style="display:none">
+  <div class="gate-header">
+    <div class="eyebrow">Castelló de la Plana</div>
+    <div class="logo-row"><div class="logo">LA COLLA</div><div class="dot"></div></div>
+  </div>
+  <div class="gate-body" id="gateBody"></div>
+</div>
+
 <!-- ═══════════════════════════════ MENU ═══════════════════════════════ -->
-<div class="menu" id="mainMenu">
+<div class="menu" id="mainMenu" style="display:none">
   <div class="menu-header">
-    <div class="eyebrow">Castellón de la Plana</div>
+    <div class="eyebrow">Castelló de la Plana</div>
     <div class="logo-row">
       <div class="logo">LA COLLA</div>
       <div class="dot"></div>
+    </div>
+    <div class="menu-user">
+      <span class="av av-md av-on" id="meAv"></span>
+      <span class="menu-user-txt">Hola, <b id="meName"></b></span>
+      <button class="menu-switch" onclick="logout()">Cambiar</button>
     </div>
   </div>
   <div class="menu-list" id="menuList"></div>
@@ -168,7 +235,7 @@ textarea.inp{height:100px;}
     <div class="sec-title">Eventos</div>
   </div>
   <div class="sec-body" id="body-eventos"></div>
-  <button class="fab" onclick="openModal('modalEvento')">+</button>
+  <button class="fab" onclick="openEventoModal()">+</button>
 </div>
 
 <div class="section" id="sec-caja">
@@ -309,26 +376,61 @@ textarea.inp{height:100px;}
   </div>
 </div>
 
+<script type="module">
+// ═══════════════════════════════════════════════════════════════════════
+//  FIREBASE
+// ═══════════════════════════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDocs }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAPCswvXmDJlTn7PKrdOb_WCKcTqfyEgNA",
+  authDomain: "app-colla.firebaseapp.com",
+  projectId: "app-colla",
+  storageBucket: "app-colla.firebasestorage.app",
+  messagingSenderId: "235447122137",
+  appId: "1:235447122137:web:d06e1e6e487159ec7e26c8",
+  measurementId: "G-FX4HDRRS3P"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+// Exponer helpers de Firestore al scope global (el resto del código no es módulo)
+window.DB = { db, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDocs };
+window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
 <script>
-// ═══════════════════════════════ DATA ════════════════════════════════
+// El grueso de la app se carga aquí (no-module) una vez Firebase está listo.
+window.addEventListener('firebase-ready', () => { window.__startApp(); });
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  COLLA FAREM CURT · app definitiva con Firebase
+// ═══════════════════════════════════════════════════════════════════════
+
+// ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
 const TREASURER = "Edu";
-const ME = "David";
+const TREASURER_PIN = "1234"; // Edu puede cambiarlo: ver nota al final del chat
+let ME = null; // se define en el login
 
 const GROUPS = [
-  {id:1,members:["David","Carmen"]},
-  {id:2,members:["Inma","Roky"]},
-  {id:3,members:["Carla","Diego"]},
-  {id:4,members:["Maria","Edu"]},
-  {id:5,members:["Zurine","Carlos"]},
-  {id:6,members:["Marta","Alejandro"]},
-  {id:7,members:["Raquel","Fran"]},
-  {id:8,members:["Sandri","Guille"]},
-  {id:9,members:["Yani","Patri"]},
-  {id:10,members:["Lledo","Carmenxita"]},
-  {id:11,members:["Sergio","Gonzalo"]},
-  {id:12,members:["Ari"]},
+  {id:1,  members:["David","Carmen"]},
+  {id:2,  members:["Inma","Roky"]},
+  {id:3,  members:["Carla","Fran"]},
+  {id:4,  members:["Ari","Diego"]},
+  {id:5,  members:["Maria","Edu"]},
+  {id:6,  members:["Patri","Gonzalo"]},
+  {id:7,  members:["Sergio","Sandri"]},
+  {id:8,  members:["Alejandro","Yani"]},
+  {id:9,  members:["Zurine","Carlos"]},
+  {id:10, members:["Guille","Lledo"]},
+  {id:11, members:["Marta","Raquel","Adrián"]},
 ];
-const MEMBERS = GROUPS.flatMap((g,gi)=>g.members.map((name,ni)=>({id:gi*2+ni+1,name,groupId:g.id})));
+const MEMBERS = GROUPS.flatMap((g)=>g.members.map((name)=>({name,groupId:g.id})))
+  .map((m,i)=>({...m,id:i+1}));
 
 const EVENT_TYPES = {
   comida:{label:"Comida",color:"#3d8000"},
@@ -337,45 +439,238 @@ const EVENT_TYPES = {
   otro:{label:"Evento",color:"#6e6860"},
 };
 
-let events = [
-  {id:1,title:"Paella valenciana",type:"comida",date:"2026-05-25",time:"14:00",description:"Paella valenciana + postre",attendees:[1,2,3,4,5,6],expenses:[{id:1,who:"David",what:"Arroz y verduras",amount:34},{id:2,who:"Carla",what:"Carne y conejo",amount:28}],agenda:"",polls:[{id:1,title:"¿Qué menú preferís?",multi:false,open:true,options:[{id:1,text:"Paella valenciana",votes:["David","Carmen","Inma"]},{id:2,text:"Paella con pulpo",votes:["Carla","Diego","Roky","Edu"]},{id:3,text:"Me da igual",votes:["Maria"]}]}]},
-  {id:2,title:"Cena de verano",type:"cena",date:"2026-06-14",time:"21:00",description:"Traed algo para beber.",attendees:[1,2,5,7,8],expenses:[],agenda:"",polls:[]},
-  {id:3,title:"Reunión de colla",type:"reunion",date:"2026-05-28",time:"20:30",description:"Reunión ordinaria mayo.",attendees:[1,2,3,4,5,6,7,8],expenses:[],agenda:"1. Cuotas pendientes\n2. Organización fiesta julio\n3. Reparación baño\n4. Ruegos y preguntas",polls:[]},
-];
-
-let compras = [
-  {id:1,who:"Inma",what:"Lejía y bayetas",amount:8.4,date:"2026-05-10",reintegrated:true,confirmedBy:"Edu"},
-  {id:2,who:"David",what:"Papel de cocina x4",amount:6.8,date:"2026-05-14",reintegrated:false,confirmedBy:null},
-  {id:3,who:"Carla",what:"Detergente loza",amount:4.95,date:"2026-05-16",reintegrated:false,confirmedBy:null},
-];
-
-let turns = [
-  {week:"19 may",group:1,note:"",done:false},
-  {week:"26 may",group:3,note:"Falta lejía en el baño pequeño.",done:true},
-  {week:"2 jun",group:5,note:"",done:false},
-  {week:"9 jun",group:7,note:"",done:false},
-  {week:"16 jun",group:9,note:"",done:false},
-  {week:"23 jun",group:2,note:"",done:false},
-];
-
-let quotas = [
-  {id:1,concept:"Cuota mensual",amount:20,month:"Mayo 2026",payments:MEMBERS.map(m=>({name:m.name,selfDeclared:true,confirmedByTreasurer:m.id<16}))},
-  {id:2,concept:"Cuota mensual",amount:20,month:"Junio 2026",payments:MEMBERS.map(m=>({name:m.name,selfDeclared:[1,2,5,9].includes(m.id),confirmedByTreasurer:[1,2].includes(m.id)}))},
-];
-
-let shopping = [
-  {id:1,text:"Papel higiénico",done:false,addedBy:"Inma"},
-  {id:2,text:"Bombilla terraza",done:false,addedBy:"Carmen"},
-  {id:3,text:"Lejía",done:true,addedBy:"David"},
-];
+// ───────────────────────── ESTADO (espejo de Firestore) ────────────────
+let events = [];
+let compras = [];
+let turns = [];
+let quotas = [];
+let shopping = [];
 
 let activeEvId = null;
 let pollMulti = false;
 let pollOpts = ["","",""];
 let editTurnIdx = null;
-let compraWho = ME;
-let evExpWho = ME;
+let compraWho = null;
+let evExpWho = null;
 let evType = "comida";
+let currentSection = null;
+let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:false};
+
+// ───────────────────────── DATOS POR DEFECTO (seed) ────────────────────
+// Solo se suben a Firestore la primera vez, si la colección está vacía.
+const SEED = {
+  events: [
+    {id:1,title:"Paella valenciana",type:"comida",date:"2026-06-21",time:"14:00",description:"Paella valenciana + postre",attendees:[1,2,3,4,5,6],expenses:[{id:1,who:"David",what:"Arroz y verduras",amount:34},{id:2,who:"Carla",what:"Carne y conejo",amount:28}],agenda:"",polls:[{id:1,title:"¿Qué menú preferís?",multi:false,open:true,options:[{id:1,text:"Paella valenciana",votes:["David","Carmen","Inma"]},{id:2,text:"Paella con pulpo",votes:["Carla","Diego","Roky","Edu"]},{id:3,text:"Me da igual",votes:["Maria"]}]}]},
+    {id:2,title:"Cena de verano",type:"cena",date:"2026-07-12",time:"21:00",description:"Traed algo para beber.",attendees:[1,2,5,7,8],expenses:[],agenda:"",polls:[]},
+    {id:3,title:"Reunión de colla",type:"reunion",date:"2026-06-26",time:"20:30",description:"Reunión ordinaria.",attendees:[1,2,3,4,5,6,7,8],expenses:[],agenda:"1. Cuotas pendientes\n2. Organización fiesta julio\n3. Reparación baño\n4. Ruegos y preguntas",polls:[]},
+  ],
+  compras: [
+    {id:1,who:"Inma",what:"Lejía y bayetas",amount:8.4,date:"2026-05-10",reintegrated:true,confirmedBy:"Edu"},
+    {id:2,who:"David",what:"Papel de cocina x4",amount:6.8,date:"2026-05-14",reintegrated:false,confirmedBy:null},
+    {id:3,who:"Carla",what:"Detergente loza",amount:4.95,date:"2026-05-16",reintegrated:false,confirmedBy:null},
+  ],
+  turns: [
+    {id:1,week:"Por definir (sept.)",group:1,note:"",done:false},
+    {id:2,week:"Por definir (sept.)",group:2,note:"",done:false},
+    {id:3,week:"Por definir (sept.)",group:3,note:"",done:false},
+    {id:4,week:"Por definir (sept.)",group:4,note:"",done:false},
+    {id:5,week:"Por definir (sept.)",group:5,note:"",done:false},
+    {id:6,week:"Por definir (sept.)",group:6,note:"",done:false},
+  ],
+  quotas: [
+    {id:1,concept:"Cuota mensual",amount:20,month:"Mayo 2026",payments:MEMBERS.map(m=>({name:m.name,selfDeclared:true,confirmedByTreasurer:m.id<16}))},
+    {id:2,concept:"Cuota mensual",amount:20,month:"Junio 2026",payments:MEMBERS.map(m=>({name:m.name,selfDeclared:[1,2,5,9].includes(m.id),confirmedByTreasurer:[1,2].includes(m.id)}))},
+  ],
+  shopping: [
+    {id:1,text:"Papel higiénico",done:false,addedBy:"Inma"},
+    {id:2,text:"Bombilla terraza",done:false,addedBy:"Carmen"},
+    {id:3,text:"Lejía",done:true,addedBy:"David"},
+  ],
+};
+
+// ───────────────────────── FIRESTORE SYNC ──────────────────────────────
+let DB = null;
+const COLLECTIONS = ["events","compras","turns","quotas","shopping"];
+
+function showSync(txt="Sincronizado"){
+  const b = document.getElementById('syncBar');
+  b.textContent = txt; b.classList.add('show');
+  clearTimeout(window.__syncT);
+  window.__syncT = setTimeout(()=>b.classList.remove('show'),1400);
+}
+
+// Guarda un documento (un item) en su colección. id = clave del doc.
+async function fbSet(coll, item){
+  try{
+    await DB.setDoc(DB.doc(DB.db, coll, String(item.id)), item);
+    showSync("Guardado");
+  }catch(e){ console.error("Error guardando",coll,e); showSync("Error de red"); }
+}
+async function fbDelete(coll, id){
+  try{
+    await DB.deleteDoc(DB.doc(DB.db, coll, String(id)));
+    showSync("Guardado");
+  }catch(e){ console.error("Error borrando",coll,e); showSync("Error de red"); }
+}
+
+// Mapea colección → variable local
+function setLocal(coll, arr){
+  if(coll==="events") events = arr;
+  if(coll==="compras") compras = arr;
+  if(coll==="turns") turns = arr;
+  if(coll==="quotas") quotas = arr;
+  if(coll==="shopping") shopping = arr;
+}
+
+// Suscribe a todas las colecciones en tiempo real
+function subscribeAll(){
+  COLLECTIONS.forEach(coll=>{
+    DB.onSnapshot(DB.collection(DB.db, coll), snap=>{
+      const arr = [];
+      snap.forEach(d=>arr.push(d.data()));
+      // ordena por id numérico para estabilidad
+      arr.sort((a,b)=>(a.id||0)-(b.id||0));
+      setLocal(coll, arr);
+      dataReady[coll] = true;
+      onData(coll, snap.empty);
+    }, err=>{
+      console.error("onSnapshot error",coll,err);
+      showSync("Error de conexión");
+    });
+  });
+}
+
+// Primera vez: si una colección llega vacía, sube el seed
+let seeded = {};
+async function maybeSeed(coll, empty){
+  if(empty && !seeded[coll]){
+    seeded[coll] = true;
+    for(const item of SEED[coll]){ await fbSet(coll, item); }
+  }
+}
+
+function allReady(){ return COLLECTIONS.every(c=>dataReady[c]); }
+
+function onData(coll, empty){
+  maybeSeed(coll, empty);
+  if(allReady()){
+    document.getElementById('loader').style.display='none';
+    // Si ya estamos logueados y en una sección, re-render en vivo
+    if(ME){
+      if(currentSection) renderSection(currentSection);
+      if(document.getElementById('sec-evdetail').classList.contains('active')) renderEvDetail();
+      renderMenu();
+    }
+  }
+}
+
+// ───────────────────────── ARRANQUE ────────────────────────────────────
+window.__startApp = function(){
+  DB = window.DB;
+  subscribeAll();
+  initEvTypePills();
+  // failsafe: si en 6s no ha cargado, mostrar login igual
+  setTimeout(()=>{
+    document.getElementById('loader').style.display='none';
+    if(!ME) renderGate();
+  }, 6000);
+  // mostrar login en cuanto haya datos (o ya)
+  const waitGate = setInterval(()=>{
+    if(allReady()){
+      clearInterval(waitGate);
+      const saved = localStorage.getItem('colla_me');
+      if(saved && MEMBERS.some(m=>m.name===saved)){ ME = saved; enterApp(); }
+      else renderGate();
+    }
+  }, 120);
+};
+
+// ═══════════════════════════════ LOGIN ═══════════════════════════════
+function renderGate(){
+  document.getElementById('loader').style.display='none';
+  document.getElementById('gate').style.display='flex';
+  document.getElementById('mainMenu').style.display='none';
+  const body = document.getElementById('gateBody');
+  let html = `<div class="gate-q">¿Quién eres?</div>
+    <div class="gate-sub">Toca tu nombre para entrar.</div>
+    <div class="who-grid">`;
+  GROUPS.forEach(g=>{
+    html += `<div class="who-group"><div class="who-group-label">Grupo ${g.id} · ${g.members.join(" & ")}</div>`;
+    g.members.forEach(name=>{
+      const isTre = name===TREASURER;
+      html += `<button class="who-btn" onclick="pickMe('${name}')">
+        ${av(name,'av av-md '+(isTre?'av-on':'av-off'))}
+        <span class="who-name">${name}</span>
+        ${isTre?`<span class="who-tre">Tesorero</span>`:''}
+      </button>`;
+    });
+    html += `</div>`;
+  });
+  html += `</div>`;
+  body.innerHTML = html;
+}
+
+let pinBuffer = "";
+function pickMe(name){
+  if(name===TREASURER){ renderPin(); return; }
+  ME = name;
+  localStorage.setItem('colla_me', name);
+  enterApp();
+}
+
+function renderPin(){
+  pinBuffer = "";
+  const body = document.getElementById('gateBody');
+  body.innerHTML = `
+    <button class="btn-ghost" style="margin-bottom:18px" onclick="renderGate()">← Volver</button>
+    <div class="gate-q">Hola, Edu</div>
+    <div class="gate-sub">Introduce tu clave de tesorero.</div>
+    <div class="pin-box">
+      <div class="pin-dots" id="pinDots"></div>
+      <div class="pin-pad" id="pinPad"></div>
+      <div class="pin-err" id="pinErr"></div>
+    </div>`;
+  renderPinDots();
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  document.getElementById('pinPad').innerHTML = keys.map(k=>{
+    if(k==='') return `<div></div>`;
+    if(k==='⌫') return `<button class="pin-key fn" onclick="pinDel()">⌫</button>`;
+    return `<button class="pin-key" onclick="pinPress('${k}')">${k}</button>`;
+  }).join('');
+}
+function renderPinDots(){
+  let h=''; for(let i=0;i<4;i++) h+=`<div class="pin-dot ${i<pinBuffer.length?'filled':''}"></div>`;
+  document.getElementById('pinDots').innerHTML=h;
+}
+function pinPress(d){
+  if(pinBuffer.length>=4) return;
+  pinBuffer+=d; renderPinDots();
+  if(pinBuffer.length===4){
+    setTimeout(()=>{
+      if(pinBuffer===TREASURER_PIN){
+        ME = TREASURER; localStorage.setItem('colla_me',TREASURER); enterApp();
+      } else {
+        document.getElementById('pinErr').textContent='Clave incorrecta';
+        pinBuffer=''; renderPinDots();
+      }
+    },120);
+  }
+}
+function pinDel(){ pinBuffer=pinBuffer.slice(0,-1); document.getElementById('pinErr').textContent=''; renderPinDots(); }
+
+function enterApp(){
+  compraWho = ME; evExpWho = ME;
+  document.getElementById('gate').style.display='none';
+  document.getElementById('meAv').textContent = ini(ME);
+  document.getElementById('meName').textContent = ME + (ME===TREASURER?' · Tesorero':'');
+  goMenu();
+}
+function logout(){
+  ME=null; localStorage.removeItem('colla_me');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('mainMenu').style.display='none';
+  renderGate();
+}
 
 // ═══════════════════════════════ HELPERS ══════════════════════════════
 const ini = n => n ? n[0].toUpperCase() : "?";
@@ -383,30 +678,27 @@ const gm = id => MEMBERS.find(m=>m.id===id);
 const gg = id => GROUPS.find(g=>g.id===id);
 const fmtD = s => {
   const d = new Date(s+"T12:00:00");
-  return {
-    day: d.getDate(),
-    mon: d.toLocaleDateString("es-ES",{month:"short"}),
-    wday: d.toLocaleDateString("es-ES",{weekday:"long"}),
-  };
+  return { day:d.getDate(), mon:d.toLocaleDateString("es-ES",{month:"short"}), wday:d.toLocaleDateString("es-ES",{weekday:"long"}) };
 };
 const av = (name,cls="av-md av-off") => `<span class="av ${cls}">${ini(name)}</span>`;
 const tag = (text,color,bg) => `<span class="tag" style="color:${color};background:${bg||color+'18'}">${text}</span>`;
+const clone = o => JSON.parse(JSON.stringify(o));
 
 // ═══════════════════════════════ NAVIGATION ═══════════════════════════
 function goMenu(){
+  currentSection=null;
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('mainMenu').style.display='flex';
   renderMenu();
 }
-
 function goSection(key){
+  currentSection=key;
   document.getElementById('mainMenu').style.display='none';
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   const s = document.getElementById('sec-'+key);
   if(s) s.classList.add('active');
   renderSection(key);
 }
-
 function renderSection(key){
   if(key==='eventos') renderEventos();
   if(key==='caja') renderCaja();
@@ -425,7 +717,6 @@ const MENU_ITEMS = [
   {key:"cuotas",label:"Cuotas",num:"05"},
   {key:"colla",label:"Colla",num:"06"},
 ];
-
 function getBadge(key){
   if(key==='eventos') return events.reduce((s,e)=>s+(e.polls||[]).filter(p=>p.open).length,0)||null;
   if(key==='caja') return compras.filter(c=>!c.reintegrated).length||null;
@@ -433,9 +724,9 @@ function getBadge(key){
   if(key==='cuotas') return quotas.reduce((s,q)=>s+(q.payments||[]).filter(p=>!p.confirmedByTreasurer&&p.selfDeclared).length,0)||null;
   return null;
 }
-
 function renderMenu(){
   const list = document.getElementById('menuList');
+  if(!list) return;
   list.innerHTML = MENU_ITEMS.map(item=>{
     const b = getBadge(item.key);
     return `<div class="menu-row" onclick="goSection('${item.key}')">
@@ -447,12 +738,14 @@ function renderMenu(){
   }).join('');
   document.getElementById('menuFooter').textContent = `${MEMBERS.length} miembros · Tesorero: ${TREASURER}`;
 }
-
+</script>
+<script>
 // ═══════════════════════════════ EVENTOS ═════════════════════════════
 function renderEventos(){
   const sorted = [...events].sort((a,b)=>a.date>b.date?1:-1);
   document.getElementById('body-eventos').innerHTML = `
     <span class="lbl">Próximos eventos</span>
+    ${sorted.length===0?`<div style="font-size:13px;color:var(--faint);font-style:italic">Aún no hay eventos. Crea el primero con el botón +.</div>`:''}
     ${sorted.map(ev=>{
       const {day,mon} = fmtD(ev.date);
       const total = (ev.expenses||[]).reduce((s,x)=>s+x.amount,0);
@@ -488,6 +781,7 @@ function renderEventos(){
 
 function openEvDetail(evId){
   activeEvId = evId;
+  currentSection=null;
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('sec-evdetail').classList.add('active');
   renderEvDetail();
@@ -510,20 +804,16 @@ function renderEvDetail(){
 
   let html = '';
   if(ev.description) html += `<div style="font-size:13px;color:var(--muted);font-style:italic;margin-bottom:18px">${ev.description}</div>`;
-
   if(isReu && ev.agenda){
     html += `<span class="lbl">Orden del día</span>
     <div class="warn-card"><div style="font-size:13px;color:var(--text);white-space:pre-line;line-height:1.7">${ev.agenda}</div></div>`;
   }
-
-  // Polls
   if((ev.polls||[]).length>0){
     html += `<span class="lbl" style="margin-top:16px">Votaciones</span>`;
     ev.polls.forEach(p=>{ html += renderPollHTML(p, ev.id); });
   }
   html += `<button class="btn-dashed" onclick="openPollModal()">+ Nueva votación</button>`;
 
-  // Attendees
   html += `<span class="lbl" style="margin-top:8px">Apuntados (${ev.attendees.length})</span>
   <div class="card"><div class="attend-grid">
     ${MEMBERS.map(m=>{
@@ -534,7 +824,6 @@ function renderEvDetail(){
     }).join('')}
   </div></div>`;
 
-  // Expenses
   if(!isReu){
     html += `<span class="lbl" style="margin-top:18px">Gastos del evento</span>`;
     if((ev.expenses||[]).length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin gastos registrados.</div>`;
@@ -555,7 +844,6 @@ function renderEvDetail(){
       <div style="font-size:11px;color:var(--faint);margin-top:4px">Entre ${ev.attendees.length} asistentes</div>`;
     }
   }
-
   document.getElementById('body-evdetail').innerHTML = html;
 }
 
@@ -584,9 +872,7 @@ function renderPollHTML(p, evId){
         <div class="poll-fill" style="width:${pct}%"></div>
         <div class="poll-content">
           <div style="display:flex;align-items:center;gap:8px">
-            <div class="poll-check${voted?' checked':(p.multi?'':'')}">
-              ${voted?'✓':''}
-            </div>
+            <div class="poll-check${voted?' checked':''}">${voted?'✓':''}</div>
             <span style="font-size:13px;color:var(--text)">${opt.text}</span>
             ${winner?tag('Ganadora','#3d8000'):''}
           </div>
@@ -603,85 +889,69 @@ function renderPollHTML(p, evId){
   return html;
 }
 
+// — Mutaciones de eventos → Firestore —
 function toggleAtt(evId,mid){
-  const ev = events.find(e=>e.id===evId);
-  if(!ev) return;
-  const idx = ev.attendees.indexOf(mid);
-  if(idx>-1) ev.attendees.splice(idx,1); else ev.attendees.push(mid);
-  renderEvDetail();
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const next = clone(ev);
+  const idx = next.attendees.indexOf(mid);
+  if(idx>-1) next.attendees.splice(idx,1); else next.attendees.push(mid);
+  fbSet('events', next);
 }
-
 function castVote(evId,pollId,optId,multi){
-  const ev = events.find(e=>e.id===evId);
-  if(!ev) return;
-  const p = ev.polls.find(x=>x.id===pollId);
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const next = clone(ev);
+  const p = next.polls.find(x=>x.id===pollId);
   if(!p||!p.open) return;
   p.options.forEach(o=>{
-    if(multi){
-      if(o.id===optId){
-        const i=o.votes.indexOf(ME);
-        if(i>-1) o.votes.splice(i,1); else o.votes.push(ME);
-      }
-    } else {
-      if(o.id===optId){
-        const i=o.votes.indexOf(ME);
-        if(i>-1) o.votes.splice(i,1); else o.votes.push(ME);
-      } else {
-        const i=o.votes.indexOf(ME);
-        if(i>-1) o.votes.splice(i,1);
-      }
+    if(o.id===optId){
+      const i=o.votes.indexOf(ME);
+      if(i>-1) o.votes.splice(i,1); else o.votes.push(ME);
+    } else if(!multi){
+      const i=o.votes.indexOf(ME);
+      if(i>-1) o.votes.splice(i,1);
     }
   });
-  renderEvDetail();
+  fbSet('events', next);
 }
-
 function closePoll(evId,pollId){
-  const ev = events.find(e=>e.id===evId);
-  if(!ev) return;
-  const p = ev.polls.find(x=>x.id===pollId);
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const next = clone(ev);
+  const p = next.polls.find(x=>x.id===pollId);
   if(p) p.open=false;
-  renderEvDetail();
+  fbSet('events', next);
 }
-
+function openEventoModal(){ initEvTypePills(); openModal('modalEvento'); }
 function addEvento(){
   const title = document.getElementById('evTitle').value.trim();
   const date = document.getElementById('evDate').value;
   if(!title||!date) return;
-  events.push({
-    id: Date.now(),
-    title, type: evType,
-    date, time: document.getElementById('evTime').value,
+  const nextId = (events.reduce((m,e)=>Math.max(m,e.id),0))+1;
+  fbSet('events', {
+    id: nextId, title, type: evType, date,
+    time: document.getElementById('evTime').value,
     description: document.getElementById('evDesc').value,
     agenda: document.getElementById('evAgenda').value,
     attendees:[], expenses:[], polls:[],
   });
   closeModal('modalEvento');
-  document.getElementById('evTitle').value='';
-  document.getElementById('evDate').value='';
-  document.getElementById('evTime').value='';
-  document.getElementById('evDesc').value='';
-  document.getElementById('evAgenda').value='';
-  renderEventos();
+  ['evTitle','evDate','evTime','evDesc','evAgenda'].forEach(id=>document.getElementById(id).value='');
 }
-
 function addEvExp(){
-  const ev = events.find(e=>e.id===activeEvId);
-  if(!ev) return;
+  const ev = events.find(e=>e.id===activeEvId); if(!ev) return;
   const what = document.getElementById('evExpWhat').value.trim();
   const amt = parseFloat(document.getElementById('evExpAmt').value);
   if(!what||!amt) return;
-  ev.expenses.push({id:Date.now(),who:evExpWho,what,amount:amt});
+  const next = clone(ev);
+  const eid = (next.expenses.reduce((m,x)=>Math.max(m,x.id),0))+1;
+  next.expenses.push({id:eid,who:evExpWho,what,amount:amt});
+  fbSet('events', next);
   closeModal('modalEvExp');
-  document.getElementById('evExpWhat').value='';
-  document.getElementById('evExpAmt').value='';
-  renderEvDetail();
+  document.getElementById('evExpWhat').value=''; document.getElementById('evExpAmt').value='';
 }
 
-// Poll modal
+// — Poll modal —
 function openPollModal(){
-  pollOpts = ["","",""];
-  pollMulti = false;
-  renderPollOpts();
+  pollOpts = ["","",""]; pollMulti = false; renderPollOpts();
   document.getElementById('pollTitle').value='';
   document.getElementById('pollTypeSingle').className='pill on';
   document.getElementById('pollTypeMulti').className='pill';
@@ -699,15 +969,15 @@ function renderPollOpts(){
 }
 function addPollOpt(){ pollOpts.push(""); renderPollOpts(); }
 function savePoll(){
-  const ev = events.find(e=>e.id===activeEvId);
-  if(!ev) return;
-  const title = document.getElementById('pollTitle').value.trim();
-  if(!title) return;
+  const ev = events.find(e=>e.id===activeEvId); if(!ev) return;
+  const title = document.getElementById('pollTitle').value.trim(); if(!title) return;
   const opts = pollOpts.filter(o=>o.trim()).map((text,i)=>({id:i+1,text,votes:[]}));
   if(opts.length<2) return;
-  ev.polls.push({id:Date.now(),title,multi:pollMulti,open:true,options:opts});
+  const next = clone(ev);
+  const pid = (next.polls.reduce((m,p)=>Math.max(m,p.id),0))+1;
+  next.polls.push({id:pid,title,multi:pollMulti,open:true,options:opts});
+  fbSet('events', next);
   closeModal('modalPoll');
-  renderEvDetail();
 }
 
 // ═══════════════════════════════ CAJA ════════════════════════════════
@@ -721,7 +991,7 @@ function renderCaja(){
   </div>`;
   if(pend.length>0) html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:10px">${pend.length} compra${pend.length>1?'s':''} pendiente${pend.length>1?'s':''} de reintegro</div>`;
   html += `<span class="lbl">Compras puntuales</span>`;
-  compras.forEach(c=>{
+  [...compras].sort((a,b)=>b.id-a.id).forEach(c=>{
     html += `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div style="flex:1;padding-right:10px">
@@ -731,58 +1001,41 @@ function renderCaja(){
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${c.amount.toFixed(2)} €</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${c.reintegrated
-          ? tag('Reintegrado','#3d8000')
-          : `${tag('Pendiente reintegro','#c07800')} <button class="btn-ghost" style="font-size:9px;padding:4px 10px" onclick="doReintegrate(${c.id})">Marcar reintegrado</button>`
-        }
-        ${c.confirmedBy
-          ? tag('Confirmado · '+c.confirmedBy,'#3d8000')
-          : ME===TREASURER ? `<button class="btn-ghost" style="font-size:9px;padding:4px 10px" onclick="doConfirmComp(${c.id})">✓ Confirmar</button>` : ''
-        }
+        ${c.reintegrated ? tag('Reintegrado','#3d8000')
+          : `${tag('Pendiente reintegro','#c07800')} <button class="btn-ghost" style="font-size:9px;padding:4px 10px" onclick="doReintegrate(${c.id})">Marcar reintegrado</button>`}
+        ${c.confirmedBy ? tag('Confirmado · '+c.confirmedBy,'#3d8000')
+          : ME===TREASURER ? `<button class="btn-ghost" style="font-size:9px;padding:4px 10px" onclick="doConfirmComp(${c.id})">✓ Confirmar</button>` : ''}
       </div>
     </div>`;
   });
   html += `<button class="btn-dashed" onclick="initCompraPills();openModal('modalCompra')">+ Registrar compra</button>`;
   document.getElementById('body-caja').innerHTML = html;
 }
-
-function doReintegrate(id){ const c=compras.find(x=>x.id===id); if(c) c.reintegrated=true; renderCaja(); }
-function doConfirmComp(id){ const c=compras.find(x=>x.id===id); if(c) c.confirmedBy=TREASURER; renderCaja(); }
-
+function doReintegrate(id){ const c=compras.find(x=>x.id===id); if(c){const n=clone(c);n.reintegrated=true;fbSet('compras',n);} }
+function doConfirmComp(id){ const c=compras.find(x=>x.id===id); if(c){const n=clone(c);n.confirmedBy=TREASURER;fbSet('compras',n);} }
 function addCompra(){
   const what = document.getElementById('compraWhat').value.trim();
   const amt = parseFloat(document.getElementById('compraAmt').value);
   if(!what||!amt) return;
-  compras.unshift({id:Date.now(),who:compraWho,what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:false,confirmedBy:null});
+  const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
+  fbSet('compras', {id:nextId,who:compraWho,what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:false,confirmedBy:null});
   closeModal('modalCompra');
-  document.getElementById('compraWhat').value='';
-  document.getElementById('compraAmt').value='';
-  renderCaja();
+  document.getElementById('compraWhat').value=''; document.getElementById('compraAmt').value='';
 }
-
 function initCompraPills(){
   compraWho = ME;
   document.getElementById('compraWhoPills').innerHTML = MEMBERS.map(m=>
     `<span class="pill${m.name===compraWho?' on':''}" onclick="setCompraWho('${m.name}',this)">${av(m.name,'av '+(m.name===compraWho?'av-on':'av-off'))} ${m.name}</span>`
   ).join('');
 }
-function setCompraWho(name,el){
-  compraWho=name;
-  document.querySelectorAll('#compraWhoPills .pill').forEach(p=>p.classList.remove('on'));
-  el.classList.add('on');
-}
-
+function setCompraWho(name,el){ compraWho=name; document.querySelectorAll('#compraWhoPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
 function initEvExpPills(){
   evExpWho = ME;
   document.getElementById('evExpWhoPills').innerHTML = MEMBERS.map(m=>
     `<span class="pill${m.name===evExpWho?' on':''}" onclick="setEvExpWho('${m.name}',this)">${av(m.name,'av '+(m.name===evExpWho?'av-on':'av-off'))} ${m.name}</span>`
   ).join('');
 }
-function setEvExpWho(name,el){
-  evExpWho=name;
-  document.querySelectorAll('#evExpWhoPills .pill').forEach(p=>p.classList.remove('on'));
-  el.classList.add('on');
-}
+function setEvExpWho(name,el){ evExpWho=name; document.querySelectorAll('#evExpWhoPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
 
 // ═══════════════════════════════ COMPRA ══════════════════════════════
 function renderCompra(){
@@ -809,24 +1062,22 @@ function renderCompra(){
   }
   document.getElementById('body-compra').innerHTML = html;
 }
-
-function toggleShop(id){ const s=shopping.find(x=>x.id===id); if(s) s.done=!s.done; renderCompra(); }
-function removeShop(id){ shopping=shopping.filter(s=>s.id!==id); renderCompra(); }
+function toggleShop(id){ const s=shopping.find(x=>x.id===id); if(s){const n=clone(s);n.done=!n.done;fbSet('shopping',n);} }
+function removeShop(id){ fbDelete('shopping', id); }
 function addShopItem(){
-  const text=document.getElementById('shopText').value.trim();
-  if(!text) return;
-  shopping.push({id:Date.now(),text,done:false,addedBy:ME});
-  closeModal('modalShop');
-  document.getElementById('shopText').value='';
-  renderCompra();
+  const text=document.getElementById('shopText').value.trim(); if(!text) return;
+  const nextId = (shopping.reduce((m,s)=>Math.max(m,s.id),0))+1;
+  fbSet('shopping', {id:nextId,text,done:false,addedBy:ME});
+  closeModal('modalShop'); document.getElementById('shopText').value='';
 }
 
 // ═══════════════════════════════ TURNOS ══════════════════════════════
 function renderTurnos(){
-  let html = `<span class="lbl">Limpieza y compra · por grupo</span>`;
+  let html = `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:10px 12px;margin-bottom:14px">Los turnos arrancan después de verano. Orden de rotación semanal por grupo.</div>`;
+  html += `<span class="lbl">Limpieza y compra · por grupo</span>`;
   turns.forEach((t,i)=>{
     const group = gg(t.group);
-    const now = i===0;
+    const now = i===0 && t.done===false && false; // ninguno "esta semana" hasta sept.
     const avs = (group?.members||[]).map((n,ni)=>`<span style="margin-left:${ni>0?'-8px':'0'};z-index:${ni};position:relative">${av(n,'av av-md '+(now?'av-on':'av-off'))}</span>`).join('');
     html += `<div class="card" style="border-left:4px solid ${now?'var(--accent)':'var(--border)'}">
       <div style="display:flex;justify-content:space-between;align-items:center;${t.note?'margin-bottom:12px':''}">
@@ -835,14 +1086,13 @@ function renderTurnos(){
           <div>
             <div style="font-size:14px;font-weight:${now?600:400};color:${now?'var(--text)':'var(--muted)'}">${(group?.members||[]).join(" & ")}</div>
             <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">
-              ${now?tag('Esta semana','#3d8000'):''}
               ${t.done?tag('Completado','#3d8000'):''}
             </div>
           </div>
         </div>
         <div style="text-align:right">
           <div style="font-size:11px;color:var(--faint);margin-bottom:6px">${t.week}</div>
-          ${now&&!t.done?`<button class="btn-ghost" style="font-size:9px;padding:4px 10px" onclick="openTurnNote(${i})">+ Nota</button>`:''}
+          <button class="btn-ghost" style="font-size:9px;padding:4px 10px" onclick="openTurnNote(${i})">+ Nota</button>
         </div>
       </div>
       ${t.note?`<div style="font-size:13px;color:var(--muted);background:var(--bg);border-radius:5px;padding:10px 12px;line-height:1.5;font-style:italic">${t.note}</div>`:''}
@@ -850,7 +1100,6 @@ function renderTurnos(){
   });
   document.getElementById('body-turnos').innerHTML = html;
 }
-
 function openTurnNote(idx){
   editTurnIdx = idx;
   document.getElementById('turnNoteText').value = turns[idx].note||'';
@@ -858,11 +1107,12 @@ function openTurnNote(idx){
 }
 function saveTurnNote(){
   if(editTurnIdx===null) return;
-  turns[editTurnIdx].note = document.getElementById('turnNoteText').value;
-  turns[editTurnIdx].done = true;
-  closeModal('modalTurnNote');
-  editTurnIdx = null;
-  renderTurnos();
+  const t = turns[editTurnIdx]; if(!t){closeModal('modalTurnNote');return;}
+  const n = clone(t);
+  n.note = document.getElementById('turnNoteText').value;
+  n.done = true;
+  fbSet('turns', n);
+  closeModal('modalTurnNote'); editTurnIdx = null;
 }
 
 // ═══════════════════════════════ CUOTAS ══════════════════════════════
@@ -881,7 +1131,7 @@ function renderCuotas(){
       <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
       <div style="font-size:10px;color:var(--faint);margin-bottom:12px;letter-spacing:1px">${declared} declarados · ${confirmed} confirmados</div>
       <div class="card" style="padding:0 16px">
-        ${q.payments.map((p,i)=>{
+        ${q.payments.map((p)=>{
           const isMe = p.name===ME;
           const isTr = ME===TREASURER;
           let actions = '';
@@ -903,20 +1153,17 @@ function renderCuotas(){
   });
   document.getElementById('body-cuotas').innerHTML = html;
 }
-
 function doDeclarePaid(qid,name){
-  const q=quotas.find(x=>x.id===qid);
-  if(!q) return;
-  const p=q.payments.find(x=>x.name===name);
+  const q=quotas.find(x=>x.id===qid); if(!q) return;
+  const n=clone(q); const p=n.payments.find(x=>x.name===name);
   if(p){ p.selfDeclared=!p.selfDeclared; p.confirmedByTreasurer=false; }
-  renderCuotas();
+  fbSet('quotas', n);
 }
 function doConfirmPay(qid,name){
-  const q=quotas.find(x=>x.id===qid);
-  if(!q) return;
-  const p=q.payments.find(x=>x.name===name);
+  const q=quotas.find(x=>x.id===qid); if(!q) return;
+  const n=clone(q); const p=n.payments.find(x=>x.name===name);
   if(p) p.confirmedByTreasurer=!p.confirmedByTreasurer;
-  renderCuotas();
+  fbSet('quotas', n);
 }
 
 // ═══════════════════════════════ COLLA ═══════════════════════════════
@@ -927,16 +1174,16 @@ function renderColla(){
     <div style="text-align:right"><div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Tesorero</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff">${TREASURER}</div></div>
   </div>
-  <span class="lbl">Miembros</span>`;
+  <span class="lbl">Grupos (${GROUPS.length})</span>`;
   GROUPS.forEach(g=>{
-    const avs = g.members.map((n,i)=>`<span style="margin-left:${i>0?'-8px':'0'};z-index:${i};position:relative">${av(n,'av av-lg '+(i===0?'av-on':'av-off'))}</span>`).join('');
+    const avs = g.members.map((n,i)=>`<span style="margin-left:${i>0?'-8px':'0'};z-index:${i};position:relative">${av(n,'av av-lg '+(g.members.includes(ME)&&n===ME?'av-on':(i===0?'av-on':'av-off')))}</span>`).join('');
     html += `<div class="group-card"><div class="group-avs">${avs}</div><div class="group-name">${g.members.join(" & ")}</div></div>`;
   });
   html += `<div class="divider"></div>
   <span class="lbl">Documentos</span>
   <div class="card" style="display:flex;justify-content:space-between;align-items:center">
     <div><div style="font-size:14px;color:var(--text);margin-bottom:3px">Estatutos de la colla</div><div style="font-size:11px;color:var(--faint)">Documento oficial · PDF</div></div>
-    <a href="https://example.com/estatutos-colla.pdf" target="_blank"><button class="btn-accent">Ver PDF</button></a>
+    <button class="btn-ghost" onclick="alert('Añade aquí la URL del PDF de los estatutos cuando lo tengáis.')">Próximamente</button>
   </div>`;
   document.getElementById('body-colla').innerHTML = html;
 }
@@ -946,7 +1193,6 @@ function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 function closeModalBg(e,id){ if(e.target===document.getElementById(id)) closeModal(id); }
 
-// Evento type pills
 function initEvTypePills(){
   evType = 'comida';
   document.getElementById('evTypePills').innerHTML = Object.entries(EVENT_TYPES).map(([key,val])=>
@@ -960,19 +1206,6 @@ function setEvType(type,el){
   el.classList.add('on');
   document.getElementById('evAgendaWrap').style.display = type==='reunion'?'block':'none';
 }
-
-// ═══════════════════════════════ INIT ════════════════════════════════
-document.addEventListener('DOMContentLoaded',()=>{
-  renderMenu();
-  // Pre-init ev type pills
-  initEvTypePills();
-  document.querySelector('[onclick="openModal(\'modalEvento\')"]')?.remove();
-  // Patch fab in eventos
-  document.querySelector('#sec-eventos .fab')?.addEventListener('click',()=>{
-    initEvTypePills();
-    openModal('modalEvento');
-  });
-});
 </script>
 </body>
 </html>
