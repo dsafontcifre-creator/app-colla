@@ -119,6 +119,7 @@ textarea.inp{height:100px;}
 
 /* PILLS */
 .pill-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;}
+.pill-scroll{max-height:160px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;padding:8px;}
 .pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;user-select:none;}
 .pill.on{background:var(--accent);color:var(--black);border-color:var(--accent);}
 .pill:hover{opacity:.82;}
@@ -137,9 +138,11 @@ textarea.inp{height:100px;}
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(20,20,16,.55);display:flex;align-items:flex-end;z-index:300;display:none;}
 .modal-overlay.open{display:flex;}
-.modal-box{background:var(--paper);border-radius:14px 14px 0 0;padding:24px;width:100%;max-width:480px;margin:0 auto;max-height:90vh;overflow-y:auto;border-top:4px solid var(--accent);}
+.modal-box{background:var(--paper);border-radius:14px 14px 0 0;padding:24px;width:100%;max-width:480px;margin:0 auto;max-height:90vh;overflow-y:auto;border-top:4px solid var(--accent);padding-bottom:calc(24px + env(safe-area-inset-bottom));}
 .modal-title{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--text);margin-bottom:20px;letter-spacing:1px;}
-.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:12px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;position:sticky;bottom:0;background:var(--paper);padding-top:14px;border-top:1px solid var(--line);}
+.modal-footer .btn-accent{padding:13px 22px;min-height:46px;}
+.modal-footer .btn-ghost{padding:13px 18px;min-height:46px;}
 
 /* PROGRESS BAR */
 .progress-wrap{height:5px;background:var(--line);border-radius:3px;margin-bottom:4px;overflow:hidden;}
@@ -313,9 +316,9 @@ textarea.inp{height:100px;}
   <div class="modal-box">
     <div class="modal-title">Registrar Gasto</div>
     <div class="inp-wrap"><label class="inp-label">Categoría</label><div class="pill-row" id="compraCatPills"></div></div>
-    <div class="inp-wrap"><label class="inp-label">Concepto</label><input class="inp" id="compraWhat" placeholder="Ej: Productos de limpieza"/></div>
+    <div class="inp-wrap"><label class="inp-label">Concepto (opcional)</label><input class="inp" id="compraWhat" placeholder="Ej: Productos de limpieza"/></div>
     <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" id="compraAmt" placeholder="0.00"/></div>
-    <div class="inp-wrap"><label class="inp-label">Quién pagó</label><div class="pill-row" id="compraWhoPills"></div></div>
+    <div class="inp-wrap"><label class="inp-label">Quién pagó</label><div class="pill-row pill-scroll" id="compraWhoPills"></div></div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modalCompra')">Cancelar</button>
       <button class="btn-accent" onclick="addCompra()">Añadir</button>
@@ -414,7 +417,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 6; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 8; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -1024,8 +1027,8 @@ function renderCaja(){
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${c.amount.toFixed(2)} €</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${c.reintegrated ? tag('Reintegrado por '+(c.reintegratedBy||'Edu'),'#3d8000')
-          : `${tag('Pendiente de reintegro','#c07800')} ${ME===TREASURER?`<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="doReintegrate(${c.id})">Reintegrar a ${c.who}</button>`:''}`}
+        ${c.reintegrated ? tag('Saldado · reintegrado por '+(c.reintegratedBy||'Edu'),'#3d8000')
+          : `${tag('Pendiente de reintegro','#c07800')} ${ME===TREASURER?`<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="doReintegrate(${c.id})">${c.who===TREASURER?'Marcar saldado':'Reintegrar a '+c.who}</button>`:''}`}
         <button class="shop-del" style="font-size:18px;color:var(--faint);margin-left:auto" onclick="deleteCompra(${c.id})" title="Eliminar">×</button>
       </div>
     </div>`;
@@ -1039,9 +1042,12 @@ function deleteCompra(id){
   fbDelete('compras', id);
 }
 function addCompra(){
-  const what = document.getElementById('compraWhat').value.trim();
-  const amt = parseFloat(document.getElementById('compraAmt').value);
-  if(!what||!amt) return;
+  let what = document.getElementById('compraWhat').value.trim();
+  const amtRaw = document.getElementById('compraAmt').value.trim().replace(',', '.');
+  const amt = parseFloat(amtRaw);
+  if(!amt || isNaN(amt) || amt<=0){ alert("Pon un importe válido (ej: 20 o 12.50)."); return; }
+  if(!compraWho){ alert("Selecciona quién pagó."); return; }
+  if(!what) what = compraCat; // si no hay concepto, usa la categoría (ej: "Luz")
   const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
   fbSet('compras', {id:nextId,cat:compraCat,who:compraWho,what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:false,reintegratedBy:null});
   closeModal('modalCompra');
