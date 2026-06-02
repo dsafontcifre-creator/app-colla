@@ -311,8 +311,9 @@ textarea.inp{height:100px;}
 
 <div class="modal-overlay" id="modalCompra" onclick="closeModalBg(event,'modalCompra')">
   <div class="modal-box">
-    <div class="modal-title">Registrar Compra</div>
-    <div class="inp-wrap"><label class="inp-label">Qué se compró</label><input class="inp" id="compraWhat" placeholder="Ej: Papel higiénico"/></div>
+    <div class="modal-title">Registrar Gasto</div>
+    <div class="inp-wrap"><label class="inp-label">Categoría</label><div class="pill-row" id="compraCatPills"></div></div>
+    <div class="inp-wrap"><label class="inp-label">Concepto</label><input class="inp" id="compraWhat" placeholder="Ej: Productos de limpieza"/></div>
     <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" id="compraAmt" placeholder="0.00"/></div>
     <div class="inp-wrap"><label class="inp-label">Quién pagó</label><div class="pill-row" id="compraWhoPills"></div></div>
     <div class="modal-footer">
@@ -413,7 +414,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 5; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 6; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -980,53 +981,82 @@ function savePoll(){
 }
 
 // ═══════════════════════════════ CAJA ════════════════════════════════
+const EXP_CATS = ["Compra","Luz","Agua","Alquiler","Fianza","Evento","Otro"];
+const CAT_COLORS = {Compra:"#3d8000",Luz:"#c07800",Agua:"#5a6ea8",Alquiler:"#9b59b6",Fianza:"#16a085",Evento:"#c0392b",Otro:"#6e6860"};
+let compraCat = "Compra";
+
 function renderCaja(){
-  const total = compras.reduce((s,c)=>s+c.amount,0);
+  // Ingresos: todas las cuotas confirmadas
+  const ingresosCuotas = quotas.reduce((s,q)=> s + q.payments.filter(p=>p.confirmedByTreasurer).length * q.amount, 0);
+  // Gastos: todas las compras/gastos registrados
+  const gastosTotal = compras.reduce((s,c)=>s+c.amount,0);
+  const saldo = ingresosCuotas - gastosTotal;
   const pend = compras.filter(c=>!c.reintegrated);
-  let html = `<div class="card card-dark" style="margin-bottom:20px">
-    <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Compras este mes</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:44px;color:var(--accent);letter-spacing:2px;line-height:1">${total.toFixed(2)} €</div>
-    <div style="font-size:11px;color:var(--faint);margin-top:6px">${pend.length} pendiente${pend.length!==1?'s':''} de reintegro</div>
+  const pendTotal = pend.reduce((s,c)=>s+c.amount,0);
+
+  let html = `<div class="card card-dark" style="margin-bottom:16px">
+    <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Saldo de la colla</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:${saldo>=0?'var(--accent)':'#ff6b5e'};letter-spacing:2px;line-height:1">${saldo.toFixed(2)} €</div>
+    <div style="display:flex;gap:16px;margin-top:12px">
+      <div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Ingresos (cuotas)</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">+ ${ingresosCuotas.toFixed(2)} €</div></div>
+      <div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Gastos</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">− ${gastosTotal.toFixed(2)} €</div></div>
+    </div>
   </div>`;
-  if(pend.length>0) html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:10px">${pend.length} compra${pend.length>1?'s':''} pendiente${pend.length>1?'s':''} de reintegro</div>`;
-  html += `<span class="lbl">Compras puntuales</span>`;
+
+  if(pend.length>0) html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:14px">${pend.length} gasto${pend.length>1?'s':''} pendiente${pend.length>1?'s':''} de reintegro · ${pendTotal.toFixed(2)} €</div>`;
+
+  html += `<button class="btn-dashed" onclick="initCompraPills();openModal('modalCompra')">+ Registrar gasto</button>`;
+
+  html += `<span class="lbl" style="margin-top:6px">Gastos y compras</span>`;
+  if(compras.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin gastos registrados todavía.</div>`;
   [...compras].sort((a,b)=>b.id-a.id).forEach(c=>{
+    const cat = c.cat||"Otro";
+    const col = CAT_COLORS[cat]||"#6e6860";
     html += `<div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div style="flex:1;padding-right:10px">
-          <div style="font-size:14px;color:var(--text);margin-bottom:3px">${c.what}</div>
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
+            ${tag(cat,col)}
+            <span style="font-size:14px;color:var(--text)">${c.what}</span>
+          </div>
           <div style="font-size:12px;color:var(--muted)">Pagó ${c.who} · ${c.date}</div>
         </div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${c.amount.toFixed(2)} €</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${c.reintegrated ? tag('Reintegrado','#3d8000')
-          : `${tag('Pendiente reintegro','#c07800')} <button class="btn-ghost" style="font-size:9px;padding:4px 10px" onclick="doReintegrate(${c.id})">Marcar reintegrado</button>`}
-        ${c.confirmedBy ? tag('Confirmado · '+c.confirmedBy,'#3d8000')
-          : ME===TREASURER ? `<button class="btn-ghost" style="font-size:9px;padding:4px 10px" onclick="doConfirmComp(${c.id})">✓ Confirmar</button>` : ''}
+        ${c.reintegrated ? tag('Reintegrado por '+(c.reintegratedBy||'Edu'),'#3d8000')
+          : `${tag('Pendiente de reintegro','#c07800')} ${ME===TREASURER?`<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="doReintegrate(${c.id})">Reintegrar a ${c.who}</button>`:''}`}
+        <button class="shop-del" style="font-size:18px;color:var(--faint);margin-left:auto" onclick="deleteCompra(${c.id})" title="Eliminar">×</button>
       </div>
     </div>`;
   });
-  html += `<button class="btn-dashed" onclick="initCompraPills();openModal('modalCompra')">+ Registrar compra</button>`;
   document.getElementById('body-caja').innerHTML = html;
 }
-function doReintegrate(id){ const c=compras.find(x=>x.id===id); if(c){const n=clone(c);n.reintegrated=true;fbSet('compras',n);} }
-function doConfirmComp(id){ const c=compras.find(x=>x.id===id); if(c){const n=clone(c);n.confirmedBy=TREASURER;fbSet('compras',n);} }
+function doReintegrate(id){ const c=compras.find(x=>x.id===id); if(c){const n=clone(c);n.reintegrated=true;n.reintegratedBy=ME;fbSet('compras',n);} }
+function deleteCompra(id){
+  const c=compras.find(x=>x.id===id); if(!c) return;
+  if(!confirm(`¿Eliminar el gasto "${c.what}" (${c.amount.toFixed(2)} €)?`)) return;
+  fbDelete('compras', id);
+}
 function addCompra(){
   const what = document.getElementById('compraWhat').value.trim();
   const amt = parseFloat(document.getElementById('compraAmt').value);
   if(!what||!amt) return;
   const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
-  fbSet('compras', {id:nextId,who:compraWho,what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:false,confirmedBy:null});
+  fbSet('compras', {id:nextId,cat:compraCat,who:compraWho,what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:false,reintegratedBy:null});
   closeModal('modalCompra');
   document.getElementById('compraWhat').value=''; document.getElementById('compraAmt').value='';
 }
 function initCompraPills(){
-  compraWho = ME;
+  compraWho = ME; compraCat = "Compra";
+  document.getElementById('compraCatPills').innerHTML = EXP_CATS.map(cat=>
+    `<span class="pill${cat==='Compra'?' on':''}" onclick="setCompraCat('${cat}',this)">${cat}</span>`
+  ).join('');
   document.getElementById('compraWhoPills').innerHTML = MEMBERS.map(m=>
     `<span class="pill${m.name===compraWho?' on':''}" onclick="setCompraWho('${m.name}',this)">${av(m.name,'av '+(m.name===compraWho?'av-on':'av-off'))} ${m.name}</span>`
   ).join('');
 }
+function setCompraCat(cat,el){ compraCat=cat; document.querySelectorAll('#compraCatPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
 function setCompraWho(name,el){ compraWho=name; document.querySelectorAll('#compraWhoPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
 function initEvExpPills(){
   evExpWho = ME;
