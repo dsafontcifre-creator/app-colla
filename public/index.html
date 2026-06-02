@@ -318,7 +318,13 @@ textarea.inp{height:100px;}
     <div class="inp-wrap"><label class="inp-label">Categoría</label><div class="pill-row" id="compraCatPills"></div></div>
     <div class="inp-wrap"><label class="inp-label">Concepto (opcional)</label><input class="inp" id="compraWhat" placeholder="Ej: Productos de limpieza"/></div>
     <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" id="compraAmt" placeholder="0.00"/></div>
-    <div class="inp-wrap"><label class="inp-label">Quién pagó</label><div class="pill-row pill-scroll" id="compraWhoPills"></div></div>
+    <div class="inp-wrap"><label class="inp-label">¿Quién lo pagó?</label>
+      <div class="pill-row">
+        <span class="pill on" id="payModeMember" onclick="setPayMode('member')">Lo adelantó un miembro</span>
+        <span class="pill" id="payModeColla" onclick="setPayMode('colla')">Pagado por la colla</span>
+      </div>
+    </div>
+    <div class="inp-wrap" id="compraWhoWrap"><label class="inp-label">Miembro que lo adelantó</label><div class="pill-row pill-scroll" id="compraWhoPills"></div></div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modalCompra')">Cancelar</button>
       <button class="btn-accent" onclick="addCompra()">Añadir</button>
@@ -417,7 +423,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 8; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 9; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -1022,13 +1028,14 @@ function renderCaja(){
             ${tag(cat,col)}
             <span style="font-size:14px;color:var(--text)">${c.what}</span>
           </div>
-          <div style="font-size:12px;color:var(--muted)">Pagó ${c.who} · ${c.date}</div>
+          <div style="font-size:12px;color:var(--muted)">${c.direct?'Pagado directamente por la colla':'Pagó '+c.who} · ${c.date}</div>
         </div>
         <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${c.amount.toFixed(2)} €</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${c.reintegrated ? tag('Saldado · reintegrado por '+(c.reintegratedBy||'Edu'),'#3d8000')
-          : `${tag('Pendiente de reintegro','#c07800')} ${ME===TREASURER?`<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="doReintegrate(${c.id})">${c.who===TREASURER?'Marcar saldado':'Reintegrar a '+c.who}</button>`:''}`}
+        ${c.direct ? tag('Gasto de la colla','#5a6ea8')
+          : (c.reintegrated ? tag('Saldado · reintegrado por '+(c.reintegratedBy||'Edu'),'#3d8000')
+          : `${tag('Pendiente de reintegro','#c07800')} ${ME===TREASURER?`<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="doReintegrate(${c.id})">${c.who===TREASURER?'Marcar saldado':'Reintegrar a '+c.who}</button>`:''}`)}
         <button class="shop-del" style="font-size:18px;color:var(--faint);margin-left:auto" onclick="deleteCompra(${c.id})" title="Eliminar">×</button>
       </div>
     </div>`;
@@ -1041,20 +1048,33 @@ function deleteCompra(id){
   if(!confirm(`¿Eliminar el gasto "${c.what}" (${c.amount.toFixed(2)} €)?`)) return;
   fbDelete('compras', id);
 }
+let compraPayMode = "member"; // "member" = lo adelanta alguien | "colla" = paga la colla directa
+function setPayMode(mode){
+  compraPayMode = mode;
+  document.getElementById('payModeMember').className = 'pill'+(mode==='member'?' on':'');
+  document.getElementById('payModeColla').className = 'pill'+(mode==='colla'?' on':'');
+  document.getElementById('compraWhoWrap').style.display = mode==='member'?'block':'none';
+}
 function addCompra(){
   let what = document.getElementById('compraWhat').value.trim();
   const amtRaw = document.getElementById('compraAmt').value.trim().replace(',', '.');
   const amt = parseFloat(amtRaw);
   if(!amt || isNaN(amt) || amt<=0){ alert("Pon un importe válido (ej: 20 o 12.50)."); return; }
-  if(!compraWho){ alert("Selecciona quién pagó."); return; }
-  if(!what) what = compraCat; // si no hay concepto, usa la categoría (ej: "Luz")
+  if(compraPayMode==='member' && !compraWho){ alert("Selecciona quién lo adelantó."); return; }
+  if(!what) what = compraCat;
   const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
-  fbSet('compras', {id:nextId,cat:compraCat,who:compraWho,what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:false,reintegratedBy:null});
+  if(compraPayMode==='colla'){
+    // Pagado por la colla: no hay reintegro, nace saldado
+    fbSet('compras', {id:nextId,cat:compraCat,who:"La colla",what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:true,reintegratedBy:null,direct:true});
+  } else {
+    fbSet('compras', {id:nextId,cat:compraCat,who:compraWho,what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:false,reintegratedBy:null,direct:false});
+  }
   closeModal('modalCompra');
   document.getElementById('compraWhat').value=''; document.getElementById('compraAmt').value='';
 }
 function initCompraPills(){
-  compraWho = ME; compraCat = "Compra";
+  compraWho = ME; compraCat = "Compra"; compraPayMode = "member";
+  setPayMode('member');
   document.getElementById('compraCatPills').innerHTML = EXP_CATS.map(cat=>
     `<span class="pill${cat==='Compra'?' on':''}" onclick="setCompraCat('${cat}',this)">${cat}</span>`
   ).join('');
