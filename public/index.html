@@ -413,8 +413,8 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
+const APP_VERSION = 5; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
-const TREASURER_PIN = "1234"; // Edu puede cambiarlo: ver nota al final del chat
 let ME = null; // se define en el login
 
 const GROUPS = [
@@ -450,7 +450,7 @@ let shopping = [];
 let activeEvId = null;
 let pollMulti = false;
 let pollOpts = ["","",""];
-let editTurnIdx = null;
+let editTurnGroup = null;
 let compraWho = null;
 let evExpWho = null;
 let evType = "comida";
@@ -460,7 +460,7 @@ let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:fa
 // ───────────────────────── TURNOS POR DEFECTO (solo memoria) ───────────
 // La app NUNCA escribe datos automáticamente en Firebase. Si la colección
 // turns está vacía, se muestran los 11 grupos por defecto sin guardarlos.
-const DEFAULT_TURNS = GROUPS.map((g,i)=>({id:i+1,week:"Por definir (sept.)",group:g.id,note:"",done:false}));
+const DEFAULT_TURNS = GROUPS.map((g)=>({id:g.id,group:g.id,date:"",note:"",done:false}));
 
 // ───────────────────────── FIRESTORE SYNC ──────────────────────────────
 let DB = null;
@@ -491,7 +491,13 @@ async function fbDelete(coll, id){
 function setLocal(coll, arr){
   if(coll==="events") events = arr;
   if(coll==="compras") compras = arr;
-  if(coll==="turns") turns = arr.length ? arr : DEFAULT_TURNS;
+  if(coll==="turns"){
+    // Siempre mostramos los 11 grupos; los que estén en Firebase sobrescriben al defecto
+    turns = DEFAULT_TURNS.map(def=>{
+      const saved = arr.find(t=>t.group===def.group);
+      return saved ? saved : def;
+    });
+  }
   if(coll==="quotas") quotas = arr;
   if(coll==="shopping") shopping = arr;
 }
@@ -529,9 +535,28 @@ function onData(coll, empty){
   }
 }
 
+// ───────────────────────── CONTROL DE VERSIÓN ──────────────────────────
+// Un doc en Firestore (meta/app) guarda la versión mínima requerida.
+// Si esta app es más vieja, se recarga sola → mata las versiones zombi.
+let versionChecked = false;
+function watchVersion(){
+  DB.onSnapshot(DB.doc(DB.db,"meta","app"), snap=>{
+    const data = snap.exists() ? snap.data() : null;
+    const required = data && typeof data.minVersion==="number" ? data.minVersion : 0;
+    if(required > APP_VERSION){
+      // Esta app está obsoleta → recarga forzando red (sin caché)
+      try{ localStorage.setItem('colla_reload', Date.now()); }catch(e){}
+      location.reload(true);
+      return;
+    }
+    versionChecked = true;
+  }, err=>{ versionChecked = true; });
+}
+
 // ───────────────────────── ARRANQUE ────────────────────────────────────
 window.__startApp = function(){
   DB = window.DB;
+  watchVersion();
   subscribeAll();
   initEvTypePills();
   // failsafe: si en 6s no ha cargado, mostrar login igual
@@ -1046,84 +1071,146 @@ function addShopItem(){
 }
 
 // ═══════════════════════════════ TURNOS ══════════════════════════════
+// Da formato a un fin de semana a partir del sábado (YYYY-MM-DD)
+function fmtFinde(satStr){
+  if(!satStr) return null;
+  const sat = new Date(satStr+"T12:00:00");
+  const sun = new Date(sat); sun.setDate(sat.getDate()+1);
+  const mesS = sat.toLocaleDateString("es-ES",{month:"short"});
+  const mesD = sun.toLocaleDateString("es-ES",{month:"short"});
+  if(mesS===mesD) return `Finde ${sat.getDate()}–${sun.getDate()} ${mesS}`;
+  return `Finde ${sat.getDate()} ${mesS} – ${sun.getDate()} ${mesD}`;
+}
+
 function renderTurnos(){
-  let html = `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:10px 12px;margin-bottom:14px">Los turnos arrancan después de verano. Orden de rotación semanal por grupo.</div>`;
-  html += `<span class="lbl">Limpieza y compra · por grupo</span>`;
-  turns.forEach((t,i)=>{
+  // Copia ordenada: primero los que tienen fecha (por fecha asc), luego sin fecha
+  const list = turns.map((t,idx)=>({...t,_idx:idx}));
+  const dated = list.filter(t=>t.date).sort((a,b)=>a.date<b.date?-1:1);
+  const undated = list.filter(t=>!t.date);
+  const ordered = [...dated, ...undated];
+  // El "próximo" = primer turno con fecha >= hoy y no completado
+  const today = new Date().toISOString().split("T")[0];
+  const nextTurn = dated.find(t=>t.date>=today && !t.done);
+
+  let html = `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:10px 12px;margin-bottom:14px">Cada pareja se encarga de la limpieza y compra su fin de semana. Agenda la fecha que os toque; si una semana no se hace, se reagenda.</div>`;
+  html += `<span class="lbl">Turnos por pareja</span>`;
+  ordered.forEach(t=>{
     const group = gg(t.group);
-    const now = i===0 && t.done===false && false; // ninguno "esta semana" hasta sept.
-    const avs = (group?.members||[]).map((n,ni)=>`<span style="margin-left:${ni>0?'-8px':'0'};z-index:${ni};position:relative">${av(n,'av av-md '+(now?'av-on':'av-off'))}</span>`).join('');
-    html += `<div class="card" style="border-left:4px solid ${now?'var(--accent)':'var(--border)'}">
-      <div style="display:flex;justify-content:space-between;align-items:center;${t.note?'margin-bottom:12px':''}">
-        <div style="display:flex;align-items:center;gap:10px">
+    const isNext = nextTurn && t.id===nextTurn.id && t.group===nextTurn.group;
+    const findeTxt = fmtFinde(t.date);
+    const avs = (group?.members||[]).map((n,ni)=>`<span style="margin-left:${ni>0?'-8px':'0'};z-index:${ni};position:relative">${av(n,'av av-md '+(isNext?'av-on':'av-off'))}</span>`).join('');
+    html += `<div class="card" style="border-left:4px solid ${isNext?'var(--accent)':'var(--border)'}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px;min-width:0">
           <div class="turn-avs">${avs}</div>
-          <div>
-            <div style="font-size:14px;font-weight:${now?600:400};color:${now?'var(--text)':'var(--muted)'}">${(group?.members||[]).join(" & ")}</div>
-            <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">
+          <div style="min-width:0">
+            <div style="font-size:14px;font-weight:${isNext?600:400};color:${isNext?'var(--text)':'var(--muted)'}">${(group?.members||[]).join(" & ")}</div>
+            <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
+              ${isNext?tag('Esta semana','#3d8000'):''}
               ${t.done?tag('Completado','#3d8000'):''}
+              ${findeTxt?`<span style="font-size:12px;color:${isNext?'var(--accentD)':'var(--muted)'};font-weight:500">${findeTxt}</span>`:`<span style="font-size:12px;color:var(--faint);font-style:italic">Sin fecha</span>`}
             </div>
           </div>
         </div>
-        <div style="text-align:right">
-          <div style="font-size:11px;color:var(--faint);margin-bottom:6px">${t.week}</div>
-          <button class="btn-ghost" style="font-size:9px;padding:4px 10px" onclick="openTurnNote(${i})">+ Nota</button>
-        </div>
       </div>
-      ${t.note?`<div style="font-size:13px;color:var(--muted);background:var(--bg);border-radius:5px;padding:10px 12px;line-height:1.5;font-style:italic">${t.note}</div>`:''}
+      <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
+        <button class="btn-ghost" style="font-size:9px;padding:6px 12px" onclick="openTurnDate(${t.group})">${t.date?'Cambiar fecha':'Agendar finde'}</button>
+        <button class="btn-ghost" style="font-size:9px;padding:6px 12px" onclick="openTurnNote(${t.group})">${t.note?'Editar nota':'+ Nota'}</button>
+        ${t.done?`<button class="btn-ghost" style="font-size:9px;padding:6px 12px" onclick="toggleTurnDone(${t.group})">Reabrir</button>`:`<button class="btn-ghost" style="font-size:9px;padding:6px 12px;border-color:var(--accentD);color:var(--accentD)" onclick="toggleTurnDone(${t.group})">Marcar hecho</button>`}
+      </div>
+      ${t.note?`<div style="font-size:13px;color:var(--muted);background:var(--bg);border-radius:5px;padding:10px 12px;line-height:1.5;font-style:italic;margin-top:10px">${t.note}</div>`:''}
     </div>`;
   });
   document.getElementById('body-turnos').innerHTML = html;
 }
-function openTurnNote(idx){
-  editTurnIdx = idx;
-  document.getElementById('turnNoteText').value = turns[idx].note||'';
+
+// Asegura que el turno de un grupo existe como objeto editable (desde DEFAULT o Firebase)
+function getTurnByGroup(groupId){
+  let t = turns.find(x=>x.group===groupId);
+  if(!t){
+    const g = GROUPS.find(x=>x.id===groupId);
+    t = {id:groupId, group:groupId, date:"", note:"", done:false};
+  }
+  return clone(t);
+}
+
+function openTurnDate(groupId){
+  const t = getTurnByGroup(groupId);
+  const val = prompt("Agenda el SÁBADO del fin de semana (formato: AAAA-MM-DD)\nEj: 2026-09-13\n\nDeja vacío para quitar la fecha:", t.date||"");
+  if(val===null) return;
+  const clean = val.trim();
+  if(clean && !/^\d{4}-\d{2}-\d{2}$/.test(clean)){ alert("Formato no válido. Usa AAAA-MM-DD, por ejemplo 2026-09-13"); return; }
+  t.date = clean;
+  fbSet('turns', t);
+}
+function openTurnNote(groupId){
+  editTurnGroup = groupId;
+  const t = getTurnByGroup(groupId);
+  document.getElementById('turnNoteText').value = t.note||'';
   openModal('modalTurnNote');
 }
 function saveTurnNote(){
-  if(editTurnIdx===null) return;
-  const t = turns[editTurnIdx]; if(!t){closeModal('modalTurnNote');return;}
-  const n = clone(t);
-  n.note = document.getElementById('turnNoteText').value;
-  n.done = true;
-  fbSet('turns', n);
-  closeModal('modalTurnNote'); editTurnIdx = null;
+  if(editTurnGroup===null){ closeModal('modalTurnNote'); return; }
+  const t = getTurnByGroup(editTurnGroup);
+  t.note = document.getElementById('turnNoteText').value;
+  fbSet('turns', t);
+  closeModal('modalTurnNote'); editTurnGroup = null;
+}
+function toggleTurnDone(groupId){
+  const t = getTurnByGroup(groupId);
+  t.done = !t.done;
+  fbSet('turns', t);
 }
 
 // ═══════════════════════════════ CUOTAS ══════════════════════════════
 function renderCuotas(){
   let html = '';
-  if(ME===TREASURER) html += `<div style="font-size:12px;color:var(--accentD);background:rgba(127,255,0,.13);border:1px solid rgba(127,255,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:16px">Modo tesorero activo · Puedes crear cuotas y confirmar pagos</div>`;
+  if(ME===TREASURER) html += `<div style="font-size:12px;color:var(--accentD);background:rgba(127,255,0,.13);border:1px solid rgba(127,255,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:16px">Eres el tesorero · solo tú puedes confirmar los pagos</div>`;
+  else html += `<div style="font-size:12px;color:var(--muted);background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:16px">Marca a quien haya pagado. Edu confirma cuando reciba el dinero.</div>`;
   if(quotas.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:14px">${ME===TREASURER?'No hay cuotas todavía. Crea la primera con el botón de abajo.':'No hay cuotas activas. El tesorero las creará cuando toque.'}</div>`;
   quotas.forEach(q=>{
     const confirmed = q.payments.filter(p=>p.confirmedByTreasurer).length;
-    const declared = q.payments.filter(p=>p.selfDeclared).length;
+    const paid = q.payments.filter(p=>p.selfDeclared && !p.confirmedByTreasurer).length;
+    const pending = MEMBERS.length - confirmed - paid;
     const pct = Math.round((confirmed/MEMBERS.length)*100);
+    const recaudado = (confirmed * q.amount);
+    const total = (MEMBERS.length * q.amount);
     html += `<div style="margin-bottom:24px">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:8px">
-        <div><span class="lbl">${q.month}</span><div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text)">${q.concept} · ${q.amount} €</div></div>
-        <div style="display:flex;gap:8px;align-items:center">
-          ${tag(confirmed+'/'+MEMBERS.length,pct===100?'#3d8000':'#c07800')}
-          ${ME===TREASURER?`<button class="shop-del" style="font-size:18px;color:var(--neg)" onclick="deleteQuota(${q.id})" title="Eliminar cuota">×</button>`:''}
-        </div>
+        <div><span class="lbl">${q.month}</span><div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text)">${q.concept} · ${q.amount} €</div></div>
+        ${ME===TREASURER?`<button class="shop-del" style="font-size:18px;color:var(--neg)" onclick="deleteQuota(${q.id})" title="Eliminar cuota">×</button>`:''}
       </div>
       <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
-      <div style="font-size:10px;color:var(--faint);margin-bottom:12px;letter-spacing:1px">${declared} declarados · ${confirmed} confirmados</div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-bottom:12px;letter-spacing:.5px">
+        <span><b style="color:var(--accentD)">${recaudado} €</b> de ${total} € recaudados</span>
+        <span>${confirmed} confirmados · ${paid} por confirmar · ${pending} pendientes</span>
+      </div>
       <div class="card" style="padding:0 16px">
         ${q.payments.map((p)=>{
-          const isMe = p.name===ME;
           const isTr = ME===TREASURER;
-          let actions = '';
-          if(p.confirmedByTreasurer) actions = tag('Confirmado','#3d8000');
-          else if(p.selfDeclared) actions = `${tag('Declarado','#c07800')} ${isTr?`<button class="btn-ghost" style="font-size:9px;padding:3px 8px" onclick="doConfirmPay(${q.id},'${p.name}')">✓</button>`:''}`;
-          else if(isMe) actions = `<button class="btn-accent" style="font-size:9px;padding:5px 12px" onclick="doDeclarePaid(${q.id},'${p.name}')">He pagado</button>`;
-          else actions = tag('Pendiente','#c0392b');
+          let badge='', action='';
+          if(p.confirmedByTreasurer){
+            badge = tag('Confirmado por Edu','#3d8000');
+            // Edu puede revertir si se equivocó
+            if(isTr) action = `<button class="btn-ghost" style="font-size:9px;padding:4px 9px" onclick="cuotaConfirm(${q.id},'${p.name}',false)">Deshacer</button>`;
+          } else if(p.selfDeclared){
+            badge = tag('Pagado','#c07800');
+            if(isTr) action = `<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="cuotaConfirm(${q.id},'${p.name}',true)">✓ Confirmar</button>`;
+            else action = `<button class="btn-ghost" style="font-size:9px;padding:4px 9px" onclick="cuotaPaid(${q.id},'${p.name}',false)">Quitar</button>`;
+          } else {
+            badge = tag('Pendiente','#c0392b');
+            action = `<button class="btn-ghost" style="font-size:9px;padding:5px 11px;border-color:var(--accentD);color:var(--accentD)" onclick="cuotaPaid(${q.id},'${p.name}',true)">Marcar pagado</button>`;
+          }
+          const st = p.confirmedByTreasurer?'av-on':(p.selfDeclared?'av-on':'av-off');
           return `<div class="quota-row">
-            <div style="display:flex;align-items:center;gap:10px">
-              ${av(p.name,'av av-md '+(p.confirmedByTreasurer?'av-on':'av-off'))}
-              <div><div style="font-size:14px;color:${p.confirmedByTreasurer?'var(--text)':'var(--muted)'}">${p.name}</div>
-              ${p.selfDeclared&&!p.confirmedByTreasurer?`<div style="font-size:10px;color:var(--warn);margin-top:1px">Pendiente de confirmar</div>`:''}</div>
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+              ${av(p.name,'av av-md '+st)}
+              <div style="min-width:0">
+                <div style="font-size:14px;color:${p.confirmedByTreasurer?'var(--text)':'var(--muted)'}">${p.name}${p.name===ME?' <span style="font-size:9px;color:var(--faint)">(tú)</span>':''}</div>
+                <div style="margin-top:2px">${badge}</div>
+              </div>
             </div>
-            <div style="display:flex;gap:6px;align-items:center">${actions}</div>
+            <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${action}</div>
           </div>`;
         }).join('')}
       </div>
@@ -1135,16 +1222,14 @@ function renderCuotas(){
   document.getElementById('body-cuotas').innerHTML = html;
 }
 function addQuota(){
-  const concept = prompt("Concepto de la cuota:", "Cuota mensual");
-  if(concept===null) return;
-  const amountStr = prompt("Importe en € por miembro:", "20");
+  const month = prompt("¿De qué mes es la cuota?", new Date().toLocaleDateString("es-ES",{month:"long",year:"numeric"}));
+  if(month===null) return;
+  const amountStr = prompt("Importe en € por miembro:", "30");
   if(amountStr===null) return;
   const amount = parseFloat(amountStr); if(isNaN(amount)) return;
-  const month = prompt("Mes / periodo:", new Date().toLocaleDateString("es-ES",{month:"long",year:"numeric"}));
-  if(month===null) return;
   const nextId = (quotas.reduce((m,q)=>Math.max(m,q.id),0))+1;
   fbSet('quotas', {
-    id: nextId, concept: concept.trim()||"Cuota", amount, month: month.trim(),
+    id: nextId, concept: "Cuota mensual", amount, month: month.trim()||"Cuota",
     payments: MEMBERS.map(m=>({name:m.name,selfDeclared:false,confirmedByTreasurer:false})),
   });
 }
@@ -1153,16 +1238,19 @@ function deleteQuota(qid){
   if(!confirm(`¿Eliminar la cuota "${q.concept} · ${q.month}"?\n\nNo se puede deshacer.`)) return;
   fbDelete('quotas', qid);
 }
-function doDeclarePaid(qid,name){
+// Cualquiera marca/desmarca "pagado". Si lo desmarca, también quita confirmación.
+function cuotaPaid(qid,name,val){
   const q=quotas.find(x=>x.id===qid); if(!q) return;
   const n=clone(q); const p=n.payments.find(x=>x.name===name);
-  if(p){ p.selfDeclared=!p.selfDeclared; p.confirmedByTreasurer=false; }
+  if(p){ p.selfDeclared=val; if(!val) p.confirmedByTreasurer=false; }
   fbSet('quotas', n);
 }
-function doConfirmPay(qid,name){
+// Solo Edu confirma/deshace.
+function cuotaConfirm(qid,name,val){
+  if(ME!==TREASURER) return;
   const q=quotas.find(x=>x.id===qid); if(!q) return;
   const n=clone(q); const p=n.payments.find(x=>x.name===name);
-  if(p) p.confirmedByTreasurer=!p.confirmedByTreasurer;
+  if(p){ p.confirmedByTreasurer=val; if(val) p.selfDeclared=true; }
   fbSet('quotas', n);
 }
 
@@ -1185,7 +1273,38 @@ function renderColla(){
     <div><div style="font-size:14px;color:var(--text);margin-bottom:3px">Estatutos de la colla</div><div style="font-size:11px;color:var(--faint)">Documento oficial · PDF</div></div>
     <button class="btn-ghost" onclick="alert('Añade aquí la URL del PDF de los estatutos cuando lo tengáis.')">Próximamente</button>
   </div>`;
+  if(ME===TREASURER){
+    html += `<div class="divider"></div>
+    <span class="lbl" style="color:var(--neg)">Administración · solo tesorero</span>
+    <div class="warn-card" style="background:#fbeae8;border-color:rgba(192,57,43,.3)">
+      <div style="font-size:13px;color:var(--text);margin-bottom:4px;font-weight:500">Vaciar todos los datos</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Borra eventos, caja, lista de la compra, turnos y cuotas para toda la colla. Úsalo solo para empezar de cero. No se puede deshacer.</div>
+      <button class="btn-accent" style="background:var(--neg);color:#fff;width:100%" onclick="resetAllData()">Vaciar y reiniciar la app</button>
+    </div>`;
+  }
   document.getElementById('body-colla').innerHTML = html;
+}
+
+// Reset total: borra todas las colecciones y sube la versión (obliga a todos
+// los móviles a recargar la versión nueva → mata las apps zombi con seed viejo).
+async function resetAllData(){
+  if(!confirm("¿VACIAR TODOS LOS DATOS de la colla?\n\nSe borra todo (eventos, caja, compra, turnos, cuotas) para los 23 miembros y todas las apps se actualizarán.\n\nEsto NO se puede deshacer.")) return;
+  if(!confirm("Última confirmación.\n\n¿Seguro que quieres vaciar la app por completo?")) return;
+  showSync("Vaciando…");
+  try{
+    // 1) Borra todos los documentos de todas las colecciones
+    for(const coll of COLLECTIONS){
+      const snap = await DB.getDocs(DB.collection(DB.db, coll));
+      for(const d of snap.docs){ await DB.deleteDoc(DB.doc(DB.db, coll, d.id)); }
+    }
+    // 2) Sube la versión mínima → toda app con versión < APP_VERSION+1 se recargará
+    await DB.setDoc(DB.doc(DB.db,"meta","app"), { minVersion: APP_VERSION });
+    showSync("Hecho · todo limpio");
+    setTimeout(()=>{ alert("Datos vaciados. La app se recargará limpia en todos los móviles."); location.reload(true); }, 600);
+  }catch(e){
+    console.error(e);
+    alert("Hubo un error al vaciar. Revisa la conexión e inténtalo de nuevo.");
+  }
 }
 
 // ═══════════════════════════════ MODALS ══════════════════════════════
