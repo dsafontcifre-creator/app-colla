@@ -436,7 +436,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 10; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 11; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -1272,13 +1272,20 @@ function toggleQuota(qid){
 }
 function renderCuotas(){
   // Más reciente primero (mayor id = creada más tarde)
-  const ordered = [...quotas].sort((a,b)=>b.id-a.id);
+  // Más reciente primero (mayor id = creada más tarde). Las cuotas "Inicial"
+  // (saldo inicial de caja metido como cuota) van siempre al final.
+  const isInicial = q => (q.month||'').toLowerCase().includes('inicial');
+  const ordered = [...quotas].sort((a,b)=>{
+    const aI = isInicial(a), bI = isInicial(b);
+    if(aI!==bI) return aI ? 1 : -1;
+    return b.id-a.id;
+  });
   // Por defecto solo la más reciente aparece abierta
   if(expandedQuotas===null){
     expandedQuotas = new Set();
     if(ordered.length>0) expandedQuotas.add(ordered[0].id);
   }
-  const mostRecentId = ordered.length>0 ? ordered[0].id : null;
+  const mostRecentId = ordered.find(q=>!isInicial(q))?.id ?? null;
 
   let html = '';
   if(ME===TREASURER) html += `<div style="font-size:12px;color:var(--accentD);background:rgba(127,255,0,.13);border:1px solid rgba(127,255,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:16px">Eres el tesorero · solo tú puedes confirmar los pagos</div>`;
@@ -1296,8 +1303,8 @@ function renderCuotas(){
     const isCurrent = q.id===mostRecentId;
 
     html += `<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
-      <div style="padding:16px 16px 14px;cursor:pointer" onclick="toggleQuota(${q.id})">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div style="padding:16px 16px 14px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(127,255,0,.15)" onclick="toggleQuota(${q.id})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none">
           <div style="min-width:0;flex:1">
             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
               <span class="lbl" style="margin-bottom:2px">${q.month}</span>
@@ -1307,14 +1314,16 @@ function renderCuotas(){
             <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text);line-height:1.15">${q.concept} · ${q.amount} €</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            ${ME===TREASURER?`<button class="shop-del" style="font-size:18px;color:var(--neg)" onclick="event.stopPropagation();deleteQuota(${q.id})" title="Eliminar cuota">×</button>`:''}
+            ${ME===TREASURER?`<button class="shop-del" style="font-size:18px;color:var(--neg);pointer-events:auto" onclick="event.stopPropagation();deleteQuota(${q.id})" title="Eliminar cuota">×</button>`:''}
             <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--faint);transform:rotate(${isOpen?'180deg':'0deg'});transition:transform .18s;display:inline-block">⌄</span>
           </div>
         </div>
+        <div style="pointer-events:none">
         <div class="progress-wrap" style="margin-top:10px"><div class="progress-bar" style="width:${pct}%"></div></div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:4px;letter-spacing:.5px">
           <span><b style="color:var(--accentD)">${recaudado} €</b> de ${total} € recaudados</span>
           <span>${confirmed} confirmados · ${paid} por confirmar · ${pending} pendientes</span>
+        </div>
         </div>
       </div>
       ${isOpen ? `<div style="border-top:1px solid var(--line);padding:6px 16px 4px">
