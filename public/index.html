@@ -436,7 +436,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 11; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 12; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -510,6 +510,49 @@ async function fbDelete(coll, id){
     showSync("Guardado");
   }catch(e){ console.error("Error borrando",coll,e); showSync("Error de red"); }
 }
+
+// ───────────────────────── PAPELERA (soft-delete) ───────────────────────
+// Nada se borra de verdad al pulsar "×": se archiva con fecha y autor.
+// Se puede restaurar en cualquier momento desde Colla → Papelera.
+// Solo el tesorero puede vaciar la papelera de verdad (borrado definitivo).
+function softDelete(coll, item){
+  const next = clone(item);
+  next.deleted = true;
+  next.deletedAt = new Date().toISOString();
+  next.deletedBy = ME;
+  fbSet(coll, next);
+}
+function restoreItem(coll, item){
+  const next = clone(item);
+  next.deleted = false;
+  next.deletedAt = null;
+  next.deletedBy = null;
+  fbSet(coll, next);
+}
+function permanentDelete(coll, id, label){
+  if(ME!==TREASURER){ alert("Solo el tesorero puede borrar definitivamente."); return; }
+  if(!confirm(`¿Eliminar PARA SIEMPRE "${label}"?\n\nEsto no se puede deshacer ni recuperar.`)) return;
+  fbDelete(coll, id);
+}
+function trashLabel(dt){
+  if(!dt) return '';
+  const d = new Date(dt);
+  return d.toLocaleDateString("es-ES",{day:'numeric',month:'short'}) + ' · ' + d.toLocaleTimeString("es-ES",{hour:'2-digit',minute:'2-digit'});
+}
+function getTrashItems(){
+  const items = [];
+  shopping.filter(s=>s.deleted).forEach(s=>items.push({coll:'shopping', id:s.id, label:s.text, sub:'La compra', deletedAt:s.deletedAt, deletedBy:s.deletedBy, raw:s}));
+  compras.filter(c=>c.deleted).forEach(c=>items.push({coll:'compras', id:c.id, label:`${c.what} · ${c.amount.toFixed(2)} €`, sub:'Caja', deletedAt:c.deletedAt, deletedBy:c.deletedBy, raw:c}));
+  quotas.filter(q=>q.deleted).forEach(q=>items.push({coll:'quotas', id:q.id, label:`${q.month} · ${q.concept}`, sub:'Cuotas', deletedAt:q.deletedAt, deletedBy:q.deletedBy, raw:q}));
+  events.filter(e=>e.deleted).forEach(e=>items.push({coll:'events', id:e.id, label:e.title, sub:'Eventos', deletedAt:e.deletedAt, deletedBy:e.deletedBy, raw:e}));
+  items.sort((a,b)=>(b.deletedAt||'').localeCompare(a.deletedAt||''));
+  return items;
+}
+let trashOpen = false;
+let trashCache = [];
+function toggleTrash(){ trashOpen=!trashOpen; renderColla(); }
+function restoreTrashItem(i){ const t=trashCache[i]; if(t) restoreItem(t.coll, t.raw); }
+function permanentDeleteTrashItem(i){ const t=trashCache[i]; if(t) permanentDelete(t.coll, t.id, t.label); }
 
 // Mapea colección → variable local
 function setLocal(coll, arr){
@@ -731,10 +774,10 @@ const MENU_ITEMS = [
   {key:"colla",label:"Colla",num:"06"},
 ];
 function getBadge(key){
-  if(key==='eventos') return events.reduce((s,e)=>s+(e.polls||[]).filter(p=>p.open).length,0)||null;
-  if(key==='caja') return compras.filter(c=>!c.reintegrated).length||null;
-  if(key==='compra') return shopping.filter(s=>!s.done).length||null;
-  if(key==='cuotas') return quotas.reduce((s,q)=>s+(q.payments||[]).filter(p=>!p.confirmedByTreasurer&&p.selfDeclared).length,0)||null;
+  if(key==='eventos') return events.filter(e=>!e.deleted).reduce((s,e)=>s+(e.polls||[]).filter(p=>p.open).length,0)||null;
+  if(key==='caja') return compras.filter(c=>!c.deleted && !c.reintegrated).length||null;
+  if(key==='compra') return shopping.filter(s=>!s.deleted && !s.done).length||null;
+  if(key==='cuotas') return quotas.filter(q=>!q.deleted).reduce((s,q)=>s+(q.payments||[]).filter(p=>!p.confirmedByTreasurer&&p.selfDeclared).length,0)||null;
   return null;
 }
 function renderMenu(){
@@ -755,7 +798,7 @@ function renderMenu(){
 <script>
 // ═══════════════════════════════ EVENTOS ═════════════════════════════
 function renderEventos(){
-  const sorted = [...events].sort((a,b)=>a.date>b.date?1:-1);
+  const sorted = events.filter(e=>!e.deleted).sort((a,b)=>a.date>b.date?1:-1);
   document.getElementById('body-eventos').innerHTML = `
     <span class="lbl">Próximos eventos</span>
     ${sorted.length===0?`<div style="font-size:13px;color:var(--faint);font-style:italic">Aún no hay eventos. Crea el primero con el botón +.</div>`:''}
@@ -802,7 +845,7 @@ function openEvDetail(evId){
 
 function renderEvDetail(){
   const ev = events.find(e=>e.id===activeEvId);
-  if(!ev) return;
+  if(!ev || ev.deleted){ goSection('eventos'); return; }
   const {day,mon,wday} = fmtD(ev.date);
   const et = EVENT_TYPES[ev.type]||EVENT_TYPES.otro;
   const isReu = ev.type==='reunion';
@@ -865,8 +908,8 @@ function renderEvDetail(){
 function deleteEvento(evId){
   const ev = events.find(e=>e.id===evId);
   if(!ev) return;
-  if(!confirm(`¿Eliminar "${ev.title}"?\n\nSe borrará para toda la colla y no se puede deshacer.`)) return;
-  fbDelete('events', evId);
+  if(!confirm(`¿Eliminar "${ev.title}"?\n\nSe mueve a la Papelera (Colla) por si hay que recuperarlo.`)) return;
+  softDelete('events', ev);
   goSection('eventos');
 }
 
@@ -1009,13 +1052,14 @@ const CAT_COLORS = {Compra:"#3d8000",Luz:"#c07800",Agua:"#5a6ea8",Alquiler:"#9b5
 let compraCat = "Compra";
 
 function renderCaja(){
-  // Ingresos: todas las cuotas confirmadas + ingresos manuales
-  const ingresosCuotas = quotas.reduce((s,q)=> s + q.payments.filter(p=>p.confirmedByTreasurer).length * q.amount, 0);
-  const ingresosManual = compras.filter(c=>c.income).reduce((s,c)=>s+c.amount,0);
-  // Gastos: todas las compras/gastos registrados (excluye ingresos manuales)
-  const gastosTotal = compras.filter(c=>!c.income).reduce((s,c)=>s+c.amount,0);
+  // Ingresos: todas las cuotas confirmadas + ingresos manuales (excluye papelera)
+  const ingresosCuotas = quotas.filter(q=>!q.deleted).reduce((s,q)=> s + q.payments.filter(p=>p.confirmedByTreasurer).length * q.amount, 0);
+  const activeCompras = compras.filter(c=>!c.deleted);
+  const ingresosManual = activeCompras.filter(c=>c.income).reduce((s,c)=>s+c.amount,0);
+  // Gastos: todas las compras/gastos registrados (excluye ingresos manuales y papelera)
+  const gastosTotal = activeCompras.filter(c=>!c.income).reduce((s,c)=>s+c.amount,0);
   const saldo = ingresosCuotas + ingresosManual - gastosTotal;
-  const pend = compras.filter(c=>!c.income && !c.reintegrated);
+  const pend = activeCompras.filter(c=>!c.income && !c.reintegrated);
   const pendTotal = pend.reduce((s,c)=>s+c.amount,0);
 
   let html = `<div class="card card-dark" style="margin-bottom:16px">
@@ -1036,8 +1080,8 @@ function renderCaja(){
   </div>`;
 
   html += `<span class="lbl" style="margin-top:6px">Gastos y movimientos</span>`;
-  if(compras.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin movimientos registrados todavía.</div>`;
-  [...compras].sort((a,b)=>b.id-a.id).forEach(c=>{
+  if(activeCompras.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin movimientos registrados todavía.</div>`;
+  [...activeCompras].sort((a,b)=>b.id-a.id).forEach(c=>{
     if(c.income){
       html += `<div class="card" style="border-left:4px solid var(--accentD)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
@@ -1092,8 +1136,8 @@ function addIngreso(){
 function doReintegrate(id){ const c=compras.find(x=>x.id===id); if(c){const n=clone(c);n.reintegrated=true;n.reintegratedBy=ME;fbSet('compras',n);} }
 function deleteCompra(id){
   const c=compras.find(x=>x.id===id); if(!c) return;
-  if(!confirm(`¿Eliminar el gasto "${c.what}" (${c.amount.toFixed(2)} €)?`)) return;
-  fbDelete('compras', id);
+  if(!confirm(`¿Eliminar el gasto "${c.what}" (${c.amount.toFixed(2)} €)?\n\nSe mueve a la Papelera (Colla) por si hay que recuperarlo.`)) return;
+  softDelete('compras', c);
 }
 let compraPayMode = "member"; // "member" = lo adelanta alguien | "colla" = paga la colla directa
 function setPayMode(mode){
@@ -1141,8 +1185,8 @@ function setEvExpWho(name,el){ evExpWho=name; document.querySelectorAll('#evExpW
 
 // ═══════════════════════════════ COMPRA ══════════════════════════════
 function renderCompra(){
-  const pending = shopping.filter(s=>!s.done);
-  const done = shopping.filter(s=>s.done);
+  const pending = shopping.filter(s=>!s.deleted && !s.done);
+  const done = shopping.filter(s=>!s.deleted && s.done);
   let html = `<span class="lbl">Necesidades del local (${pending.length} pendientes)</span>`;
   if(pending.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Todo en orden.</div>`;
   pending.forEach(item=>{
@@ -1165,7 +1209,7 @@ function renderCompra(){
   document.getElementById('body-compra').innerHTML = html;
 }
 function toggleShop(id){ const s=shopping.find(x=>x.id===id); if(s){const n=clone(s);n.done=!n.done;fbSet('shopping',n);} }
-function removeShop(id){ fbDelete('shopping', id); }
+function removeShop(id){ const s=shopping.find(x=>x.id===id); if(s) softDelete('shopping', s); }
 function addShopItem(){
   const text=document.getElementById('shopText').value.trim(); if(!text) return;
   const nextId = (shopping.reduce((m,s)=>Math.max(m,s.id),0))+1;
@@ -1275,7 +1319,7 @@ function renderCuotas(){
   // Más reciente primero (mayor id = creada más tarde). Las cuotas "Inicial"
   // (saldo inicial de caja metido como cuota) van siempre al final.
   const isInicial = q => (q.month||'').toLowerCase().includes('inicial');
-  const ordered = [...quotas].sort((a,b)=>{
+  const ordered = quotas.filter(q=>!q.deleted).sort((a,b)=>{
     const aI = isInicial(a), bI = isInicial(b);
     if(aI!==bI) return aI ? 1 : -1;
     return b.id-a.id;
@@ -1377,8 +1421,8 @@ function addQuota(){
 }
 function deleteQuota(qid){
   const q=quotas.find(x=>x.id===qid); if(!q) return;
-  if(!confirm(`¿Eliminar la cuota "${q.concept} · ${q.month}"?\n\nNo se puede deshacer.`)) return;
-  fbDelete('quotas', qid);
+  if(!confirm(`¿Eliminar la cuota "${q.concept} · ${q.month}"?\n\nSe mueve a la Papelera (Colla) por si hay que recuperarla.`)) return;
+  softDelete('quotas', q);
 }
 // Cualquiera marca/desmarca "pagado". Si lo desmarca, también quita confirmación.
 function cuotaPaid(qid,name,val){
@@ -1415,6 +1459,39 @@ function renderColla(){
     <div><div style="font-size:14px;color:var(--text);margin-bottom:3px">Estatutos de la colla</div><div style="font-size:11px;color:var(--faint)">Documento oficial · PDF</div></div>
     <button class="btn-ghost" onclick="alert('Añade aquí la URL del PDF de los estatutos cuando lo tengáis.')">Próximamente</button>
   </div>`;
+
+  const trash = getTrashItems();
+  trashCache = trash;
+  html += `<div class="divider"></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:16px;cursor:pointer;touch-action:manipulation" onclick="toggleTrash()">
+      <div style="display:flex;justify-content:space-between;align-items:center;pointer-events:none">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="lbl" style="margin-bottom:0">Papelera</span>
+          ${trash.length>0?tag(trash.length,'#6e6860'):tag('Vacía','#a8a098')}
+        </div>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--faint);transform:rotate(${trashOpen?'180deg':'0deg'});transition:transform .18s;display:inline-block">⌄</span>
+      </div>
+    </div>
+    ${trashOpen ? `<div style="border-top:1px solid var(--line);padding:12px 16px 16px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Nada se borra para siempre al pulsar "×" — todo pasa por aquí primero. Cualquiera puede restaurar; solo ${TREASURER} puede eliminar definitivamente.</div>
+      ${trash.length===0?`<div style="font-size:13px;color:var(--faint);font-style:italic">No hay nada en la papelera.</div>`:''}
+      ${trash.map((t,i)=>`<div class="card" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">${tag(t.sub,'#6e6860')}</div>
+            <div style="font-size:14px;color:var(--text)">${t.label}</div>
+            <div style="font-size:11px;color:var(--faint);margin-top:2px">Eliminado por ${t.deletedBy||'?'} · ${trashLabel(t.deletedAt)}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <button class="btn-ghost" style="border-color:var(--accentD);color:var(--accentD)" onclick="restoreTrashItem(${i})">Restaurar</button>
+          ${ME===TREASURER?`<button class="btn-ghost" style="border-color:var(--neg);color:var(--neg)" onclick="permanentDeleteTrashItem(${i})">Eliminar definitivamente</button>`:''}
+        </div>
+      </div>`).join('')}
+    </div>` : ''}
+  </div>`;
+
   if(ME===TREASURER){
     html += `<div class="divider"></div>
     <span class="lbl" style="color:var(--neg)">Administración · solo tesorero</span>
