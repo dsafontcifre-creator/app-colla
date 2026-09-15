@@ -267,6 +267,15 @@ textarea.inp{height:100px;}
   <button class="fab" onclick="openModal('modalShop')">+</button>
 </div>
 
+<div class="section" id="sec-tareas">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
+    <div class="sec-title">Tareas y mejoras</div>
+  </div>
+  <div class="sec-body" id="body-tareas"></div>
+  <button class="fab" onclick="openTaskModal()" aria-label="Añadir tarea">+</button>
+</div>
+
 <div class="section" id="sec-turnos">
   <div class="sec-header">
     <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
@@ -437,6 +446,19 @@ textarea.inp{height:100px;}
   </div>
 </div>
 
+<div class="modal-overlay" id="modalTask" onclick="closeModalBg(event,'modalTask')">
+  <div class="modal-box">
+    <div class="modal-title" id="taskModalTitle">Nueva tarea</div>
+    <div class="inp-wrap"><label class="inp-label">Qué hay que hacer</label><input class="inp" id="taskText" placeholder="Ej: Poner grifo nuevo en la cocina"/></div>
+    <div class="inp-wrap"><label class="inp-label">Quién se encarga (opcional)</label><div class="pill-row pill-scroll" id="taskWhoPills"></div></div>
+    <div class="inp-wrap"><label class="inp-label">Coste aproximado € (opcional)</label><input class="inp" type="text" inputmode="decimal" id="taskCost" placeholder="Ej: 85"/></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalTask')">Cancelar</button>
+      <button class="btn-accent" onclick="saveTask()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalTurnNote" onclick="closeModalBg(event,'modalTurnNote')">
   <div class="modal-box">
     <div class="modal-title">Nota del turno</div>
@@ -484,7 +506,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 18; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 20; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -551,6 +573,7 @@ let quotas = [];
 let shopping = [];
 let docs = [];
 let consum = [];
+let tasks = [];
 
 let activeEvId = null;
 let pollMulti = false;
@@ -561,7 +584,7 @@ let evExpWho = null;
 let evType = "comida";
 let expandedQuotas = null; // Set de ids de cuota expandidas. null = aún sin inicializar (se abre la más reciente)
 let currentSection = null;
-let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:false,docs:false,consum:false};
+let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:false,docs:false,consum:false,tasks:false};
 
 // ───────────────────────── TURNOS POR EQUIPOS (acta nº2) ───────────────
 // 4 equipos, 2 meses cada uno. La rueda arranca en noviembre de 2026.
@@ -585,9 +608,9 @@ const CLEAN_CHECKS = [
 
 // ───────────────────────── FIRESTORE SYNC ──────────────────────────────
 let DB = null;
-const COLLECTIONS = ["events","compras","turns","quotas","shopping","docs","consum"];
+const COLLECTIONS = ["events","compras","turns","quotas","shopping","docs","consum","tasks"];
 // El reset de la app NO toca los documentos oficiales (actas, estatutos)
-const RESET_COLLECTIONS = ["events","compras","turns","quotas","shopping","consum"];
+const RESET_COLLECTIONS = ["events","compras","turns","quotas","shopping","consum","tasks"];
 
 function showSync(txt="Sincronizado"){
   const b = document.getElementById('syncBar');
@@ -644,6 +667,7 @@ function getTrashItems(){
   compras.filter(c=>c.deleted).forEach(c=>items.push({coll:'compras', id:c.id, label:`${c.what} · ${c.amount.toFixed(2)} €`, sub:c.transfer?'Caja · Traspaso':'Caja', deletedAt:c.deletedAt, deletedBy:c.deletedBy, raw:c}));
   quotas.filter(q=>q.deleted).forEach(q=>items.push({coll:'quotas', id:q.id, label:`${q.month} · ${q.concept}`, sub:'Cuotas', deletedAt:q.deletedAt, deletedBy:q.deletedBy, raw:q}));
   events.filter(e=>e.deleted).forEach(e=>items.push({coll:'events', id:e.id, label:e.title, sub:'Eventos', deletedAt:e.deletedAt, deletedBy:e.deletedBy, raw:e}));
+  tasks.filter(t=>t.deleted).forEach(t=>items.push({coll:'tasks', id:t.id, label:t.text, sub:'Tareas', deletedAt:t.deletedAt, deletedBy:t.deletedBy, raw:t}));
   consum.filter(c=>c.deleted).forEach(c=>{
     const a = `${(Number(c.amount)||0).toFixed(2)} €`;
     const label = c.kind==='pay' ? `Pago de ${c.name} · ${a}`
@@ -670,6 +694,7 @@ function normItem(o){
   if(o.name) o.name = normName(o.name);
   if(o.by) o.by = normName(o.by);
   if(o.paidBy) o.paidBy = normName(o.paidBy);
+  if(o.doneBy) o.doneBy = normName(o.doneBy);
   if(o.deletedBy) o.deletedBy = normName(o.deletedBy);
   if(o.reintegratedBy) o.reintegratedBy = normName(o.reintegratedBy);
   if(Array.isArray(o.payments)) o.payments.forEach(p=>{ p.name = normName(p.name); });
@@ -681,6 +706,7 @@ function setLocal(coll, arr){
   arr.forEach(normItem);
   if(coll==="docs") docs = arr;
   if(coll==="consum") consum = arr;
+  if(coll==="tasks") tasks = arr;
   if(coll==="events") events = arr;
   if(coll==="compras") compras = arr;
   if(coll==="turns"){
@@ -891,6 +917,7 @@ function renderSection(key){
   if(key==='cuotas') renderCuotas();
   if(key==='colla') renderColla();
   if(key==='consum') renderConsum();
+  if(key==='tareas') renderTareas();
 }
 
 // ═══════════════════════════════ MENU ═════════════════════════════════
@@ -899,9 +926,10 @@ const MENU_ITEMS = [
   {key:"caja",label:"Caja",num:"02"},
   {key:"consum",label:"Consumiciones",num:"03"},
   {key:"compra",label:"La compra",num:"04"},
-  {key:"turnos",label:"Turnos",num:"05"},
-  {key:"cuotas",label:"Cuotas",num:"06"},
-  {key:"colla",label:"Colla",num:"07"},
+  {key:"tareas",label:"Tareas",num:"05"},
+  {key:"turnos",label:"Turnos",num:"06"},
+  {key:"cuotas",label:"Cuotas",num:"07"},
+  {key:"colla",label:"Colla",num:"08"},
 ];
 function getBadge(key){
   if(key==='eventos') return events.filter(e=>!e.deleted).reduce((s,e)=>s+(e.polls||[]).filter(p=>p.open).length,0)||null;
@@ -912,6 +940,7 @@ function getBadge(key){
     return mine && mine.saldo > 0.005 ? '!' : null;
   }
   if(key==='caja') return compras.filter(c=>!c.deleted && !c.reintegrated).length||null;
+  if(key==='tareas') return tasks.filter(t=>!t.deleted && !t.done).length||null;
   if(key==='compra') return shopping.filter(s=>!s.deleted && !s.done).length||null;
   if(key==='turnos'){
     const cur = currentTurn();
@@ -1729,6 +1758,139 @@ function saveGraella(){
   closeModal('modalGraella');
 }
 
+// ═══════════════════════════════ TAREAS Y MEJORAS ════════════════════
+// Lista compartida de cosas por hacer en el local. Cualquiera añade, se
+// apunta como encargado y marca hecho. Lo borrado va a la Papelera.
+const TASK_IDEAS = ["Recoger sillas","Comprar nevera","Grifo para la cocina","Adaptar el paellero a la cocina","2 mesas","Sillas","Percheros","Acondicionar la cocina"];
+let editTaskId = null;
+let taskWho = null;
+let tasksDoneOpen = false;
+const normTxt = t => String(t||'').trim().toLowerCase();
+
+function renderTareas(){
+  const act = tasks.filter(t=>!t.deleted);
+  const pend = act.filter(t=>!t.done).sort((a,b)=>a.id-b.id);
+  const done = act.filter(t=>t.done).sort((a,b)=>(b.doneAt||'').localeCompare(a.doneAt||''));
+  const total = act.length;
+  const pct = total ? Math.round(done.length/total*100) : 0;
+  const costPend = pend.reduce((s,t)=>s+(Number(t.cost)||0),0);
+
+  let html = `<div class="card card-dark" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+      <div>
+        <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Por hacer</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--accent);line-height:1">${pend.length}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--faint)">${done.length} de ${total} hechas</div>
+        ${costPend>0?`<div style="font-size:11px;color:var(--faint);margin-top:3px">Pendiente aprox. <b style="color:#fff">${eur(costPend)}</b></div>`:''}
+      </div>
+    </div>
+    <div class="progress-wrap" style="background:rgba(255,255,255,.1);margin-top:12px"><div class="progress-bar" style="width:${pct}%"></div></div>
+  </div>`;
+
+  const ideas = TASK_IDEAS.filter(i=>!act.some(t=>normTxt(t.text)===normTxt(i)));
+  if(ideas.length){
+    html += `<span class="lbl">Del acta · toca para añadir</span>
+    <div class="pill-row" style="margin-bottom:16px">${ideas.map(i=>`<span class="pill" onclick="quickTask('${esc(i)}')">+ ${esc(i)}</span>`).join('')}</div>`;
+  }
+
+  html += `<span class="lbl">Pendientes</span>`;
+  if(pend.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Nada pendiente. Añade una tarea con el botón +.</div>`;
+  pend.forEach(t=>{
+    const mine = t.who===ME;
+    html += `<div class="shop-item" style="align-items:flex-start;${mine?'border-color:var(--accentD)':''}">
+      <button class="shop-check" style="margin-top:2px" onclick="toggleTask(${t.id})" aria-label="Marcar hecha"></button>
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="openTaskModal(${t.id})">
+        <div style="font-size:15px;color:var(--text);line-height:1.35">${esc(t.text)}</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px">
+          ${t.who?tag('Se encarga '+esc(t.who), mine?'#3d8000':'#5a6ea8'):''}
+          ${Number(t.cost)>0?tag('≈ '+eur(t.cost),'#c07800'):''}
+          <span style="font-size:11px;color:var(--faint)">Añadida por ${esc(t.addedBy||'?')}</span>
+        </div>
+        ${!t.who?`<button class="btn-ghost" style="font-size:9px;padding:5px 10px;margin-top:8px;border-color:var(--accentD);color:var(--accentD)" onclick="event.stopPropagation();takeTask(${t.id})">Me encargo yo</button>`:''}
+      </div>
+      <button class="shop-del" onclick="removeTask(${t.id})" aria-label="Eliminar">×</button>
+    </div>`;
+  });
+
+  if(done.length){
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:22px;cursor:pointer" onclick="tasksDoneOpen=!tasksDoneOpen;renderTareas()">
+      <span class="lbl" style="margin:0">Hechas (${done.length})</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--faint);transform:rotate(${tasksDoneOpen?'180deg':'0deg'});display:inline-block">⌄</span>
+    </div>`;
+    if(tasksDoneOpen){
+      html += `<div style="margin-top:8px">`;
+      done.forEach(t=>{
+        html += `<div class="shop-item" style="opacity:.6;border-color:var(--line)">
+          <button class="shop-check done" onclick="toggleTask(${t.id})" aria-label="Reabrir">✓</button>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;color:var(--muted);text-decoration:line-through">${esc(t.text)}</div>
+            <div style="font-size:11px;color:var(--faint);margin-top:2px">Hecha por ${esc(t.doneBy||'?')} · ${shortDT(t.doneAt)}</div>
+          </div>
+          <button class="shop-del" onclick="removeTask(${t.id})" aria-label="Eliminar">×</button>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+  }
+  document.getElementById('body-tareas').innerHTML = html;
+}
+
+function renderTaskWhoPills(){
+  document.getElementById('taskWhoPills').innerHTML =
+    `<span class="pill${!taskWho?' on':''}" onclick="setTaskWho('')">Nadie aún</span>` +
+    MEMBERS.map(m=>`<span class="pill${m.name===taskWho?' on':''}" onclick="setTaskWho('${esc(m.name)}')">${av(m.name,'av '+(m.name===taskWho?'av-on':'av-off'))} ${esc(m.name)}</span>`).join('');
+}
+function setTaskWho(n){ taskWho = n || null; renderTaskWhoPills(); }
+function openTaskModal(id){
+  const t = id ? tasks.find(x=>x.id===id) : null;
+  editTaskId = t ? t.id : null;
+  taskWho = t ? (t.who||null) : null;
+  document.getElementById('taskModalTitle').textContent = t ? 'Editar tarea' : 'Nueva tarea';
+  document.getElementById('taskText').value = t ? t.text : '';
+  document.getElementById('taskCost').value = t && Number(t.cost)>0 ? t.cost : '';
+  renderTaskWhoPills();
+  openModal('modalTask');
+}
+function saveTask(){
+  const text = document.getElementById('taskText').value.trim();
+  if(!text){ alert("Escribe qué hay que hacer."); return; }
+  const cost = parseFloat(document.getElementById('taskCost').value.trim().replace(',', '.'));
+  const costVal = isNaN(cost)||cost<=0 ? null : Math.round(cost*100)/100;
+  if(editTaskId){
+    const t = tasks.find(x=>x.id===editTaskId); if(!t) return;
+    const n = clone(t); n.text = text; n.who = taskWho; n.cost = costVal;
+    fbSet('tasks', n);
+  } else {
+    const nextId = tasks.reduce((m,t)=>Math.max(m,t.id||0),0)+1;
+    fbSet('tasks', {id:nextId, text, who:taskWho, cost:costVal, done:false, doneBy:null, doneAt:null, addedBy:ME, createdAt:new Date().toISOString(), deleted:false});
+  }
+  closeModal('modalTask'); editTaskId = null;
+}
+function quickTask(text){
+  if(tasks.some(t=>!t.deleted && normTxt(t.text)===normTxt(text))) return;
+  const nextId = tasks.reduce((m,t)=>Math.max(m,t.id||0),0)+1;
+  fbSet('tasks', {id:nextId, text, who:null, cost:null, done:false, doneBy:null, doneAt:null, addedBy:ME, createdAt:new Date().toISOString(), deleted:false});
+}
+function toggleTask(id){
+  const t = tasks.find(x=>x.id===id); if(!t) return;
+  const n = clone(t);
+  n.done = !n.done;
+  n.doneBy = n.done ? ME : null;
+  n.doneAt = n.done ? new Date().toISOString() : null;
+  fbSet('tasks', n);
+}
+function takeTask(id){
+  const t = tasks.find(x=>x.id===id); if(!t) return;
+  const n = clone(t); n.who = ME; fbSet('tasks', n);
+}
+function removeTask(id){
+  const t = tasks.find(x=>x.id===id); if(!t) return;
+  if(!confirm(`¿Eliminar "${t.text}"?\n\nSe mueve a la Papelera (Colla).`)) return;
+  softDelete('tasks', t);
+}
+
 // ═══════════════════════════════ TURNOS ══════════════════════════════
 const MONTHS_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
 const teamOf = name => TEAMS.find(t=>t.members.includes(name));
@@ -2010,7 +2172,7 @@ function renderCuotas(){
             <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text);line-height:1.15">${q.concept} · ${q.amount} €</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-            ${ME===TREASURER?`<button class="shop-del" style="font-size:18px;color:var(--neg);pointer-events:auto" onclick="event.stopPropagation();deleteQuota(${q.id})" title="Eliminar cuota">×</button>`:''}
+            ${ME===TREASURER?`<button class="btn-ghost" style="font-size:9px;padding:5px 10px;pointer-events:auto" onclick="event.stopPropagation();editQuota(${q.id})" title="Editar cuota">Editar</button><button class="shop-del" style="font-size:18px;color:var(--neg);pointer-events:auto" onclick="event.stopPropagation();deleteQuota(${q.id})" title="Eliminar cuota">×</button>`:''}
             <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--faint);transform:rotate(${isOpen?'180deg':'0deg'});transition:transform .18s;display:inline-block">⌄</span>
           </div>
         </div>
@@ -2070,6 +2232,24 @@ function addQuota(){
     payments: MEMBERS.map(m=>({name:m.name,selfDeclared:false,confirmedByTreasurer:false})),
   });
   if(expandedQuotas) expandedQuotas.add(nextId);
+}
+// Corrige el mes o el importe de una cuota sin tocar quién ha pagado
+function editQuota(qid){
+  if(ME!==TREASURER) return;
+  const q = quotas.find(x=>x.id===qid); if(!q) return;
+  const month = prompt("Mes de la cuota (los pagos ya marcados se mantienen):", q.month);
+  if(month===null) return;
+  const m = month.trim();
+  if(!m){ alert("El mes no puede quedar vacío."); return; }
+  const amountStr = prompt("Importe en € por miembro:", String(q.amount));
+  if(amountStr===null) return;
+  const amount = parseFloat(String(amountStr).trim().replace(',', '.'));
+  if(isNaN(amount) || amount<=0){ alert("Pon un importe válido."); return; }
+  if(m===q.month && amount===q.amount) return;
+  const paid = (q.payments||[]).filter(p=>p.selfDeclared||p.confirmedByTreasurer).length;
+  if(!confirm(`Cambiar "${q.month} · ${q.amount} €" por "${m} · ${amount} €"?\n\nLos ${paid} pagos ya marcados se mantienen.`)) return;
+  const n = clone(q); n.month = m; n.amount = amount;
+  fbSet('quotas', n);
 }
 function deleteQuota(qid){
   const q=quotas.find(x=>x.id===qid); if(!q) return;
@@ -2151,7 +2331,7 @@ function renderColla(){
     <span class="lbl" style="color:var(--neg)">Administración · solo tesorero</span>
     <div class="warn-card" style="background:#fbeae8;border-color:rgba(192,57,43,.3)">
       <div style="font-size:13px;color:var(--text);margin-bottom:4px;font-weight:500">Vaciar todos los datos</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Borra eventos, caja, consumiciones, lista de la compra, turnos y cuotas para toda la colla. Los documentos se conservan. Úsalo solo para empezar de cero. No se puede deshacer.</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Borra eventos, caja, consumiciones, lista de la compra, tareas, turnos y cuotas para toda la colla. Los documentos se conservan. Úsalo solo para empezar de cero. No se puede deshacer.</div>
       <button class="btn-accent" style="background:var(--neg);color:#fff;width:100%" onclick="resetAllData()">Vaciar y reiniciar la app</button>
     </div>`;
   }
