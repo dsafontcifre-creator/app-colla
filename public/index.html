@@ -72,7 +72,7 @@ textarea{resize:none;}
 .menu-row{border-bottom:1px solid var(--line);padding:22px 0;display:flex;align-items:baseline;gap:16px;cursor:pointer;}
 .menu-row:hover .menu-num,.menu-row:hover .menu-label,.menu-row:hover .menu-arrow{color:var(--accent)!important;}
 .menu-num{font-size:11px;color:var(--faint);letter-spacing:2px;min-width:24px;transition:color .15s;}
-.menu-label{font-family:'Bebas Neue',sans-serif;font-size:44px;color:var(--text);letter-spacing:1px;line-height:1;flex:1;transition:color .15s;}
+.menu-label{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,10.5vw,44px);white-space:nowrap;color:var(--text);letter-spacing:1px;line-height:1;flex:1;transition:color .15s;}
 .menu-arrow{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--faint);transition:color .15s;}
 .menu-badge{width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--black);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .menu-footer{padding:20px 28px;border-top:1px solid var(--line);font-size:10px;color:var(--faint);letter-spacing:2px;}
@@ -248,6 +248,14 @@ textarea.inp{height:100px;}
     <div class="sec-title">Caja</div>
   </div>
   <div class="sec-body" id="body-caja"></div>
+</div>
+
+<div class="section" id="sec-consum">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
+    <div class="sec-title">Consumiciones</div>
+  </div>
+  <div class="sec-body" id="body-consum"></div>
 </div>
 
 <div class="section" id="sec-compra">
@@ -429,6 +437,24 @@ textarea.inp{height:100px;}
   </div>
 </div>
 
+<div class="modal-overlay" id="modalGraella" onclick="closeModalBg(event,'modalGraella')">
+  <div class="modal-box">
+    <div class="modal-title">Pasar la graella</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Copia el total en euros de cada persona según la hoja de la nevera. Lo que consuma un invitado va a nombre de quien lo invita. Deja en blanco a quien no tenga nada.</div>
+    <div class="inp-wrap"><label class="inp-label">Periodo</label><input class="inp" id="graPeriod" placeholder="Ej: 1–15 octubre"/></div>
+    <div class="inp-wrap"><label class="inp-label">Importe por persona (€)</label>
+      <div id="graRows" style="border:1px solid var(--line);border-radius:6px;padding:4px 12px;max-height:46vh;overflow-y:auto"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)">
+      <span>Total de la hoja</span><b id="graTotal" style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text);font-weight:400">0.00 €</b>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalGraella')">Cancelar</button>
+      <button class="btn-accent" onclick="saveGraella()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalTurnNote" onclick="closeModalBg(event,'modalTurnNote')">
   <div class="modal-box">
     <div class="modal-title">Nota del turno</div>
@@ -476,7 +502,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 13; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 15; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -519,6 +545,9 @@ const DOC_TYPES = {
   Otro:{color:"#6e6860"},
 };
 
+// Consumiciones: la graella sigue en papel; solo estos la pasan a la app y cobran
+const CONSUM_MANAGERS = ["Edu","David"];
+
 // Caja: alquiler mensual de referencia para la Reserva
 const RENT = 600;
 
@@ -536,28 +565,44 @@ let turns = [];
 let quotas = [];
 let shopping = [];
 let docs = [];
+let consum = [];
 
 let activeEvId = null;
 let pollMulti = false;
 let pollOpts = ["","",""];
-let editTurnGroup = null;
+let editTurnId = null;
 let compraWho = null;
 let evExpWho = null;
 let evType = "comida";
 let expandedQuotas = null; // Set de ids de cuota expandidas. null = aún sin inicializar (se abre la más reciente)
 let currentSection = null;
-let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:false,docs:false};
+let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:false,docs:false,consum:false};
 
-// ───────────────────────── TURNOS POR DEFECTO (solo memoria) ───────────
-// La app NUNCA escribe datos automáticamente en Firebase. Si la colección
-// turns está vacía, se muestran los 11 grupos por defecto sin guardarlos.
-const DEFAULT_TURNS = GROUPS.map((g)=>({id:g.id,group:g.id,date:"",note:"",done:false}));
+// ───────────────────────── TURNOS POR EQUIPOS (acta nº2) ───────────────
+// 4 equipos, 2 meses cada uno. La rueda arranca en noviembre de 2026.
+// Marzo, junio, julio y agosto: sin turno.
+// El calendario se calcula en la app; en Firestore solo se guarda el
+// checklist, la nota y el cierre de cada turno (id = añoInicio*10 + equipo).
+const TEAMS = [
+  {id:1, months:[10,11], members:["Zuri","Carlos","Patri","Gonzalo","Raquel","Adri"]},
+  {id:2, months:[0,1],   members:["Inma","Roberto","Sandra","Sergio","Alex","Yani"]},
+  {id:3, months:[3,4],   members:["Ari","Diego","Guille","Lledó","Marta"]},
+  {id:4, months:[8,9],   members:["Carmen","David","María","Edu","Fran","Carla"]},
+];
+const ROTA_START = new Date(2026,10,1); // 1 nov 2026
+const TURN_SUPERVISORS = ["Diego"];      // Organització de tasques de manteniment
+const CLEAN_CHECKS = [
+  {key:"wc",      label:"WC a fondo",           sub:"Desinfección de WC, pica…"},
+  {key:"cocina",  label:"Cocina a fondo",       sub:"Armarios por dentro, etc."},
+  {key:"superf",  label:"Todas las superficies", sub:"Del local entero"},
+  {key:"nevera",  label:"Nevera por dentro",    sub:"Limpia por dentro"},
+];
 
 // ───────────────────────── FIRESTORE SYNC ──────────────────────────────
 let DB = null;
-const COLLECTIONS = ["events","compras","turns","quotas","shopping","docs"];
+const COLLECTIONS = ["events","compras","turns","quotas","shopping","docs","consum"];
 // El reset de la app NO toca los documentos oficiales (actas, estatutos)
-const RESET_COLLECTIONS = ["events","compras","turns","quotas","shopping"];
+const RESET_COLLECTIONS = ["events","compras","turns","quotas","shopping","consum"];
 
 function showSync(txt="Sincronizado"){
   const b = document.getElementById('syncBar');
@@ -614,6 +659,7 @@ function getTrashItems(){
   compras.filter(c=>c.deleted).forEach(c=>items.push({coll:'compras', id:c.id, label:`${c.what} · ${c.amount.toFixed(2)} €`, sub:c.transfer?'Caja · Traspaso':'Caja', deletedAt:c.deletedAt, deletedBy:c.deletedBy, raw:c}));
   quotas.filter(q=>q.deleted).forEach(q=>items.push({coll:'quotas', id:q.id, label:`${q.month} · ${q.concept}`, sub:'Cuotas', deletedAt:q.deletedAt, deletedBy:q.deletedBy, raw:q}));
   events.filter(e=>e.deleted).forEach(e=>items.push({coll:'events', id:e.id, label:e.title, sub:'Eventos', deletedAt:e.deletedAt, deletedBy:e.deletedBy, raw:e}));
+  consum.filter(c=>c.deleted).forEach(c=>items.push({coll:'consum', id:c.id, label:`${c.name} · ${c.period||''} · ${(Number(c.amount)||0).toFixed(2)} €`, sub:'Consumiciones', deletedAt:c.deletedAt, deletedBy:c.deletedBy, raw:c}));
   docs.filter(d=>d.deleted).forEach(d=>items.push({coll:'docs', id:d.id, label:d.title, sub:'Documentos', deletedAt:d.deletedAt, deletedBy:d.deletedBy, raw:d}));
   items.sort((a,b)=>(b.deletedAt||'').localeCompare(a.deletedAt||''));
   return items;
@@ -629,6 +675,9 @@ function normItem(o){
   if(!o || typeof o!=="object") return o;
   if(o.who) o.who = normName(o.who);
   if(o.addedBy) o.addedBy = normName(o.addedBy);
+  if(o.name) o.name = normName(o.name);
+  if(o.by) o.by = normName(o.by);
+  if(o.paidBy) o.paidBy = normName(o.paidBy);
   if(o.deletedBy) o.deletedBy = normName(o.deletedBy);
   if(o.reintegratedBy) o.reintegratedBy = normName(o.reintegratedBy);
   if(Array.isArray(o.payments)) o.payments.forEach(p=>{ p.name = normName(p.name); });
@@ -639,14 +688,12 @@ function normItem(o){
 function setLocal(coll, arr){
   arr.forEach(normItem);
   if(coll==="docs") docs = arr;
+  if(coll==="consum") consum = arr;
   if(coll==="events") events = arr;
   if(coll==="compras") compras = arr;
   if(coll==="turns"){
-    // Siempre mostramos los 11 grupos; los que estén en Firebase sobrescriben al defecto
-    turns = DEFAULT_TURNS.map(def=>{
-      const saved = arr.find(t=>t.group===def.group);
-      return saved ? saved : def;
-    });
+    // Solo registros del sistema de equipos (los de parejas antiguos se ignoran)
+    turns = arr.filter(t=>t && t.team);
   }
   if(coll==="quotas") quotas = arr;
   if(coll==="shopping") shopping = arr;
@@ -851,21 +898,34 @@ function renderSection(key){
   if(key==='turnos') renderTurnos();
   if(key==='cuotas') renderCuotas();
   if(key==='colla') renderColla();
+  if(key==='consum') renderConsum();
 }
 
 // ═══════════════════════════════ MENU ═════════════════════════════════
 const MENU_ITEMS = [
   {key:"eventos",label:"Eventos",num:"01"},
   {key:"caja",label:"Caja",num:"02"},
-  {key:"compra",label:"La compra",num:"03"},
-  {key:"turnos",label:"Turnos",num:"04"},
-  {key:"cuotas",label:"Cuotas",num:"05"},
-  {key:"colla",label:"Colla",num:"06"},
+  {key:"consum",label:"Consumiciones",num:"03"},
+  {key:"compra",label:"La compra",num:"04"},
+  {key:"turnos",label:"Turnos",num:"05"},
+  {key:"cuotas",label:"Cuotas",num:"06"},
+  {key:"colla",label:"Colla",num:"07"},
 ];
 function getBadge(key){
   if(key==='eventos') return events.filter(e=>!e.deleted).reduce((s,e)=>s+(e.polls||[]).filter(p=>p.open).length,0)||null;
+  if(key==='consum'){
+    const pend = new Set(consum.filter(c=>!c.deleted && !c.paid).map(c=>c.name));
+    return pend.has(ME) ? '!' : (CONSUM_MANAGERS.includes(ME) ? (pend.size||null) : null);
+  }
   if(key==='caja') return compras.filter(c=>!c.deleted && !c.reintegrated).length||null;
   if(key==='compra') return shopping.filter(s=>!s.deleted && !s.done).length||null;
+  if(key==='turnos'){
+    const cur = currentTurn();
+    if(!cur || !canEditTurn(cur)) return null;
+    const rec = turnRecord(cur.id);
+    if(rec.closed) return null;
+    return CLEAN_CHECKS.filter(c=>!rec.checks[c.key]).length || null;
+  }
   if(key==='cuotas') return quotas.filter(q=>!q.deleted).reduce((s,q)=>s+(q.payments||[]).filter(p=>!p.confirmedByTreasurer&&p.selfDeclared).length,0)||null;
   return null;
 }
@@ -1186,12 +1246,17 @@ function cajaStats(){
   const fondo = fondoIn - fondoOut;
   const bebidaIn  = ingresos('bebida');
   const bebidaOut = gastos('bebida');
-  const bebida = bebidaIn - bebidaOut + trIn('bebida') - trOut('bebida');
+  const cons = consum.filter(c=>!c.deleted);
+  const cobrado = sum(cons.filter(c=>c.paid));
+  const pendienteCobrar = sum(cons.filter(c=>!c.paid));
+  const bebida = bebidaIn + cobrado - bebidaOut + trIn('bebida') - trOut('bebida');
   const dotacion = sum(trs.filter(c=>trFrom(c)==='fondo' && trTo(c)==='bebida'));
   const pend = gastosAll.filter(c=>!c.reintegrated);
   return {
     cuotasMes, reserva, fondo, fondoIn, fondoOut,
-    bebida, bebidaIn, bebidaOut, dotacion, bebidaDiff: bebida - dotacion,
+    bebida, bebidaIn, bebidaOut, dotacion, cobrado, pendienteCobrar,
+    // Cuadre: lo que hay en bebida + lo que nos deben, frente a la dotación
+    bebidaDiff: bebida + pendienteCobrar - dotacion,
     total: reserva + fondo + bebida,
     act, pend, pendTotal: sum(pend),
   };
@@ -1208,9 +1273,20 @@ function renderCaja(){
   const rentOk = rentPaid || st.reserva>=RENT;
   const label9 = t => `<div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">${t}</div>`;
 
+  // Resumen de un vistazo
+  const cell = (lbl,val,col,onclick) => `<div style="flex:1;min-width:0;background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:10px 10px 9px;${onclick?'cursor:pointer':''}" ${onclick?`onclick="${onclick}"`:''}>
+    <div style="font-size:8px;letter-spacing:2px;color:var(--faint);text-transform:uppercase;line-height:1.3;min-height:21px">${lbl}</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${col};line-height:1.1;margin-top:3px;white-space:nowrap">${eur(val)}</div>
+  </div>`;
+  let html = `<div style="display:flex;gap:6px;margin-bottom:12px">
+    ${cell('Bote general', st.fondo, st.fondo>=0?'var(--accentD)':'var(--neg)')}
+    ${cell('Fondo de bebida', st.bebida, CAJAS.bebida.color)}
+    ${cell('Pendiente de cobrar', st.pendienteCobrar, st.pendienteCobrar>0?'var(--warn)':'var(--muted)', "goSection('consum')")}
+  </div>`;
+
   // Fondo: lo que la colla puede gastar
-  let html = `<div class="card card-dark" style="margin-bottom:10px">
-    ${label9('Disponible para gastar')}
+  html += `<div class="card card-dark" style="margin-bottom:10px">
+    ${label9('Bote general · disponible para gastar')}
     <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:${st.fondo>=0?'var(--accent)':'#ff6b5e'};letter-spacing:2px;line-height:1">${eur(st.fondo)}</div>
     <div style="font-size:11px;color:var(--faint);margin-top:2px">Fondo de la colla · mejoras, básicos, luz, agua, eventos</div>
     <div style="display:flex;gap:18px;margin-top:14px;flex-wrap:wrap">
@@ -1226,14 +1302,15 @@ function renderCaja(){
   html += `<div class="card" style="margin-bottom:10px;border-left:4px solid ${CAJAS.bebida.color}">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
       <div>
-        ${label9('Caja bebida')}
+        ${label9('Fondo de bebida')}
         <div style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--text);line-height:1">${eur(st.bebida)}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:3px">${st.dotacion>0?`Dotación ${eur(st.dotacion)} · ${diffTxt}`:'Sin dotación todavía'}</div>
+        ${st.pendienteCobrar>0?`<div style="font-size:11px;color:var(--warn);margin-top:2px">+ ${eur(st.pendienteCobrar)} pendiente de cobrar</div>`:''}
       </div>
       ${isTr?`<button class="btn-ghost" style="font-size:9px;padding:8px 12px;flex-shrink:0;border-color:${CAJAS.bebida.color};color:${CAJAS.bebida.color}" onclick="openTraspaso(${st.dotacion>0&&diff>0?2:1})">Mover</button>`:''}
     </div>
     <div style="font-size:10px;color:var(--faint);margin-top:10px;line-height:1.5">${st.dotacion>0
-      ? 'Compra bebida con la categoría "Bebida" y mete el bote como ingreso en Caja bebida. Compárala con la dotación a final de mes: si baja sin motivo, falta alguna consumición por pagar.'
+      ? 'Solo para bebida: las compras con categoría "Bebida" salen de aquí y lo cobrado en Consumiciones vuelve aquí. El cuadre cuenta también lo pendiente de cobrar.'
       : (isTr?'Para arrancar, pulsa Mover → "Fondo → Bebida" con la dotación acordada (ej. 200 €).':'Edu la pondrá en marcha con la dotación acordada.')}</div>
   </div>`;
 
@@ -1256,7 +1333,7 @@ function renderCaja(){
 
   // Total real (para cuadrar con el banco)
   html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px dashed var(--border);border-radius:6px;margin-bottom:14px">
-    <span style="font-size:11px;color:var(--muted)">Total en cuenta <span style="color:var(--faint)">(las tres cajas)</span></span>
+    <span style="font-size:11px;color:var(--muted)">Total en cuenta <span style="color:var(--faint)">(las tres cajas, sin lo pendiente)</span></span>
     <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${eur(st.total)}</span>
   </div>`;
 
@@ -1489,96 +1566,415 @@ function addShopItem(){
   closeModal('modalShop'); document.getElementById('shopText').value='';
 }
 
+// ═══════════════════════════════ CONSUMICIONES ═══════════════════════
+// La graella sigue en papel. Edu y David pasan el total de cada persona
+// (apunte) y lo marcan cobrado en efectivo o Bizum. Lo cobrado entra en el
+// Fondo de bebida.
+const canConsum = () => CONSUM_MANAGERS.includes(ME);
+const METHODS = {efectivo:{label:"Efectivo",color:"#c07800"}, bizum:{label:"Bizum / transf.",color:"#5a6ea8"}};
+let expandedConsum = new Set();
+function toggleConsumExpand(name){ expandedConsum.has(name) ? expandedConsum.delete(name) : expandedConsum.add(name); renderConsum(); }
+
+function renderConsum(){
+  const act = consum.filter(c=>!c.deleted);
+  const pend = act.filter(c=>!c.paid);
+  const paid = act.filter(c=>c.paid);
+  const amt = c => Number(c.amount)||0;
+  const sum = a => a.reduce((s,c)=>s+amt(c),0);
+  const mgr = canConsum();
+  const st = cajaStats();
+  const ym = todayISO().slice(0,7);
+  const mesTxt = new Date().toLocaleDateString("es-ES",{month:"long",year:"numeric"});
+
+  // Pendiente agrupado por persona (orden de la lista de miembros)
+  const byPerson = MEMBERS.map(m=>({name:m.name, items:pend.filter(c=>c.name===m.name)}))
+    .filter(p=>p.items.length>0).map(p=>({...p, total:sum(p.items)}));
+  const extra = [...new Set(pend.map(c=>c.name))].filter(n=>!MEMBERS.some(m=>m.name===n))
+    .map(n=>({name:n, items:pend.filter(c=>c.name===n)})).map(p=>({...p,total:sum(p.items)}));
+  const people = [...byPerson, ...extra];
+
+  let html = `<div class="card card-dark" style="margin-bottom:12px">
+    <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Pendiente de cobrar</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:${pend.length?'#ffb13d':'var(--accent)'};letter-spacing:2px;line-height:1">${eur(sum(pend))}</div>
+    <div style="font-size:11px;color:var(--faint);margin-top:2px">${people.length?`${people.length} persona${people.length>1?'s':''} con consumiciones sin pagar`:'Todo cobrado'}</div>
+    <div style="display:flex;gap:18px;margin-top:14px;flex-wrap:wrap">
+      <div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Fondo de bebida</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">${eur(st.bebida)}</div></div>
+      <div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Cobrado en total</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">${eur(sum(paid))}</div></div>
+    </div>
+  </div>`;
+
+  html += `<div style="font-size:12px;color:var(--muted);background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:9px 12px;margin-bottom:14px;line-height:1.5">Se apunta en la hoja de la nevera. ${CONSUM_MANAGERS.join(' y ')} la pasan aquí y cobran cada 15 días o a final de mes.</div>`;
+
+  if(mgr) html += `<button class="btn-dashed" style="border-color:var(--accentD);color:var(--accentD)" onclick="openGraella()">+ Pasar la graella</button>`;
+
+  // ── Pendiente por persona
+  html += `<span class="lbl" style="margin-top:6px">Pendiente por persona</span>`;
+  if(people.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Nadie debe nada.</div>`;
+  people.forEach(p=>{
+    const open = expandedConsum.has(p.name);
+    const me = p.name===ME;
+    html += `<div class="card" style="padding:0;overflow:hidden;border-left:4px solid ${me?'var(--warn)':'var(--border)'}">
+      <div style="padding:13px 16px;cursor:pointer;touch-action:manipulation" onclick="toggleConsumExpand('${esc(p.name)}')">
+        <div style="display:flex;align-items:center;gap:10px;pointer-events:none">
+          ${av(p.name,'av av-md '+(me?'av-on':'av-off'))}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;color:var(--text)">${esc(p.name)}${me?' <span style="font-size:9px;color:var(--faint)">(tú)</span>':''}</div>
+            <div style="font-size:11px;color:var(--faint)">${p.items.map(i=>esc(i.period||'')).filter(Boolean).join(' · ')||p.items.length+' apunte'+(p.items.length>1?'s':'')}</div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--warn)">${eur(p.total)}</div>
+        </div>
+        ${mgr?`<div style="display:flex;gap:6px;margin-top:10px">
+          <button class="btn-accent" style="flex:1;font-size:9px;padding:9px 8px" onclick="event.stopPropagation();cobrarPersona('${esc(p.name)}','efectivo')">Cobrado · efectivo</button>
+          <button class="btn-accent" style="flex:1;font-size:9px;padding:9px 8px;background:#5a6ea8;color:#fff" onclick="event.stopPropagation();cobrarPersona('${esc(p.name)}','bizum')">Cobrado · Bizum</button>
+        </div>`:''}
+      </div>
+      ${open?`<div style="border-top:1px solid var(--line);padding:4px 16px 8px">
+        ${p.items.map(i=>`<div class="quota-row">
+          <div><div style="font-size:13px;color:var(--text)">${esc(i.period||'Sin periodo')}</div><div style="font-size:11px;color:var(--faint)">Apuntado por ${esc(i.by||'?')} · ${i.date||''}</div></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Bebas Neue',sans-serif;font-size:20px">${eur(i.amount)}</span>
+          ${mgr?`<button class="shop-del" onclick="deleteConsum(${i.id})" title="Eliminar">×</button>`:''}</div>
+        </div>`).join('')}
+      </div>`:''}
+    </div>`;
+  });
+
+  // ── Cuadre del mes
+  const apMes = act.filter(c=>(c.date||'').startsWith(ym));
+  const coMes = paid.filter(c=>(c.paidAt||'').startsWith(ym));
+  const efMes = coMes.filter(c=>c.method==='efectivo');
+  const bzMes = coMes.filter(c=>c.method!=='efectivo');
+  const efBy = {};
+  efMes.forEach(c=>{ efBy[c.paidBy||'?'] = (efBy[c.paidBy||'?']||0) + amt(c); });
+  const row = (l,v,bold,col) => `<div class="quota-row"><span style="font-size:13px;color:${bold?'var(--text)':'var(--muted)'};${bold?'font-weight:600':''}">${l}</span><span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${col||'var(--text)'}">${v}</span></div>`;
+  const diff = st.bebidaDiff;
+  html += `<span class="lbl" style="margin-top:18px">Cuadre · <span style="text-transform:capitalize">${mesTxt}</span></span>
+  <div class="card" style="padding:4px 16px">
+    ${row('Apuntado este mes', eur(sum(apMes)))}
+    ${row('Cobrado en efectivo', eur(sum(efMes)), false, METHODS.efectivo.color)}
+    ${Object.keys(efBy).length?`<div style="font-size:11px;color:var(--faint);margin:-4px 0 6px">${Object.entries(efBy).map(([k,v])=>`${esc(k)} tiene ${eur(v)}`).join(' · ')}</div>`:''}
+    ${row('Cobrado por Bizum / transf.', eur(sum(bzMes)), false, METHODS.bizum.color)}
+    ${row('Pendiente de cobrar (total)', eur(sum(pend)), false, 'var(--warn)')}
+    ${st.dotacion>0?row('Bebida + pendiente vs dotación', (diff>=0?'+ ':'− ')+eur(Math.abs(diff)), true, diff>=0?'var(--accentD)':'var(--neg)'):''}
+  </div>
+  ${st.dotacion>0?`<div style="font-size:11px;color:var(--faint);line-height:1.5;margin:-2px 2px 10px">${diff>=0?'Cuadra: el fondo de bebida más lo que se debe llega a la dotación.':'No cuadra: falta dinero respecto a la dotación. Puede haber consumiciones sin apuntar o bebida comprada que aún está en la nevera.'}</div>`:''}`;
+
+  // ── Cobros recientes
+  if(paid.length){
+    html += `<span class="lbl" style="margin-top:12px">Cobros recientes</span><div class="card" style="padding:4px 16px">`;
+    [...paid].sort((a,b)=>(b.paidAt||'').localeCompare(a.paidAt||'')).slice(0,25).forEach(c=>{
+      const m = METHODS[c.method]||METHODS.bizum;
+      html += `<div class="quota-row" style="gap:10px">
+        <div style="min-width:0">
+          <div style="font-size:13px;color:var(--text)">${esc(c.name)} <span style="color:var(--faint);font-size:11px">· ${esc(c.period||'')}</span></div>
+          <div style="margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">${tag(m.label,m.color)}<span style="font-size:11px;color:var(--faint)">${esc(c.paidBy||'?')} · ${shortDT(c.paidAt)}</span></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accentD)">${eur(c.amount)}</span>
+          ${mgr?`<button class="btn-ghost" style="font-size:9px;padding:4px 8px" onclick="undoCobro(${c.id})">Deshacer</button>`:''}
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  document.getElementById('body-consum').innerHTML = html;
+}
+
+function openGraella(){
+  if(!canConsum()) return;
+  const d = new Date();
+  const mes = d.toLocaleDateString("es-ES",{month:"long"});
+  document.getElementById('graPeriod').value = d.getDate()<=15 ? `2ª quincena ${new Date(d.getFullYear(),d.getMonth()-1,1).toLocaleDateString("es-ES",{month:"long"})}` : `1–15 ${mes}`;
+  document.getElementById('graRows').innerHTML = MEMBERS.map((m,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)">
+    ${av(m.name,'av av-md av-off')}
+    <span style="flex:1;font-size:14px;color:var(--text)">${esc(m.name)}</span>
+    <input class="inp gra-inp" data-name="${esc(m.name)}" type="text" inputmode="decimal" placeholder="0" style="width:90px;text-align:right;padding:8px 10px" oninput="graTotal()"/>
+  </div>`).join('');
+  graTotal();
+  openModal('modalGraella');
+}
+const parseEur = v => { const n = parseFloat(String(v||'').trim().replace(',', '.')); return isNaN(n) ? 0 : n; };
+function graTotal(){
+  const t = [...document.querySelectorAll('.gra-inp')].reduce((s,i)=>s+parseEur(i.value),0);
+  document.getElementById('graTotal').textContent = eur(t);
+}
+function saveGraella(){
+  if(!canConsum()) return;
+  const period = document.getElementById('graPeriod').value.trim();
+  if(!period){ alert("Pon el periodo de la hoja (ej: 1–15 octubre)."); return; }
+  const rows = [...document.querySelectorAll('.gra-inp')].map(i=>({name:i.dataset.name, amount:parseEur(i.value)}));
+  if(rows.some(r=>r.amount<0)){ alert("Hay algún importe negativo."); return; }
+  const valid = rows.filter(r=>r.amount>0);
+  if(!valid.length){ alert("No hay ningún importe."); return; }
+  const total = valid.reduce((s,r)=>s+r.amount,0);
+  if(!confirm(`Guardar "${period}"
+
+${valid.length} personas · ${eur(total)}`)) return;
+  let nextId = consum.reduce((m,c)=>Math.max(m,c.id||0),0);
+  const date = todayISO();
+  valid.forEach(r=>{
+    nextId++;
+    fbSet('consum', {id:nextId, name:r.name, amount:Math.round(r.amount*100)/100, period, date, by:ME, paid:false, method:null, paidAt:null, paidBy:null, deleted:false});
+  });
+  closeModal('modalGraella');
+}
+function cobrarPersona(name, method){
+  if(!canConsum()) return;
+  const items = consum.filter(c=>!c.deleted && !c.paid && c.name===name);
+  if(!items.length) return;
+  const total = items.reduce((s,c)=>s+(Number(c.amount)||0),0);
+  if(!confirm(`${name} paga ${eur(total)} por ${method==='efectivo'?'efectivo':'Bizum / transferencia'}.
+
+¿Marcar como cobrado?`)) return;
+  const at = new Date().toISOString();
+  items.forEach(c=>{ const n=clone(c); n.paid=true; n.method=method; n.paidAt=at; n.paidBy=ME; fbSet('consum', n); });
+}
+function undoCobro(id){
+  if(!canConsum()) return;
+  const c = consum.find(x=>x.id===id); if(!c) return;
+  if(!confirm(`¿Deshacer el cobro de ${c.name} (${eur(c.amount)})?
+
+Volverá a pendiente.`)) return;
+  const n=clone(c); n.paid=false; n.method=null; n.paidAt=null; n.paidBy=null; fbSet('consum', n);
+}
+function deleteConsum(id){
+  if(!canConsum()) return;
+  const c = consum.find(x=>x.id===id); if(!c) return;
+  if(!confirm(`¿Eliminar el apunte de ${c.name} (${c.period||''} · ${eur(c.amount)})?
+
+Se mueve a la Papelera.`)) return;
+  softDelete('consum', c);
+}
+
 // ═══════════════════════════════ TURNOS ══════════════════════════════
-// Da formato a un fin de semana a partir del sábado (YYYY-MM-DD)
-function fmtFinde(satStr){
-  if(!satStr) return null;
-  const sat = new Date(satStr+"T12:00:00");
-  const sun = new Date(sat); sun.setDate(sat.getDate()+1);
-  const mesS = sat.toLocaleDateString("es-ES",{month:"short"});
-  const mesD = sun.toLocaleDateString("es-ES",{month:"short"});
-  if(mesS===mesD) return `Finde ${sat.getDate()}–${sun.getDate()} ${mesS}`;
-  return `Finde ${sat.getDate()} ${mesS} – ${sun.getDate()} ${mesD}`;
+const MONTHS_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const teamOf = name => TEAMS.find(t=>t.members.includes(name));
+const dayStart = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+// Genera los turnos desde el inicio de la rueda hasta dentro de ~14 meses
+function turnPeriods(){
+  const out = [];
+  const today = dayStart(new Date());
+  const limit = new Date(today.getFullYear(), today.getMonth()+14, 1);
+  for(let y=ROTA_START.getFullYear(); y<=limit.getFullYear(); y++){
+    TEAMS.forEach(t=>{
+      const start = new Date(y, t.months[0], 1);
+      const end = new Date(y, t.months[1]+1, 0); // último día del 2º mes
+      if(start < ROTA_START || start > limit) return;
+      out.push({id: y*10+t.id, team: t, start, end,
+        label: `${MONTHS_ES[t.months[0]]} – ${MONTHS_ES[t.months[1]]} ${y}`});
+    });
+  }
+  return out.sort((a,b)=>a.start-b.start);
+}
+function currentTurn(){
+  const today = dayStart(new Date());
+  return turnPeriods().find(p=>today>=p.start && today<=p.end) || null;
+}
+function turnRecord(id){
+  const r = turns.find(t=>t.id===id);
+  return r ? clone(r) : {id, team: Math.round(id%10), checks:{}, note:"", closed:false, closedBy:null, closedAt:null};
+}
+const canEditTurn = p => !!ME && (p.team.members.includes(ME) || TURN_SUPERVISORS.includes(ME));
+const daysBetween = (a,b) => Math.round((dayStart(b)-dayStart(a))/86400000);
+const shortDT = iso => { if(!iso) return ''; const d=new Date(iso); return `${d.getDate()} ${MONTHS_ES[d.getMonth()]}`; };
+
+let expandedTurns = new Set();
+function toggleTurnExpand(id){ expandedTurns.has(id) ? expandedTurns.delete(id) : expandedTurns.add(id); renderTurnos(); }
+
+function teamAvatars(team, dark){
+  return team.members.map((n,i)=>`<span style="margin-left:${i>0?'-8px':'0'};position:relative;z-index:${i}">${av(n,'av av-md '+(n===ME?'av-on':(dark?'av-on':'av-off')))}</span>`).join('');
+}
+
+function checklistHTML(p, rec, dark){
+  const editable = canEditTurn(p) && !rec.closed && dayStart(new Date())>=p.start;
+  const txt = dark ? '#fff' : 'var(--text)';
+  const sub = dark ? 'var(--faint)' : 'var(--muted)';
+  const line = dark ? 'rgba(255,255,255,.12)' : 'var(--line)';
+  return CLEAN_CHECKS.map(c=>{
+    const done = rec.checks && rec.checks[c.key];
+    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid ${line}">
+      <button class="shop-check${done?' done':''}" style="${dark&&!done?'border-color:#6e6860;':''}${editable?'':'cursor:default;opacity:.75'}" ${editable?`onclick="toggleCheck(${p.id},'${c.key}')"`:'disabled'} aria-label="${c.label}">${done?'✓':''}</button>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;color:${txt};${done?'text-decoration:line-through;opacity:.7':''}">${c.label}</div>
+        <div style="font-size:11px;color:${sub};margin-top:1px">${done?`Hecho por ${esc(done.by)} · ${shortDT(done.at)}`:c.sub}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function turnActionsHTML(p, rec, dark){
+  if(!canEditTurn(p)) return '';
+  const started = dayStart(new Date())>=p.start;
+  if(!started) return '';
+  const nDone = CLEAN_CHECKS.filter(c=>rec.checks && rec.checks[c.key]).length;
+  const complete = nDone===CLEAN_CHECKS.length;
+  let h = `<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">`;
+  if(rec.closed){
+    h += `<button class="btn-ghost" style="${dark?'color:var(--faint);border-color:#4a4a44':''}" onclick="reopenTurn(${p.id})">Reabrir turno</button>`;
+  } else {
+    h += complete
+      ? `<button class="btn-accent" style="flex:1" onclick="closeTurn(${p.id})">Cerrar turno</button>`
+      : `<button class="btn-ghost" style="flex:1;cursor:default;${dark?'color:#6e6860;border-color:#4a4a44':''}" disabled>Faltan ${CLEAN_CHECKS.length-nDone} para cerrar</button>`;
+  }
+  h += `<button class="btn-ghost" style="${dark?'color:var(--faint);border-color:#4a4a44':''}" onclick="openTurnNote(${p.id})">${rec.note?'Editar nota':'+ Nota'}</button></div>`;
+  return h;
+}
+
+function noteHTML(rec, dark){
+  if(!rec.note) return '';
+  return `<div style="font-size:13px;color:${dark?'#d8d0c0':'var(--muted)'};background:${dark?'rgba(255,255,255,.06)':'var(--bg)'};border-radius:5px;padding:10px 12px;line-height:1.5;font-style:italic;margin-top:12px">${esc(rec.note)}</div>`;
 }
 
 function renderTurnos(){
-  // Copia ordenada: primero los que tienen fecha (por fecha asc), luego sin fecha
-  const list = turns.map((t,idx)=>({...t,_idx:idx}));
-  const dated = list.filter(t=>t.date).sort((a,b)=>a.date<b.date?-1:1);
-  const undated = list.filter(t=>!t.date);
-  const ordered = [...dated, ...undated];
-  // El "próximo" = primer turno con fecha >= hoy y no completado
-  const today = new Date().toISOString().split("T")[0];
-  const nextTurn = dated.find(t=>t.date>=today && !t.done);
+  const periods = turnPeriods();
+  const today = dayStart(new Date());
+  const cur = periods.find(p=>today>=p.start && today<=p.end) || null;
+  const upcoming = periods.filter(p=>p.start>today);
+  const past = periods.filter(p=>p.end<today).reverse();
+  const myTeam = teamOf(ME);
 
-  let html = `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:10px 12px;margin-bottom:14px">Cada pareja se encarga de la limpieza y compra su fin de semana. Agenda la fecha que os toque; si una semana no se hace, se reagenda.</div>`;
-  html += `<span class="lbl">Turnos por pareja</span>`;
-  ordered.forEach(t=>{
-    const group = gg(t.group);
-    const isNext = nextTurn && t.id===nextTurn.id && t.group===nextTurn.group;
-    const findeTxt = fmtFinde(t.date);
-    const avs = (group?.members||[]).map((n,ni)=>`<span style="margin-left:${ni>0?'-8px':'0'};z-index:${ni};position:relative">${av(n,'av av-md '+(isNext?'av-on':'av-off'))}</span>`).join('');
-    html += `<div class="card" style="border-left:4px solid ${isNext?'var(--accent)':'var(--border)'}">
+  let html = `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:10px 12px;margin-bottom:14px;line-height:1.5">Cada equipo se encarga durante 2 meses de la <b>limpieza a fondo</b> y de <b>comprar bebida y básicos</b>. El turno se cierra con los 4 puntos marcados. Después de cada uso, el local se deja recogido.</div>`;
+
+  // ── Turno en curso
+  if(cur){
+    const rec = turnRecord(cur.id);
+    const nDone = CLEAN_CHECKS.filter(c=>rec.checks[c.key]).length;
+    const left = daysBetween(today, cur.end);
+    const mine = cur.team.members.includes(ME);
+    html += `<div class="card card-dark" style="margin-bottom:18px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-        <div style="display:flex;align-items:center;gap:10px;min-width:0">
-          <div class="turn-avs">${avs}</div>
-          <div style="min-width:0">
-            <div style="font-size:14px;font-weight:${isNext?600:400};color:${isNext?'var(--text)':'var(--muted)'}">${(group?.members||[]).join(" & ")}</div>
-            <div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center">
-              ${isNext?tag('Esta semana','#3d8000'):''}
-              ${t.done?tag('Completado','#3d8000'):''}
-              ${findeTxt?`<span style="font-size:12px;color:${isNext?'var(--accentD)':'var(--muted)'};font-weight:500">${findeTxt}</span>`:`<span style="font-size:12px;color:var(--faint);font-style:italic">Sin fecha</span>`}
+        <div>
+          <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">De turno ahora</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--accent);line-height:1;letter-spacing:1px">Equipo ${cur.team.id}</div>
+          <div style="font-size:12px;color:#fff;margin-top:3px;text-transform:capitalize">${cur.label}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          ${mine?tag('Tu equipo','#7fff00','rgba(127,255,0,.14)'):''}
+          <div style="font-size:11px;color:var(--faint);margin-top:6px">${rec.closed?'Cerrado':`Quedan ${left} día${left===1?'':'s'}`}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin:14px 0 4px">
+        <div class="turn-avs">${teamAvatars(cur.team,true)}</div>
+      </div>
+      <div style="font-size:12px;color:var(--faint);margin-bottom:12px">${cur.team.members.map(esc).join(', ')}</div>
+      <div class="progress-wrap" style="background:rgba(255,255,255,.1)"><div class="progress-bar" style="width:${Math.round(nDone/CLEAN_CHECKS.length*100)}%"></div></div>
+      <div style="font-size:10px;color:var(--faint);letter-spacing:.5px;margin-bottom:4px">${rec.closed?`Cerrado por ${esc(rec.closedBy)} · ${shortDT(rec.closedAt)}`:`Limpieza a fondo · ${nDone} de ${CLEAN_CHECKS.length}`}</div>
+      ${checklistHTML(cur, rec, true)}
+      ${turnActionsHTML(cur, rec, true)}
+      ${noteHTML(rec, true)}
+    </div>`;
+  } else {
+    const nxt = upcoming[0];
+    const inDays = nxt ? daysBetween(today, nxt.start) : null;
+    html += `<div class="card card-dark" style="margin-bottom:18px">
+      <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">${today<ROTA_START?'La rueda empieza en noviembre':'Este mes no hay turno'}</div>
+      ${nxt?`<div style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:#fff;line-height:1.05;letter-spacing:1px">Siguiente: <span style="color:var(--accent)">Equipo ${nxt.team.id}</span></div>
+      <div style="font-size:12px;color:var(--faint);margin-top:4px"><span style="text-transform:capitalize">${nxt.label}</span> · empieza en ${inDays} día${inDays===1?'':'s'}</div>
+      <div class="turn-avs" style="margin-top:12px">${teamAvatars(nxt.team,true)}</div>
+      <div style="font-size:12px;color:var(--faint);margin-top:6px">${nxt.team.members.map(esc).join(', ')}</div>`:''}
+    </div>`;
+  }
+
+  // ── Tu equipo (recordatorio)
+  if(myTeam){
+    const myNext = periods.find(p=>p.team.id===myTeam.id && p.end>=today);
+    const heroId = cur ? cur.id : (upcoming[0] ? upcoming[0].id : null);
+    if(myNext && myNext.id!==heroId){
+      html += `<div style="font-size:12px;color:var(--accentD);background:rgba(127,255,0,.13);border:1px solid rgba(127,255,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:16px">Estás en el <b>equipo ${myTeam.id}</b> · tu turno: <span style="text-transform:capitalize">${myNext.label}</span></div>`;
+    }
+  }
+
+  // ── Próximos
+  html += `<span class="lbl">Próximos turnos</span>`;
+  upcoming.slice(cur?0:1, (cur?0:1)+4).forEach(p=>{
+    const mine = p.team.members.includes(ME);
+    html += `<div class="card" style="border-left:4px solid ${mine?'var(--accent)':'var(--border)'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div style="min-width:0">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="card-title">Equipo ${p.team.id}</span>
+            ${mine?tag('Tu equipo','#3d8000'):''}
+          </div>
+          <div style="font-size:12px;color:var(--accentD);font-weight:500;text-transform:capitalize;margin-top:2px">${p.label}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4">${p.team.members.map(esc).join(', ')}</div>
+        </div>
+        <div class="turn-avs" style="flex-shrink:0">${teamAvatars(p.team,false)}</div>
+      </div>
+    </div>`;
+  });
+  if(!cur && upcoming.length<=1) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin más turnos programados.</div>`;
+
+  // ── Anteriores
+  if(past.length>0){
+    html += `<span class="lbl" style="margin-top:18px">Turnos anteriores</span>`;
+    past.forEach(p=>{
+      const rec = turnRecord(p.id);
+      const nDone = CLEAN_CHECKS.filter(c=>rec.checks[c.key]).length;
+      const open = expandedTurns.has(p.id);
+      html += `<div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:14px 16px;cursor:pointer;touch-action:manipulation" onclick="toggleTurnExpand(${p.id})">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;pointer-events:none">
+            <div>
+              <div class="card-title">Equipo ${p.team.id}</div>
+              <div style="font-size:12px;color:var(--muted);text-transform:capitalize">${p.label}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              ${rec.closed?tag('Cerrado','#3d8000'):tag(`Sin cerrar · ${nDone}/${CLEAN_CHECKS.length}`,'#c0392b')}
+              <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--faint);transform:rotate(${open?'180deg':'0deg'});transition:transform .18s;display:inline-block">⌄</span>
             </div>
           </div>
         </div>
-      </div>
-      <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap">
-        <button class="btn-ghost" style="font-size:9px;padding:6px 12px" onclick="openTurnDate(${t.group})">${t.date?'Cambiar fecha':'Agendar finde'}</button>
-        <button class="btn-ghost" style="font-size:9px;padding:6px 12px" onclick="openTurnNote(${t.group})">${t.note?'Editar nota':'+ Nota'}</button>
-        ${t.done?`<button class="btn-ghost" style="font-size:9px;padding:6px 12px" onclick="toggleTurnDone(${t.group})">Reabrir</button>`:`<button class="btn-ghost" style="font-size:9px;padding:6px 12px;border-color:var(--accentD);color:var(--accentD)" onclick="toggleTurnDone(${t.group})">Marcar hecho</button>`}
-      </div>
-      ${t.note?`<div style="font-size:13px;color:var(--muted);background:var(--bg);border-radius:5px;padding:10px 12px;line-height:1.5;font-style:italic;margin-top:10px">${t.note}</div>`:''}
-    </div>`;
-  });
+        ${open?`<div style="border-top:1px solid var(--line);padding:4px 16px 16px">
+          ${checklistHTML(p, rec, false)}
+          ${turnActionsHTML(p, rec, false)}
+          ${noteHTML(rec, false)}
+        </div>`:''}
+      </div>`;
+    });
+  }
+
   document.getElementById('body-turnos').innerHTML = html;
 }
 
-// Asegura que el turno de un grupo existe como objeto editable (desde DEFAULT o Firebase)
-function getTurnByGroup(groupId){
-  let t = turns.find(x=>x.group===groupId);
-  if(!t){
-    const g = GROUPS.find(x=>x.id===groupId);
-    t = {id:groupId, group:groupId, date:"", note:"", done:false};
-  }
-  return clone(t);
+// — Mutaciones de turnos → Firestore —
+function findPeriod(id){ return turnPeriods().find(p=>p.id===id); }
+function toggleCheck(id, key){
+  const p = findPeriod(id); if(!p || !canEditTurn(p)) return;
+  const rec = turnRecord(id);
+  if(rec.closed) return;
+  rec.checks = rec.checks || {};
+  if(rec.checks[key]) delete rec.checks[key];
+  else rec.checks[key] = {by: ME, at: new Date().toISOString()};
+  fbSet('turns', rec);
 }
-
-function openTurnDate(groupId){
-  const t = getTurnByGroup(groupId);
-  const val = prompt("Agenda el SÁBADO del fin de semana (formato: AAAA-MM-DD)\nEj: 2026-09-13\n\nDeja vacío para quitar la fecha:", t.date||"");
-  if(val===null) return;
-  const clean = val.trim();
-  if(clean && !/^\d{4}-\d{2}-\d{2}$/.test(clean)){ alert("Formato no válido. Usa AAAA-MM-DD, por ejemplo 2026-09-13"); return; }
-  t.date = clean;
-  fbSet('turns', t);
+function closeTurn(id){
+  const p = findPeriod(id); if(!p || !canEditTurn(p)) return;
+  const rec = turnRecord(id);
+  const missing = CLEAN_CHECKS.filter(c=>!rec.checks[c.key]);
+  if(missing.length){ alert("Falta por marcar:\n\n" + missing.map(c=>"· "+c.label).join("\n")); return; }
+  if(!confirm(`¿Cerrar el turno del equipo ${p.team.id} (${p.label})?\n\nQueda como hecho para toda la colla.`)) return;
+  rec.closed = true; rec.closedBy = ME; rec.closedAt = new Date().toISOString();
+  fbSet('turns', rec);
 }
-function openTurnNote(groupId){
-  editTurnGroup = groupId;
-  const t = getTurnByGroup(groupId);
-  document.getElementById('turnNoteText').value = t.note||'';
+function reopenTurn(id){
+  const p = findPeriod(id); if(!p || !canEditTurn(p)) return;
+  if(!confirm("¿Reabrir este turno?")) return;
+  const rec = turnRecord(id);
+  rec.closed = false; rec.closedBy = null; rec.closedAt = null;
+  fbSet('turns', rec);
+}
+function openTurnNote(id){
+  const p = findPeriod(id); if(!p || !canEditTurn(p)) return;
+  editTurnId = id;
+  document.getElementById('turnNoteText').value = turnRecord(id).note || '';
   openModal('modalTurnNote');
 }
 function saveTurnNote(){
-  if(editTurnGroup===null){ closeModal('modalTurnNote'); return; }
-  const t = getTurnByGroup(editTurnGroup);
-  t.note = document.getElementById('turnNoteText').value;
-  fbSet('turns', t);
-  closeModal('modalTurnNote'); editTurnGroup = null;
-}
-function toggleTurnDone(groupId){
-  const t = getTurnByGroup(groupId);
-  t.done = !t.done;
-  fbSet('turns', t);
+  if(editTurnId===null){ closeModal('modalTurnNote'); return; }
+  const rec = turnRecord(editTurnId);
+  rec.note = document.getElementById('turnNoteText').value.trim();
+  fbSet('turns', rec);
+  closeModal('modalTurnNote'); editTurnId = null;
 }
 
 // ═══════════════════════════════ CUOTAS ══════════════════════════════
@@ -1771,7 +2167,7 @@ function renderColla(){
     <span class="lbl" style="color:var(--neg)">Administración · solo tesorero</span>
     <div class="warn-card" style="background:#fbeae8;border-color:rgba(192,57,43,.3)">
       <div style="font-size:13px;color:var(--text);margin-bottom:4px;font-weight:500">Vaciar todos los datos</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Borra eventos, caja, lista de la compra, turnos y cuotas para toda la colla. Los documentos se conservan. Úsalo solo para empezar de cero. No se puede deshacer.</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Borra eventos, caja, consumiciones, lista de la compra, turnos y cuotas para toda la colla. Los documentos se conservan. Úsalo solo para empezar de cero. No se puede deshacer.</div>
       <button class="btn-accent" style="background:var(--neg);color:#fff;width:100%" onclick="resetAllData()">Vaciar y reiniciar la app</button>
     </div>`;
   }
