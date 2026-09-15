@@ -343,11 +343,11 @@ textarea.inp{height:100px;}
 <div class="modal-overlay" id="modalIngreso" onclick="closeModalBg(event,'modalIngreso')">
   <div class="modal-box">
     <div class="modal-title">Ingreso Manual</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Para saldo inicial, derramas, bote de consumiciones u otros ingresos que no sean cuotas mensuales.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Para saldo inicial, derramas, altas u otros ingresos que no sean cuotas. Lo que pague gente de fuera por bebida, en "Bebida".</div>
     <div class="inp-wrap"><label class="inp-label">Entra en</label>
       <div class="pill-row">
-        <span class="pill on" id="ingDestFondo" onclick="setIngresoDest('fondo')">Fondo de la colla</span>
-        <span class="pill" id="ingDestBebida" onclick="setIngresoDest('bebida')">Caja bebida</span>
+        <span class="pill on" id="ingDestFondo" onclick="setIngresoDest('fondo')">Bote general</span>
+        <span class="pill" id="ingDestBebida" onclick="setIngresoDest('bebida')">Bebida</span>
       </div>
       <div id="ingresoDestHint" style="font-size:11px;color:var(--muted);margin-top:-6px"></div>
     </div>
@@ -356,24 +356,6 @@ textarea.inp{height:100px;}
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modalIngreso')">Cancelar</button>
       <button class="btn-accent" onclick="addIngreso()">Añadir ingreso</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalTraspaso" onclick="closeModalBg(event,'modalTraspaso')">
-  <div class="modal-box">
-    <div class="modal-title">Mover entre cajas</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">El total en cuenta no cambia: el dinero solo cambia de caja.</div>
-    <div class="inp-wrap"><label class="inp-label">Movimiento</label><div class="pill-row" id="trasRoutePills"></div></div>
-    <div class="card" style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
-      <div style="font-size:12px;color:var(--muted)" id="trasOrigenLbl">En Reserva ahora</div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text)" id="trasReserva">0.00 €</div>
-    </div>
-    <div class="inp-wrap"><label class="inp-label">Concepto</label><input class="inp" id="trasWhat" placeholder="Ej: Sobrante cuotas septiembre"/></div>
-    <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" inputmode="decimal" id="trasAmt" placeholder="90"/></div>
-    <div class="modal-footer">
-      <button class="btn-ghost" onclick="closeModal('modalTraspaso')">Cancelar</button>
-      <button class="btn-accent" onclick="addTraspaso()">Mover dinero</button>
     </div>
   </div>
 </div>
@@ -437,41 +419,10 @@ textarea.inp{height:100px;}
   </div>
 </div>
 
-<div class="modal-overlay" id="modalPago" onclick="closeModalBg(event,'modalPago')">
-  <div class="modal-box">
-    <div class="modal-title">He pagado</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5" id="pagoInfo"></div>
-    <div class="inp-wrap"><label class="inp-label">Cómo</label>
-      <div class="pill-row">
-        <span class="pill on" id="pagoEfectivo" onclick="setPagoMethod('efectivo')">Al bote (efectivo)</span>
-        <span class="pill" id="pagoBizum" onclick="setPagoMethod('bizum')">Bizum / transferencia</span>
-      </div>
-    </div>
-    <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="text" inputmode="decimal" id="pagoAmt" placeholder="0.00"/></div>
-    <div class="modal-footer">
-      <button class="btn-ghost" onclick="closeModal('modalPago')">Cancelar</button>
-      <button class="btn-accent" onclick="savePago()">Guardar pago</button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="modalBote" onclick="closeModalBg(event,'modalBote')">
-  <div class="modal-box">
-    <div class="modal-title" id="boteTitle">Bote</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5" id="boteInfo"></div>
-    <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="text" inputmode="decimal" id="boteAmt" placeholder="0.00"/></div>
-    <div class="inp-wrap"><label class="inp-label">Nota (opcional)</label><input class="inp" id="boteNote" placeholder=""/></div>
-    <div class="modal-footer">
-      <button class="btn-ghost" onclick="closeModal('modalBote')">Cancelar</button>
-      <button class="btn-accent" onclick="saveBote()">Guardar</button>
-    </div>
-  </div>
-</div>
-
 <div class="modal-overlay" id="modalGraella" onclick="closeModalBg(event,'modalGraella')">
   <div class="modal-box">
-    <div class="modal-title">Pasar la graella</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Copia el total en euros de cada persona según la hoja de la nevera. Lo que consuma un invitado va a nombre de quien lo invita. Deja en blanco a quien no tenga nada.</div>
+    <div class="modal-title">Pasar la hoja</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Pon solo lo que cada persona <b>tiene pendiente</b> en la hoja (lo marcado como pagado no). Lo de un invitado va a nombre de quien lo invita. Deja en blanco a quien no deba nada.</div>
     <div class="inp-wrap"><label class="inp-label">Periodo</label><input class="inp" id="graPeriod" placeholder="Ej: 1–15 octubre"/></div>
     <div class="inp-wrap"><label class="inp-label">Importe por persona (€)</label>
       <div id="graRows" style="border:1px solid var(--line);border-radius:6px;padding:4px 12px;max-height:46vh;overflow-y:auto"></div>
@@ -533,7 +484,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 17; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 18; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -576,12 +527,14 @@ const DOC_TYPES = {
   Otro:{color:"#6e6860"},
 };
 
-// Consumiciones: la graella sigue en papel. Solo Edu la pasa a la app,
-// cobra y confirma los pagos que declara cada uno.
-const CONSUM_MANAGERS = ["Edu"];
+// Gestión del dinero del día a día: pasar la hoja de consumiciones, cobrar
+// y marcar el alquiler pagado. (Confirmar cuotas sigue siendo solo del tesorero.)
+const CONSUM_MANAGERS = ["Edu","Marta"];
 
-// Caja: alquiler mensual de referencia para la Reserva
+// Caja: alquiler mensual que se aparta hasta que se paga
 const RENT = 600;
+// Fondo de bebida: dinero fijo que la colla reserva para comprar bebida
+const BEBIDA_BASE = 200;
 
 const EVENT_TYPES = {
   comida:{label:"Comida",color:"#3d8000"},
@@ -954,9 +907,9 @@ function getBadge(key){
   if(key==='eventos') return events.filter(e=>!e.deleted).reduce((s,e)=>s+(e.polls||[]).filter(p=>p.open).length,0)||null;
   if(key==='consum'){
     const L = consumLedger();
-    if(CONSUM_MANAGERS.includes(ME)) return L.toConfirm.length || null;
+    if(CONSUM_MANAGERS.includes(ME) && L.toConfirm.length) return L.toConfirm.length;
     const mine = L.people.find(x=>x.name===ME);
-    return mine && mine.saldo - mine.declarado > 0.005 ? '!' : null;
+    return mine && mine.saldo > 0.005 ? '!' : null;
   }
   if(key==='caja') return compras.filter(c=>!c.deleted && !c.reintegrated).length||null;
   if(key==='compra') return shopping.filter(s=>!s.deleted && !s.done).length||null;
@@ -1241,70 +1194,41 @@ const EXP_CATS = ["Compra","Bebida","Luz","Agua","Alquiler","Fianza","Evento","O
 const CAT_COLORS = {Compra:"#3d8000",Bebida:"#0e7c86",Luz:"#c07800",Agua:"#5a6ea8",Alquiler:"#9b59b6",Fianza:"#16a085",Evento:"#c0392b",Otro:"#6e6860"};
 let compraCat = "Compra";
 
-// ── Tres cajas ─────────────────────────────────────────────────────────
-// Reserva alquiler : cuotas mensuales confirmadas − gastos "Alquiler".
-// Caja bebida      : dotación (traspaso desde Fondo) + bote de consumiciones − gastos "Bebida".
-// Fondo de la colla: cuota "Inicial" + ingresos manuales − resto de gastos.
-// Los traspasos mueven dinero entre cajas; el total en cuenta no cambia.
-const CAJAS = {
-  fondo:  {label:"Fondo",           long:"Fondo de la colla", color:"#3d8000"},
-  bebida: {label:"Bebida",          long:"Caja bebida",       color:"#0e7c86"},
-  reserva:{label:"Reserva",         long:"Reserva alquiler",  color:"#141410"},
-};
-const TRANSFER_ROUTES = [
-  {from:"reserva", to:"fondo",  label:"Reserva → Fondo", what:m=>`Sobrante cuotas ${m}`},
-  {from:"fondo",   to:"bebida", label:"Fondo → Bebida",  what:()=>"Dotación caja bebida"},
-  {from:"bebida",  to:"fondo",  label:"Bebida → Fondo",  what:m=>`Beneficio bebida ${m}`},
-];
+// ── Cuentas de la colla (simplificado) ───────────────────────────────────
+// Todo el dinero está en un solo sitio. La app lo reparte sola, sin traspasos:
+//   · Alquiler del mes: se apartan 600 € hasta que se marca como pagado.
+//   · Fondo de bebida: 200 € + lo cobrado de consumiciones − lo comprado de bebida.
+//   · Se puede gastar: todo lo demás.
 const isInicialQuota = q => (q.month||'').toLowerCase().includes('inicial');
-const trFrom = c => c.from || 'reserva';   // traspasos sin ruta = Reserva → Fondo
-const trTo   = c => c.to   || 'fondo';
-function cajaOf(c){
-  if(c.transfer) return 'traspaso';
-  if(c.income) return c.caja==='bebida' ? 'bebida' : 'fondo';
-  if(c.cat==='Alquiler') return 'reserva';
-  if(c.cat==='Bebida') return 'bebida';
-  return 'fondo';
-}
+const BEBIDA_COLOR = "#0e7c86";
+const mesActual = () => new Date().toLocaleDateString("es-ES",{month:"long"});
+const canMoney = () => CONSUM_MANAGERS.includes(ME);
 function cajaStats(){
-  const qs = quotas.filter(q=>!q.deleted);
-  const conf = q => (q.payments||[]).filter(p=>p.confirmedByTreasurer).length * (Number(q.amount)||0);
-  const cuotasMes = qs.filter(q=>!isInicialQuota(q)).reduce((s,q)=>s+conf(q),0);
-  const cuotaInicial = qs.filter(isInicialQuota).reduce((s,q)=>s+conf(q),0);
-  const act = compras.filter(c=>!c.deleted);
   const amt = c => Number(c.amount)||0;
-  const sum = arr => arr.reduce((s,c)=>s+amt(c),0);
-  const trs = act.filter(c=>c.transfer);
-  const trIn  = k => sum(trs.filter(c=>trTo(c)===k));
-  const trOut = k => sum(trs.filter(c=>trFrom(c)===k));
-  const ingresos = k => sum(act.filter(c=>c.income && !c.transfer && cajaOf(c)===k));
-  const gastosAll = act.filter(c=>!c.income && !c.transfer);
-  const gastos = k => sum(gastosAll.filter(c=>cajaOf(c)===k));
-
-  const reserva = cuotasMes - gastos('reserva') + trIn('reserva') - trOut('reserva');
-  const fondoIn  = cuotaInicial + ingresos('fondo') + trIn('fondo');
-  const fondoOut = gastos('fondo') + trOut('fondo');
-  const fondo = fondoIn - fondoOut;
-  const bebidaIn  = ingresos('bebida');
-  const bebidaOut = gastos('bebida');
+  const sum = a => a.reduce((s,c)=>s+amt(c),0);
+  const qs = quotas.filter(q=>!q.deleted);
+  const cuotas = qs.reduce((s,q)=>s+(q.payments||[]).filter(p=>p.confirmedByTreasurer).length*(Number(q.amount)||0),0);
+  const act = compras.filter(c=>!c.deleted && !c.transfer);   // los traspasos antiguos ya no cuentan
+  const ingresos = act.filter(c=>c.income);
+  const ingresosBebida = sum(ingresos.filter(c=>c.caja==='bebida'));
+  const gastosAll = act.filter(c=>!c.income);
+  const gastos = sum(gastosAll);
+  const gastosBebida = sum(gastosAll.filter(c=>c.cat==='Bebida'));
   const L = consumLedger();
   const cobrado = L.cobradoTotal;
-  const pendienteCobrar = L.pendienteTotal;
-  const bebida = bebidaIn + cobrado - bebidaOut + trIn('bebida') - trOut('bebida');
-  const dotacion = sum(trs.filter(c=>trFrom(c)==='fondo' && trTo(c)==='bebida'));
+  const total = cuotas + sum(ingresos) + cobrado - gastos;
+  const bebida = BEBIDA_BASE + cobrado + ingresosBebida - gastosBebida;
+  const ym = todayISO().slice(0,7);
+  const rentPaidItem = gastosAll.find(c=>c.cat==='Alquiler' && (c.date||'').startsWith(ym));
+  const alquiler = rentPaidItem ? 0 : RENT;
+  const disponible = total - bebida - alquiler;
   const pend = gastosAll.filter(c=>!c.reintegrated);
+  const r2 = n => Math.round(n*100)/100;
   return {
-    cuotasMes, reserva, fondo, fondoIn, fondoOut,
-    reservaAlquiler: gastos('reserva'),
-    reservaTraspasos: trOut('reserva') - trIn('reserva'),
-    nAlquileres: gastosAll.filter(c=>cajaOf(c)==='reserva').length,
-    nCuotasMes: qs.filter(q=>!isInicialQuota(q)).length,
-    bebida, bebidaIn, bebidaOut, dotacion, cobrado, pendienteCobrar,
-    // Cuadre: lo que hay en bebida + lo que nos deben, frente a la dotación
-    bebidaDiff: bebida + pendienteCobrar - dotacion,
-    total: reserva + fondo + bebida,
-    efectivoBote: L.efectivoBote,
-    banco: reserva + fondo + bebida - L.efectivoBote,
+    cuotas, total:r2(total), bebida:r2(bebida), alquiler, disponible:r2(disponible),
+    rentPaid: !!rentPaidItem, rentPaidItem,
+    cobrado, gastosBebida, ingresosBebida,
+    pendienteCobrar: L.pendienteTotal,
     L, act, pend, pendTotal: sum(pend),
   };
 }
@@ -1312,88 +1236,65 @@ function cajaStats(){
 function renderCaja(){
   const st = cajaStats();
   const isTr = ME===TREASURER;
-  // Si el alquiler de este mes ya está pagado, todo lo que queda en Reserva es sobrante
-  const ym = todayISO().slice(0,7);
-  const rentPaid = st.act.some(c=>!c.income && !c.transfer && c.cat==='Alquiler' && (c.date||'').startsWith(ym));
-  const sobrante = rentPaid ? st.reserva : st.reserva - RENT;
-  const rentPct = rentPaid ? 100 : Math.max(0, Math.min(100, Math.round((st.reserva/RENT)*100)));
-  const rentOk = rentPaid || st.reserva>=RENT;
-  const label9 = t => `<div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">${t}</div>`;
-
-  // Resumen de un vistazo
-  const cell = (lbl,val,col,onclick) => `<div style="flex:1;min-width:0;background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:10px 10px 9px;${onclick?'cursor:pointer':''}" ${onclick?`onclick="${onclick}"`:''}>
-    <div style="font-size:8px;letter-spacing:2px;color:var(--faint);text-transform:uppercase;line-height:1.3;min-height:21px">${lbl}</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${col};line-height:1.1;margin-top:3px;white-space:nowrap">${eur(val)}</div>
+  const mes = mesActual();
+  const legend = (dot,label,val,col) => `<div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-top:1px solid rgba(255,255,255,.08)">
+    <span style="width:10px;height:10px;border-radius:50%;background:${dot};flex-shrink:0"></span>
+    <span style="flex:1;font-size:12px;color:#d8d0c0">${label}</span>
+    <span style="font-size:15px;font-weight:600;color:${col||'#fff'}">${val}</span>
   </div>`;
-  let html = `<div style="display:flex;gap:6px;margin-bottom:12px">
-    ${cell('Bote general', st.fondo, st.fondo>=0?'var(--accentD)':'var(--neg)')}
-    ${cell('Fondo de bebida', st.bebida, CAJAS.bebida.color)}
-    ${cell('Pendiente de cobrar', st.pendienteCobrar, st.pendienteCobrar>0?'var(--warn)':'var(--muted)', "goSection('consum')")}
-  </div>`;
+  const pos = n => Math.max(0,n);
+  const barTotal = pos(st.disponible) + pos(st.bebida) + st.alquiler || 1;
+  const seg = (v,c) => v>0 ? `<div style="width:${(v/barTotal*100).toFixed(2)}%;background:${c}"></div>` : '';
 
-  // Fondo: lo que la colla puede gastar
-  html += `<div class="card card-dark" style="margin-bottom:10px">
-    ${label9('Bote general · disponible para gastar')}
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:${st.fondo>=0?'var(--accent)':'#ff6b5e'};letter-spacing:2px;line-height:1">${eur(st.fondo)}</div>
-    <div style="font-size:11px;color:var(--faint);margin-top:2px">Fondo de la colla · mejoras, básicos, luz, agua, eventos</div>
-    <div style="display:flex;gap:18px;margin-top:14px;flex-wrap:wrap">
-      <div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Entradas</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">+ ${eur(st.fondoIn)}</div></div>
-      <div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Salidas</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">− ${eur(st.fondoOut)}</div></div>
+  // ── Lo importante: cuánto se puede gastar
+  let html = `<div class="card card-dark" style="margin-bottom:10px">
+    <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Se puede gastar</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:58px;color:${st.disponible>=0?'var(--accent)':'#ff6b5e'};letter-spacing:2px;line-height:1">${eur(st.disponible)}</div>
+    <div style="font-size:11px;color:var(--faint);margin-top:3px">La colla tiene <b style="color:#fff">${eur(st.total)}</b> en total</div>
+    <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.1);margin:14px 0 8px">
+      ${seg(pos(st.disponible),'var(--accent)')}${seg(pos(st.bebida),'#2bb3bf')}${seg(st.alquiler,'#8a847a')}
     </div>
+    ${legend('var(--accent)','Se puede gastar',eur(st.disponible), st.disponible>=0?'var(--accent)':'#ff6b5e')}
+    ${legend('#2bb3bf','Reservado para bebida',eur(st.bebida))}
+    ${legend('#8a847a', st.rentPaid?`Alquiler de ${mes} · pagado ✓`:`Apartado para el alquiler de ${mes}`, st.rentPaid?'—':eur(st.alquiler))}
   </div>`;
 
-  // Caja bebida
-  const diff = st.bebidaDiff;
-  const diffTxt = Math.abs(diff)<0.005 ? 'En equilibrio'
-    : (diff>0 ? `<b style="color:var(--accentD)">+ ${eur(diff)} de beneficio</b>` : `<b style="color:var(--neg)">− ${eur(-diff)} bajo la dotación</b>`);
-  html += `<div class="card" style="margin-bottom:10px;border-left:4px solid ${CAJAS.bebida.color}">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <div>
-        ${label9('Fondo de bebida')}
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--text);line-height:1">${eur(st.bebida)}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">${st.dotacion>0?`Dotación ${eur(st.dotacion)} · ${diffTxt}`:'Sin dotación todavía'}</div>
-        ${st.pendienteCobrar>0?`<div style="font-size:11px;color:var(--warn);margin-top:2px">+ ${eur(st.pendienteCobrar)} pendiente de cobrar</div>`:''}
-      </div>
-      ${isTr?`<button class="btn-ghost" style="font-size:9px;padding:8px 12px;flex-shrink:0;border-color:${CAJAS.bebida.color};color:${CAJAS.bebida.color}" onclick="openTraspaso(${st.dotacion>0&&diff>0?2:1})">Mover</button>`:''}
-    </div>
-    <div style="font-size:10px;color:var(--faint);margin-top:10px;line-height:1.5">${st.dotacion>0
-      ? 'Solo para bebida: las compras con categoría "Bebida" salen de aquí y lo cobrado en Consumiciones vuelve aquí. El cuadre cuenta también lo pendiente de cobrar.'
-      : (isTr?'Para arrancar, pulsa Mover → "Fondo → Bebida" con la dotación acordada (ej. 200 €).':'Edu la pondrá en marcha con la dotación acordada.')}</div>
-  </div>`;
+  if(st.disponible<0){
+    html += `<div style="font-size:12px;color:var(--neg);background:#fbeae8;border:1px solid rgba(192,57,43,.3);border-radius:6px;padding:9px 12px;margin-bottom:10px;line-height:1.45">Ahora mismo no llega para el alquiler y la bebida: faltan <b>${eur(-st.disponible)}</b>. Mira abajo quién falta por pagar.</div>`;
+  }
 
-  // Reserva: comprometida para el alquiler
-  html += `<div class="card" style="margin-bottom:10px;border-left:4px solid var(--black)">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <div>
-        ${label9('Reserva alquiler')}
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--text);line-height:1">${eur(st.reserva)}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:3px">Cuotas cobradas que aún no han ido al alquiler · no se toca</div>
-      </div>
-      ${isTr?`<button class="btn-accent" style="font-size:9px;padding:8px 12px;flex-shrink:0" onclick="openTraspaso(0)">Pasar a Fondo</button>`:''}
-    </div>
-    <div class="progress-wrap" style="margin-top:12px;height:6px"><div class="progress-bar" style="width:${rentPct}%;background:${rentOk?'var(--accent)':'var(--warn)'}"></div></div>
-    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:4px;letter-spacing:.5px">
-      <span>${rentPaid?`Alquiler de ${mesActual()} <b style="color:var(--accentD)">pagado</b>`:`Alquiler mensual: <b style="color:var(--text)">${eur(RENT)}</b>`}</span>
-      <span>${sobrante>0.005?`<b style="color:var(--accentD)">Sobran ${eur(sobrante)}</b>`:(rentOk?'Alquiler cubierto':`Faltan ${eur(RENT-st.reserva)}`)}</span>
-    </div>
-    <div style="margin-top:12px;border-top:1px solid var(--line);padding-top:6px">
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:3px 0"><span>Cuotas confirmadas <span style="color:var(--faint)">(${st.nCuotasMes} mes${st.nCuotasMes===1?'':'es'})</span></span><span style="color:var(--text)">+ ${eur(st.cuotasMes)}</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:3px 0"><span>Alquileres pagados <span style="color:var(--faint)">(${st.nAlquileres})</span></span><span style="color:var(--text)">− ${eur(st.reservaAlquiler)}</span></div>
-      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:3px 0"><span>Pasado al Bote general</span><span style="color:var(--text)">− ${eur(st.reservaTraspasos)}</span></div>
-    </div>
-    ${st.cuotasMes>0 && st.nAlquileres===0?`<div style="font-size:11px;color:var(--warn);background:var(--warnL);border-radius:5px;padding:8px 10px;margin-top:8px;line-height:1.45">No hay ningún alquiler apuntado. Regístralos en <b>Registrar gasto → Alquiler</b> para que la reserva sea real.</div>`:''}
-  </div>`;
-
-  // Total real (para cuadrar con el banco)
-  html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px dashed var(--border);border-radius:6px;margin-bottom:14px">
+  // ── Alquiler del mes
+  html += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;border-left:4px solid ${st.rentPaid?'var(--accent)':'#8a847a'}">
     <div>
-      <div style="font-size:11px;color:var(--muted)">Total de la colla <span style="color:var(--faint)">(las tres cajas)</span></div>
-      <div style="font-size:11px;color:var(--faint);margin-top:2px">En banco ${eur(st.banco)} · Efectivo en el bote ${eur(st.efectivoBote)}</div>
+      <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Alquiler · <span style="text-transform:capitalize">${mes}</span></div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1.05;color:${st.rentPaid?'var(--accentD)':'var(--text)'}">${st.rentPaid?`Pagado · ${eur(st.rentPaidItem.amount)}`:`Pendiente · ${eur(RENT)}`}</div>
     </div>
-    <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${eur(st.total)}</span>
+    ${!st.rentPaid && canMoney()?`<button class="btn-accent" style="flex-shrink:0" onclick="markRentPaid()">Marcar pagado</button>`:''}
   </div>`;
 
-  // Falta por pagar: cuota del mes + consumiciones
+  // ── Fondo de bebida
+  const bDiff = st.bebida - BEBIDA_BASE;
+  html += `<div class="card" style="border-left:4px solid ${BEBIDA_COLOR}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div>
+        <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Fondo de bebida</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--text)">${eur(st.bebida)}</div>
+      </div>
+      <div style="text-align:right;font-size:11px;line-height:1.4;padding-top:2px">
+        ${Math.abs(bDiff)<0.005?'<span style="color:var(--muted)">Justo en la base</span>'
+          :(bDiff>0?`<b style="color:var(--accentD)">+ ${eur(bDiff)}</b><br><span style="color:var(--faint)">de beneficio</span>`
+                   :`<b style="color:var(--neg)">− ${eur(-bDiff)}</b><br><span style="color:var(--faint)">bajo la base</span>`)}
+      </div>
+    </div>
+    <div style="margin-top:10px;border-top:1px solid var(--line);padding-top:6px;font-size:12px;color:var(--muted)">
+      <div style="display:flex;justify-content:space-between;padding:2px 0"><span>Base</span><span style="color:var(--text)">${eur(BEBIDA_BASE)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0"><span>Cobrado de consumiciones</span><span style="color:var(--text)">+ ${eur(st.cobrado + st.ingresosBebida)}</span></div>
+      <div style="display:flex;justify-content:space-between;padding:2px 0"><span>Comprado de bebida</span><span style="color:var(--text)">− ${eur(st.gastosBebida)}</span></div>
+      ${st.pendienteCobrar>0.005?`<div style="display:flex;justify-content:space-between;padding:2px 0;cursor:pointer" onclick="goSection('consum')"><span style="color:var(--warn)">Pendiente de cobrar ›</span><span style="color:var(--warn)">${eur(st.pendienteCobrar)}</span></div>`:''}
+    </div>
+  </div>`;
+
+  // ── Falta por pagar: cuota del mes + consumiciones
   const curQ = quotas.filter(q=>!q.deleted && !isInicialQuota(q)).sort((a,b)=>b.id-a.id)[0];
   const morosos = curQ ? (curQ.payments||[]).filter(p=>!p.selfDeclared && !p.confirmedByTreasurer).map(p=>p.name) : [];
   const porConf = curQ ? (curQ.payments||[]).filter(p=>p.selfDeclared && !p.confirmedByTreasurer).length : 0;
@@ -1411,42 +1312,24 @@ function renderCaja(){
     </div>
   </div>`;
 
-  if(st.pend.length>0) html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:14px">${st.pend.length} gasto${st.pend.length>1?'s':''} pendiente${st.pend.length>1?'s':''} de reintegro · ${eur(st.pendTotal)}</div>`;
+  if(st.pend.length>0) html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:14px">${st.pend.length} gasto${st.pend.length>1?'s':''} adelantado${st.pend.length>1?'s':''} pendiente${st.pend.length>1?'s':''} de devolver · ${eur(st.pendTotal)}</div>`;
 
   html += `<div style="display:flex;gap:8px">
     <button class="btn-dashed" style="flex:1" onclick="initCompraPills();openModal('modalCompra')">+ Registrar gasto</button>
-    <button class="btn-dashed" style="flex:1;border-color:var(--accentD);color:var(--accentD)" onclick="openIngreso()">+ Ingreso manual</button>
+    <button class="btn-dashed" style="flex:1;border-color:var(--accentD);color:var(--accentD)" onclick="openIngreso()">+ Ingreso</button>
   </div>`;
 
-  html += `<span class="lbl" style="margin-top:6px">Gastos y movimientos</span>`;
+  html += `<span class="lbl" style="margin-top:6px">Gastos e ingresos</span>`;
   if(st.act.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin movimientos registrados todavía.</div>`;
 
-  const cajaTag = c => { const k = CAJAS[cajaOf(c)]; return k ? tag(k.label, k.color) : ''; };
-
   [...st.act].sort((a,b)=>b.id-a.id).forEach(c=>{
-    if(c.transfer){
-      const route = `${CAJAS[trFrom(c)]?.label||'?'} → ${CAJAS[trTo(c)]?.label||'?'}`;
-      html += `<div class="card" style="border-left:4px solid var(--black);background:var(--bg)">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div style="flex:1;padding-right:10px">
-            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
-              ${tag('Traspaso','#141410')} ${tag(route,'#6e6860')}
-            </div>
-            <div style="font-size:14px;color:var(--text)">${esc(c.what)}</div>
-            <div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(c.who)} · ${c.date}</div>
-          </div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">⇄ ${eur(c.amount)}</div>
-        </div>
-        ${isTr?`<div style="text-align:right;margin-top:6px"><button class="shop-del" style="font-size:18px;color:var(--faint)" onclick="deleteCompra(${c.id})" title="Eliminar">×</button></div>`:''}
-      </div>`;
-      return;
-    }
     if(c.income){
-      html += `<div class="card" style="border-left:4px solid ${cajaOf(c)==='bebida'?CAJAS.bebida.color:'var(--accentD)'}">
+      const beb = c.caja==='bebida';
+      html += `<div class="card" style="border-left:4px solid ${beb?BEBIDA_COLOR:'var(--accentD)'}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;padding-right:10px">
             <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
-              ${tag('Ingreso','#3d8000')} ${cajaTag(c)}
+              ${tag('Ingreso','#3d8000')} ${beb?tag('Bebida',BEBIDA_COLOR):''}
               <span style="font-size:14px;color:var(--text)">${esc(c.what)}</span>
             </div>
             <div style="font-size:12px;color:var(--muted)">Añadido por ${esc(c.who)} · ${c.date}</div>
@@ -1465,17 +1348,17 @@ function renderCaja(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div style="flex:1;padding-right:10px">
           <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
-            ${tag(cat,col)} ${cat!=='Bebida'?cajaTag(c):''}
+            ${tag(cat,col)}
             <span style="font-size:14px;color:var(--text)">${esc(c.what)}</span>
           </div>
-          <div style="font-size:12px;color:var(--muted)">${c.direct?'Pagado directamente por la colla':'Pagó '+esc(c.who)} · ${c.date}</div>
+          <div style="font-size:12px;color:var(--muted)">${c.direct?'Pagado por la colla':'Lo adelantó '+esc(c.who)} · ${c.date}</div>
         </div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${eur(c.amount)}</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">− ${eur(c.amount)}</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-        ${c.direct ? tag('Gasto de la colla','#5a6ea8')
-          : (c.reintegrated ? tag('Saldado · reintegrado por '+(c.reintegratedBy||TREASURER),'#3d8000')
-          : `${tag('Pendiente de reintegro','#c07800')} ${isTr?`<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="doReintegrate(${c.id})">${c.who===TREASURER?'Marcar saldado':'Reintegrar a '+esc(c.who)}</button>`:''}`)}
+        ${c.direct ? ''
+          : (c.reintegrated ? tag('Devuelto por '+(c.reintegratedBy||TREASURER),'#3d8000')
+          : `${tag('Pendiente de devolver','#c07800')} ${isTr?`<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="doReintegrate(${c.id})">${c.who===TREASURER?'Marcar saldado':'Devolver a '+esc(c.who)}</button>`:''}`)}
         <button class="shop-del" style="font-size:18px;color:var(--faint);margin-left:auto" onclick="deleteCompra(${c.id})" title="Eliminar">×</button>
       </div>
     </div>`;
@@ -1483,64 +1366,34 @@ function renderCaja(){
   document.getElementById('body-caja').innerHTML = html;
 }
 
-// ── Traspasos entre cajas (solo tesorero) ──
-let trasRoute = 0;
-const mesActual = () => new Date().toLocaleDateString("es-ES",{month:"long"});
-function openTraspaso(routeIdx){
-  if(ME!==TREASURER) return;
-  document.getElementById('trasWhat').value = '';
-  document.getElementById('trasAmt').value = '';
-  document.getElementById('trasRoutePills').innerHTML = TRANSFER_ROUTES.map((r,i)=>
-    `<span class="pill" id="trasRoute${i}" onclick="setTrasRoute(${i})">${r.label}</span>`
-  ).join('');
-  setTrasRoute(routeIdx||0);
-  openModal('modalTraspaso');
-}
-function setTrasRoute(i){
-  trasRoute = i;
-  const r = TRANSFER_ROUTES[i];
-  TRANSFER_ROUTES.forEach((_,j)=>{ const el=document.getElementById('trasRoute'+j); if(el) el.className='pill'+(j===i?' on':''); });
-  const st = cajaStats();
-  document.getElementById('trasOrigenLbl').textContent = `En ${CAJAS[r.from].long} ahora`;
-  document.getElementById('trasReserva').textContent = eur(st[r.from]);
-  document.getElementById('trasWhat').placeholder = 'Ej: ' + r.what(mesActual());
-  const amtEl = document.getElementById('trasAmt');
-  if(r.from==='bebida' && st.bebidaDiff>0) amtEl.placeholder = st.bebidaDiff.toFixed(2);
-  else if(r.from==='reserva' && st.reserva>RENT) amtEl.placeholder = (st.reserva-RENT).toFixed(2);
-  else if(r.to==='bebida') amtEl.placeholder = '200';
-  else amtEl.placeholder = '0.00';
-}
-function addTraspaso(){
-  if(ME!==TREASURER){ alert("Solo el tesorero puede mover dinero entre cajas."); return; }
-  const r = TRANSFER_ROUTES[trasRoute];
-  const amt = parseFloat(document.getElementById('trasAmt').value.trim().replace(',', '.'));
-  if(!amt || isNaN(amt) || amt<=0){ alert("Pon un importe válido (ej: 90)."); return; }
-  const st = cajaStats();
-  if(amt > st[r.from] + 0.001){
-    if(!confirm(`${CAJAS[r.from].long} tiene ${eur(st[r.from])} y quieres mover ${eur(amt)}.\n\nQuedará en negativo. ¿Continuar?`)) return;
-  }
-  const what = document.getElementById('trasWhat').value.trim() || r.what(mesActual());
+// ── Alquiler: un toque
+function markRentPaid(){
+  if(!canMoney()) return;
+  const mes = mesActual();
+  const v = prompt(`Alquiler de ${mes} pagado.\n\nImporte (€):`, String(RENT));
+  if(v===null) return;
+  const amount = parseFloat(String(v).trim().replace(',', '.'));
+  if(!amount || isNaN(amount) || amount<=0){ alert("Pon un importe válido."); return; }
   const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
-  fbSet('compras', {id:nextId,cat:"Traspaso",who:ME,what,amount:amt,date:todayISO(),reintegrated:true,reintegratedBy:null,direct:true,income:false,transfer:true,from:r.from,to:r.to});
-  closeModal('modalTraspaso');
+  const y = new Date().getFullYear();
+  fbSet('compras', {id:nextId,cat:"Alquiler",who:"La colla",what:`Alquiler ${mes} ${y}`,amount,date:todayISO(),reintegrated:true,reintegratedBy:null,direct:true});
 }
 
-// ── Ingreso manual (Fondo o Caja bebida) ──
+// ── Ingreso manual (bote general o bebida)
 let ingresoDest = 'fondo';
 function openIngreso(){ setIngresoDest('fondo'); openModal('modalIngreso'); }
 function setIngresoDest(d){
   ingresoDest = d;
   document.getElementById('ingDestFondo').className = 'pill'+(d==='fondo'?' on':'');
   document.getElementById('ingDestBebida').className = 'pill'+(d==='bebida'?' on':'');
-  document.getElementById('ingresoWhat').placeholder = d==='bebida' ? `Ej: Bote consumiciones ${mesActual()}` : 'Ej: Saldo inicial de la colla';
+  document.getElementById('ingresoWhat').placeholder = d==='bebida' ? 'Ej: Bebida de invitados' : 'Ej: Saldo inicial de la colla';
   document.getElementById('ingresoDestHint').textContent = d==='bebida'
-    ? 'Para el bote de consumiciones (llaunes, café…).'
-    : 'Para saldo inicial, derramas, altas y otros ingresos.';
+    ? 'Suma al Fondo de bebida.'
+    : 'Suma a lo que se puede gastar.';
 }
 function addIngreso(){
-  const what = document.getElementById('ingresoWhat').value.trim() || (ingresoDest==='bebida' ? `Bote consumiciones ${mesActual()}` : "Ingreso manual");
-  const amtRaw = document.getElementById('ingresoAmt').value.trim().replace(',', '.');
-  const amt = parseFloat(amtRaw);
+  const what = document.getElementById('ingresoWhat').value.trim() || (ingresoDest==='bebida' ? 'Bebida' : "Ingreso manual");
+  const amt = parseFloat(document.getElementById('ingresoAmt').value.trim().replace(',', '.'));
   if(!amt || isNaN(amt) || amt<=0){ alert("Pon un importe válido (ej: 100 o 50.50)."); return; }
   const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
   fbSet('compras', {id:nextId,cat:"Ingreso",who:ME,what,amount:amt,date:todayISO(),reintegrated:true,reintegratedBy:null,direct:true,income:true,caja:ingresoDest});
@@ -1592,10 +1445,10 @@ function setCompraCat(cat,el){ compraCat=cat; document.querySelectorAll('#compra
 function updateCajaHint(){
   const h = document.getElementById('compraCajaHint'); if(!h) return;
   h.innerHTML = compraCat==='Alquiler'
-    ? 'Sale de la <b style="color:var(--text)">Reserva alquiler</b>'
+    ? 'Marca el alquiler del mes como <b style="color:var(--text)">pagado</b>'
     : compraCat==='Bebida'
-      ? 'Sale de la <b style="color:#0e7c86">Caja bebida</b>'
-      : 'Sale del <b style="color:var(--accentD)">Fondo de la colla</b>';
+      ? 'Sale del <b style="color:#0e7c86">Fondo de bebida</b>'
+      : 'Sale de lo que <b style="color:var(--accentD)">se puede gastar</b>';
 }
 function setCompraWho(name,el){ compraWho=name; document.querySelectorAll('#compraWhoPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
 function initEvExpPills(){
@@ -1641,18 +1494,14 @@ function addShopItem(){
 }
 
 // ═══════════════════════════════ CONSUMICIONES ═══════════════════════
-// La graella sigue en papel. Cada persona tiene un saldo:
-//   lo apuntado en la hoja (charge) − lo pagado y confirmado por Edu (pay).
-// Cualquiera puede declarar un pago al momento (bote o Bizum); Edu confirma.
-// Tipos en la colección "consum":
-//   charge  · apunte de la hoja       {name, amount, period, date, by}
-//   pay     · pago de una persona     {name, amount, method, date, by, confirmed, confirmedBy, confirmedAt}
-//   guest   · efectivo sin nombre del bote (invitados)   {amount, date, by, note}
-//   deposit · efectivo del bote ingresado en el banco    {amount, date, by, note}
-// Compatibilidad v15: un charge con paid:true cuenta como pagado.
+// Se apunta en la hoja de la nevera. Quien paga al momento lo marca en la hoja.
+// Edu o Marta pasan a la app lo que queda pendiente y lo cobran
+// (efectivo o Bizum). Lo cobrado suma al Fondo de bebida.
+// Tipos en "consum":  charge (apunte de la hoja) · pay (cobro)
+// Compatibilidad: charge con paid:true (v15), guest/deposit/pagos declarados (v16-17).
 const canConsum = () => CONSUM_MANAGERS.includes(ME);
-const CONSUM_BOSS = CONSUM_MANAGERS.join(' y ');
-const METHODS = {efectivo:{label:"Efectivo · bote",color:"#c07800"}, bizum:{label:"Bizum / transf.",color:"#5a6ea8"}};
+const CONSUM_BOSS = CONSUM_MANAGERS.join(' o ');
+const METHODS = {efectivo:{label:"Efectivo",color:"#c07800"}, bizum:{label:"Bizum / transf.",color:"#5a6ea8"}};
 const parseEur = v => { const n = parseFloat(String(v||'').trim().replace(',', '.')); return isNaN(n) ? 0 : Math.round(n*100)/100; };
 let expandedConsum = new Set();
 function toggleConsumExpand(name){ expandedConsum.has(name) ? expandedConsum.delete(name) : expandedConsum.add(name); renderConsum(); }
@@ -1664,28 +1513,24 @@ function consumLedger(){
   const charges = act.filter(c=>!c.kind || c.kind==='charge');
   const legacyPays = charges.filter(c=>c.paid).map(c=>({
     id:c.id, legacy:true, kind:'pay', name:c.name, amount:c.amount, method:c.method||'bizum',
-    date:(c.paidAt||'').slice(0,10), by:c.paidBy, confirmed:true, confirmedBy:c.paidBy, confirmedAt:c.paidAt, period:c.period,
+    date:(c.paidAt||'').slice(0,10), by:c.paidBy, confirmed:true, confirmedBy:c.paidBy, confirmedAt:c.paidAt,
   }));
   const pays = [...act.filter(c=>c.kind==='pay'), ...legacyPays];
   const confirmed = pays.filter(p=>p.confirmed);
   const toConfirm = pays.filter(p=>!p.confirmed);
   const guests = act.filter(c=>c.kind==='guest');
-  const deposits = act.filter(c=>c.kind==='deposit');
   const order = n => { const i = MEMBERS.findIndex(m=>m.name===n); return i<0 ? 999 : i; };
   const names = [...new Set([...charges.map(c=>c.name), ...pays.map(p=>p.name)])];
   const people = names.map(n=>{
     const ch = charges.filter(c=>c.name===n);
     const cp = confirmed.filter(p=>p.name===n);
-    const tp = toConfirm.filter(p=>p.name===n);
-    const cargado = sum(ch), pagado = sum(cp), declarado = sum(tp);
-    return {name:n, charges:ch, pays:cp, toConfirm:tp, cargado, pagado, declarado, saldo: Math.round((cargado-pagado)*100)/100};
+    const cargado = sum(ch), pagado = sum(cp);
+    return {name:n, charges:ch, pays:cp, cargado, pagado, saldo: Math.round((cargado-pagado)*100)/100};
   }).sort((a,b)=>order(a.name)-order(b.name));
-  const cashIn = sum(confirmed.filter(p=>p.method==='efectivo')) + sum(guests);
   return {
-    charges, pays, confirmed, toConfirm, guests, deposits, people,
+    charges, confirmed, toConfirm, guests, people,
     cobradoTotal: sum(confirmed) + sum(guests),
-    pendienteTotal: people.reduce((s,x)=>s+Math.max(0,x.saldo),0),
-    efectivoBote: Math.round((cashIn - sum(deposits))*100)/100,
+    pendienteTotal: Math.round(people.reduce((s,x)=>s+Math.max(0,x.saldo),0)*100)/100,
     deudores: people.filter(x=>x.saldo>0.005),
   };
 }
@@ -1699,154 +1544,112 @@ function renderConsum(){
   const ym = todayISO().slice(0,7);
   const mesTxt = new Date().toLocaleDateString("es-ES",{month:"long",year:"numeric"});
   const me = L.people.find(x=>x.name===ME);
-  const smallStat = (l,v) => `<div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">${l}</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">${v}</div></div>`;
 
   let html = `<div class="card card-dark" style="margin-bottom:12px">
-    <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Pendiente de cobrar</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:${L.pendienteTotal>0.005?'#ffb13d':'var(--accent)'};letter-spacing:2px;line-height:1">${eur(L.pendienteTotal)}</div>
-    <div style="font-size:11px;color:var(--faint);margin-top:2px">${L.deudores.length?`${L.deudores.length} persona${L.deudores.length>1?'s':''} con consumiciones sin pagar`:'Todo cobrado'}</div>
-    <div style="display:flex;gap:18px;margin-top:14px;flex-wrap:wrap">
-      ${smallStat('Fondo de bebida', eur(st.bebida))}
-      ${smallStat('Efectivo en el bote', eur(L.efectivoBote))}
-      ${L.toConfirm.length?smallStat('Por confirmar', L.toConfirm.length):''}
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+      <div>
+        <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Falta por cobrar</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:${L.pendienteTotal>0.005?'#ffb13d':'var(--accent)'};letter-spacing:2px;line-height:1">${eur(L.pendienteTotal)}</div>
+        <div style="font-size:11px;color:var(--faint);margin-top:2px">${L.deudores.length?`${L.deudores.length} persona${L.deudores.length>1?'s':''} con consumiciones sin pagar`:'Todo cobrado'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Fondo de bebida</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#2bb3bf;line-height:1.1">${eur(st.bebida)}</div>
+      </div>
     </div>
   </div>`;
 
-  html += `<div style="font-size:12px;color:var(--muted);background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:9px 12px;margin-bottom:14px;line-height:1.5">Se apunta en la hoja de la nevera. Puedes pagar al momento, al bote o por Bizum, y apuntarlo con <b style="color:var(--text)">He pagado</b>. ${CONSUM_BOSS} pasa la hoja y cobra lo pendiente cada 15 días o a final de mes como tarde. Los de fuera pagan al bote.</div>`;
+  // ── Cómo funciona (3 pasos)
+  const step = (n,t) => `<div style="display:flex;gap:10px;align-items:flex-start;padding:5px 0"><span style="width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--black);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</span><span style="font-size:12px;color:var(--muted);line-height:1.45">${t}</span></div>`;
+  html += `<div class="card" style="margin-bottom:12px;padding:10px 14px">
+    ${step(1,'Apunta lo que tomas en la <b style="color:var(--text)">hoja de la nevera</b>.')}
+    ${step(2,'Si pagas en el momento (efectivo o Bizum), <b style="color:var(--text)">márcalo como pagado en la hoja</b>.')}
+    ${step(3,`${CONSUM_BOSS} pasa aquí lo pendiente y lo cobra, cada 15 días o a final de mes como tarde.`)}
+  </div>`;
 
   // ── Tu cuenta
-  if(!mgr || me){
+  if(ME){
     const saldo = me ? me.saldo : 0;
-    const decl = me ? me.declarado : 0;
-    const real = saldo - decl;
-    html += `<div class="card" style="border-left:4px solid ${real>0.005?'var(--warn)':'var(--accent)'};margin-bottom:10px">
-      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-        <div>
-          <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Tu cuenta</div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:${saldo>0.005?'var(--warn)':'var(--accentD)'}">${saldo>0.005?`Debes ${eur(saldo)}`:(saldo<-0.005?`A favor ${eur(-saldo)}`:'Al día')}</div>
-          ${decl>0?`<div style="font-size:11px;color:var(--muted);margin-top:3px">${eur(decl)} pagado, pendiente de que ${CONSUM_BOSS} lo confirme</div>`:''}
-        </div>
-        <button class="btn-accent" style="flex-shrink:0" onclick="openPago()">He pagado</button>
+    html += `<div class="card" style="border-left:4px solid ${saldo>0.005?'var(--warn)':'var(--accent)'};margin-bottom:12px;display:flex;align-items:center;gap:12px">
+      ${av(ME,'av av-lg '+(saldo>0.005?'av-off':'av-on'))}
+      <div style="flex:1">
+        <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">Tu cuenta</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:${saldo>0.005?'var(--warn)':'var(--accentD)'}">${saldo>0.005?`Debes ${eur(saldo)}`:(saldo<-0.005?`A favor ${eur(-saldo)}`:'Al día ✓')}</div>
       </div>
-      ${me && me.toConfirm.length && !mgr?`<div style="margin-top:10px">${me.toConfirm.map(p=>`<div class="quota-row" style="padding:7px 0"><span style="font-size:12px;color:var(--muted)">${eur(p.amount)} · ${(METHODS[p.method]||METHODS.bizum).label} · ${p.date||''}</span><button class="btn-ghost" style="font-size:9px;padding:4px 9px" onclick="cancelPago(${p.id})">Anular</button></div>`).join('')}</div>`:''}
     </div>`;
   }
 
-  // ── Herramientas de Edu
-  if(mgr){
-    html += `<button class="btn-dashed" style="border-color:var(--accentD);color:var(--accentD)" onclick="openGraella()">+ Pasar la graella</button>
-    <div style="display:flex;gap:8px">
-      <button class="btn-dashed" style="flex:1" onclick="openBote('guest')">+ Bote invitados</button>
-      <button class="btn-dashed" style="flex:1" onclick="openBote('deposit')">Bote → banco</button>
-    </div>`;
+  if(mgr) html += `<button class="btn-dashed" style="border-color:var(--accentD);color:var(--accentD)" onclick="openGraella()">+ Pasar la hoja</button>`;
 
-    if(L.toConfirm.length){
-      html += `<span class="lbl" style="margin-top:6px;color:var(--warn)">Pagos por confirmar (${L.toConfirm.length})</span>`;
-      [...L.toConfirm].sort((a,b)=>(a.date||'').localeCompare(b.date||'')).forEach(p=>{
-        const m = METHODS[p.method]||METHODS.bizum;
-        html += `<div class="card" style="border-left:4px solid var(--warn)">
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
-            <div style="display:flex;align-items:center;gap:10px;min-width:0">
-              ${av(p.name,'av av-md av-off')}
-              <div style="min-width:0">
-                <div style="font-size:14px;color:var(--text)">${esc(p.name)}</div>
-                <div style="margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">${tag(m.label,m.color)}<span style="font-size:11px;color:var(--faint)">${p.date||''}</span></div>
-              </div>
-            </div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text)">${eur(p.amount)}</div>
-          </div>
-          <div style="display:flex;gap:6px;margin-top:10px">
-            <button class="btn-accent" style="flex:1" onclick="confirmPago(${p.id})">✓ Confirmar</button>
-            <button class="btn-ghost" style="border-color:var(--neg);color:var(--neg)" onclick="rejectPago(${p.id})">Rechazar</button>
-          </div>
-        </div>`;
-      });
-    }
+  // ── Pagos declarados de versiones anteriores (solo si quedan)
+  if(mgr && L.toConfirm.length){
+    html += `<span class="lbl" style="margin-top:6px;color:var(--warn)">Pagos por confirmar (${L.toConfirm.length})</span>`;
+    L.toConfirm.forEach(p=>{
+      html += `<div class="card" style="border-left:4px solid var(--warn);display:flex;align-items:center;gap:10px">
+        <div style="flex:1;min-width:0"><div style="font-size:14px;color:var(--text)">${esc(p.name)} · ${eur(p.amount)}</div><div style="font-size:11px;color:var(--faint)">${(METHODS[p.method]||METHODS.bizum).label} · ${p.date||''}</div></div>
+        <button class="btn-accent" style="font-size:9px;padding:7px 10px" onclick="confirmPago(${p.id})">✓</button>
+        <button class="btn-ghost" style="font-size:9px;padding:6px 9px;border-color:var(--neg);color:var(--neg)" onclick="rejectPago(${p.id})">×</button>
+      </div>`;
+    });
   }
 
-  // ── Pendiente por persona
-  html += `<span class="lbl" style="margin-top:8px">Pendiente por persona</span>`;
+  // ── Quién debe
+  html += `<span class="lbl" style="margin-top:8px">Quién debe</span>`;
   if(L.deudores.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Nadie debe nada.</div>`;
   L.deudores.forEach(x=>{
     const open = expandedConsum.has(x.name);
     const isMe = x.name===ME;
-    const aCobrar = Math.round((x.saldo - x.declarado)*100)/100;
     html += `<div class="card" style="padding:0;overflow:hidden;border-left:4px solid ${isMe?'var(--warn)':'var(--border)'}">
       <div style="padding:13px 16px;cursor:pointer;touch-action:manipulation" onclick="toggleConsumExpand('${esc(x.name)}')">
         <div style="display:flex;align-items:center;gap:10px;pointer-events:none">
           ${av(x.name,'av av-md '+(isMe?'av-on':'av-off'))}
           <div style="flex:1;min-width:0">
             <div style="font-size:14px;color:var(--text)">${esc(x.name)}${isMe?' <span style="font-size:9px;color:var(--faint)">(tú)</span>':''}</div>
-            <div style="font-size:11px;color:var(--faint)">${x.declarado>0?`${eur(x.declarado)} por confirmar`:`Apuntado ${eur(x.cargado)} · pagado ${eur(x.pagado)}`}</div>
+            <div style="font-size:11px;color:var(--faint)">${x.charges.length} hoja${x.charges.length>1?'s':''}${x.pagado>0?` · ya pagado ${eur(x.pagado)}`:''}</div>
           </div>
           <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--warn)">${eur(x.saldo)}</div>
         </div>
-        ${mgr && aCobrar>0.005?`<div style="display:flex;gap:6px;margin-top:10px">
-          <button class="btn-accent" style="flex:1;font-size:9px;padding:9px 8px" onclick="event.stopPropagation();cobrarPersona('${esc(x.name)}','efectivo')">Cobrar ${eur(aCobrar)} · bote</button>
-          <button class="btn-accent" style="flex:1;font-size:9px;padding:9px 8px;background:#5a6ea8;color:#fff" onclick="event.stopPropagation();cobrarPersona('${esc(x.name)}','bizum')">Cobrar · Bizum</button>
+        ${mgr?`<div style="display:flex;gap:6px;margin-top:10px">
+          <button class="btn-accent" style="flex:1;font-size:9px;padding:9px 8px" onclick="event.stopPropagation();cobrarPersona('${esc(x.name)}','efectivo')">Cobrado · efectivo</button>
+          <button class="btn-accent" style="flex:1;font-size:9px;padding:9px 8px;background:#5a6ea8;color:#fff" onclick="event.stopPropagation();cobrarPersona('${esc(x.name)}','bizum')">Cobrado · Bizum</button>
         </div>`:''}
       </div>
       ${open?`<div style="border-top:1px solid var(--line);padding:4px 16px 8px">
         ${x.charges.map(i=>`<div class="quota-row">
-          <div><div style="font-size:13px;color:var(--text)">${esc(i.period||'Sin periodo')}</div><div style="font-size:11px;color:var(--faint)">Hoja · ${i.date||''}</div></div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Bebas Neue',sans-serif;font-size:20px">+ ${eur(i.amount)}</span>
+          <div><div style="font-size:13px;color:var(--text)">${esc(i.period||'Sin periodo')}</div><div style="font-size:11px;color:var(--faint)">Pasado el ${i.date||''}</div></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Bebas Neue',sans-serif;font-size:20px">${eur(i.amount)}</span>
           ${mgr?`<button class="shop-del" onclick="deleteConsum(${i.id})" title="Eliminar">×</button>`:''}</div>
-        </div>`).join('')}
-        ${x.pays.map(i=>`<div class="quota-row">
-          <div><div style="font-size:13px;color:var(--accentD)">Pagado</div><div style="font-size:11px;color:var(--faint)">${(METHODS[i.method]||METHODS.bizum).label} · ${i.date||''}</div></div>
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accentD)">− ${eur(i.amount)}</span>
         </div>`).join('')}
       </div>`:''}
     </div>`;
   });
 
-  // ── Cuadre del mes
-  const inMonth = (d) => (d||'').startsWith(ym);
-  const apMes = L.charges.filter(c=>inMonth(c.date));
+  // ── Resumen del mes
+  const inMonth = d => (d||'').startsWith(ym);
+  const apMes = sum(L.charges.filter(c=>inMonth(c.date)));
   const coMes = L.confirmed.filter(p=>inMonth(p.confirmedAt||p.date));
   const efMes = sum(coMes.filter(p=>p.method==='efectivo')) + sum(L.guests.filter(g=>inMonth(g.date)));
   const bzMes = sum(coMes.filter(p=>p.method!=='efectivo'));
-  const depMes = sum(L.deposits.filter(d=>inMonth(d.date)));
-  const row = (l,v,bold,col) => `<div class="quota-row"><span style="font-size:13px;color:${bold?'var(--text)':'var(--muted)'};${bold?'font-weight:600':''}">${l}</span><span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${col||'var(--text)'}">${v}</span></div>`;
-  const diff = st.bebidaDiff;
-  html += `<span class="lbl" style="margin-top:18px">Cuadre · <span style="text-transform:capitalize">${mesTxt}</span></span>
+  const row = (l,v,col) => `<div class="quota-row"><span style="font-size:13px;color:var(--muted)">${l}</span><span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${col||'var(--text)'}">${v}</span></div>`;
+  html += `<span class="lbl" style="margin-top:18px">Resumen · <span style="text-transform:capitalize">${mesTxt}</span></span>
   <div class="card" style="padding:4px 16px">
-    ${row('Apuntado en la hoja', eur(sum(apMes)))}
-    ${row('Cobrado en efectivo', eur(efMes), false, METHODS.efectivo.color)}
-    ${row('Cobrado por Bizum / transf.', eur(bzMes), false, METHODS.bizum.color)}
-    ${depMes>0?row('Efectivo ingresado en banco', eur(depMes)):''}
-    ${row('Efectivo en el bote ahora', eur(L.efectivoBote), false, METHODS.efectivo.color)}
-    ${row('Pendiente de cobrar (total)', eur(L.pendienteTotal), false, 'var(--warn)')}
-    ${st.dotacion>0?row('Bebida + pendiente vs dotación', (diff>=0?'+ ':'− ')+eur(Math.abs(diff)), true, diff>=0?'var(--accentD)':'var(--neg)'):''}
-  </div>
-  <div style="font-size:11px;color:var(--faint);line-height:1.5;margin:-2px 2px 10px">Al abrir el bote, lo contado tiene que coincidir con "Efectivo en el bote". ${st.dotacion>0?(diff>=0?'La bebida cuadra con la dotación.':'La bebida no llega a la dotación: puede haber consumiciones sin apuntar o bebida aún en la nevera.'):''}</div>`;
+    ${row('Pasado de la hoja', eur(apMes))}
+    ${row('Cobrado en efectivo', eur(efMes), METHODS.efectivo.color)}
+    ${row('Cobrado por Bizum', eur(bzMes), METHODS.bizum.color)}
+    ${row('Falta por cobrar', eur(L.pendienteTotal), 'var(--warn)')}
+  </div>`;
 
-  // ── Movimientos recientes
-  const moves = [
-    ...L.confirmed.map(p=>({t:'pay', o:p, at:p.confirmedAt||p.date||''})),
-    ...L.guests.map(g=>({t:'guest', o:g, at:g.date||''})),
-    ...L.deposits.map(d=>({t:'deposit', o:d, at:d.date||''})),
-  ].sort((a,b)=>b.at.localeCompare(a.at)).slice(0,30);
+  // ── Últimos cobros
+  const moves = L.confirmed.map(p=>({o:p, at:p.confirmedAt||p.date||''})).sort((a,b)=>b.at.localeCompare(a.at)).slice(0,20);
   if(moves.length){
-    html += `<span class="lbl" style="margin-top:12px">Movimientos recientes</span><div class="card" style="padding:4px 16px">`;
-    moves.forEach(({t,o})=>{
-      let title, meta, val, col;
-      if(t==='pay'){
-        const m = METHODS[o.method]||METHODS.bizum;
-        title = esc(o.name); meta = `${tag(m.label,m.color)}<span style="font-size:11px;color:var(--faint)">${o.confirmedBy?'Confirmado por '+esc(o.confirmedBy):''} · ${shortDT(o.confirmedAt)||o.date||''}</span>`;
-        val = '+ '+eur(o.amount); col = 'var(--accentD)';
-      } else if(t==='guest'){
-        title = 'Bote · invitados'; meta = `${tag('Efectivo · bote',METHODS.efectivo.color)}<span style="font-size:11px;color:var(--faint)">${esc(o.note||'')} ${o.date||''}</span>`;
-        val = '+ '+eur(o.amount); col = 'var(--accentD)';
-      } else {
-        title = 'Bote ingresado en el banco'; meta = `${tag('Bote → banco','#141410')}<span style="font-size:11px;color:var(--faint)">${esc(o.note||'')} ${o.date||''}</span>`;
-        val = '⇄ '+eur(o.amount); col = 'var(--text)';
-      }
+    html += `<span class="lbl" style="margin-top:12px">Últimos cobros</span><div class="card" style="padding:4px 16px">`;
+    moves.forEach(({o})=>{
+      const m = METHODS[o.method]||METHODS.bizum;
       html += `<div class="quota-row" style="gap:10px">
-        <div style="min-width:0"><div style="font-size:13px;color:var(--text)">${title}</div><div style="margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">${meta}</div></div>
+        <div style="min-width:0"><div style="font-size:13px;color:var(--text)">${esc(o.name)}</div><div style="margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">${tag(m.label,m.color)}<span style="font-size:11px;color:var(--faint)">${o.confirmedBy?esc(o.confirmedBy)+' · ':''}${shortDT(o.confirmedAt)||o.date||''}</span></div></div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-          <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${col}">${val}</span>
-          ${mgr?`<button class="btn-ghost" style="font-size:9px;padding:4px 8px" onclick="undoMove('${t}',${o.id},${o.legacy?1:0})">Deshacer</button>`:''}
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accentD)">+ ${eur(o.amount)}</span>
+          ${mgr?`<button class="btn-ghost" style="font-size:9px;padding:4px 8px" onclick="undoCobro(${o.id},${o.legacy?1:0})">Deshacer</button>`:''}
         </div>
       </div>`;
     });
@@ -1857,37 +1660,19 @@ function renderConsum(){
 
 const nextConsumId = () => consum.reduce((m,c)=>Math.max(m,c.id||0),0)+1;
 
-// — Pagos declarados —
-let pagoMethod = 'efectivo';
-function setPagoMethod(m){
-  pagoMethod = m;
-  document.getElementById('pagoEfectivo').className = 'pill'+(m==='efectivo'?' on':'');
-  document.getElementById('pagoBizum').className = 'pill'+(m==='bizum'?' on':'');
+function cobrarPersona(name, method){
+  if(!canConsum()) return;
+  const x = consumLedger().people.find(p=>p.name===name); if(!x || x.saldo<=0) return;
+  if(!confirm(`${name} paga ${eur(x.saldo)} ${method==='efectivo'?'en efectivo':'por Bizum / transferencia'}.\n\n¿Marcar como cobrado?`)) return;
+  fbSet('consum', {id:nextConsumId(), kind:'pay', name, amount:x.saldo, method, date:todayISO(), by:ME,
+    confirmed:true, confirmedBy:ME, confirmedAt:new Date().toISOString(), deleted:false});
 }
-function openPago(){
-  const L = consumLedger();
-  const me = L.people.find(x=>x.name===ME);
-  const debe = me ? Math.max(0, me.saldo - me.declarado) : 0;
-  setPagoMethod('efectivo');
-  document.getElementById('pagoAmt').value = debe>0 ? debe.toFixed(2) : '';
-  document.getElementById('pagoInfo').innerHTML = (debe>0 ? `Ahora mismo debes <b style="color:var(--text)">${eur(debe)}</b>. ` : 'Si pagas algo que aún no está pasado de la hoja, se descontará cuando se pase. ')
-    + (canConsum() ? 'Como tesorero, tu pago queda confirmado directamente.' : `${CONSUM_BOSS} lo confirmará cuando lo compruebe.`);
-  openModal('modalPago');
-}
-function savePago(){
-  if(!ME) return;
-  const amount = parseEur(document.getElementById('pagoAmt').value);
-  if(amount<=0){ alert("Pon un importe válido (ej: 12 o 8,50)."); return; }
-  const auto = canConsum();
-  const now = new Date().toISOString();
-  fbSet('consum', {id:nextConsumId(), kind:'pay', name:ME, amount, method:pagoMethod, date:todayISO(), by:ME,
-    confirmed:auto, confirmedBy:auto?ME:null, confirmedAt:auto?now:null, deleted:false});
-  closeModal('modalPago');
-}
-function cancelPago(id){
-  const p = consum.find(x=>x.id===id); if(!p || p.name!==ME || p.confirmed) return;
-  if(!confirm(`¿Anular tu pago de ${eur(p.amount)}?`)) return;
-  softDelete('consum', p);
+function undoCobro(id, legacy){
+  if(!canConsum()) return;
+  const o = consum.find(x=>x.id===id); if(!o) return;
+  if(!confirm(`¿Deshacer el cobro de ${o.name}?\n\nVolverá a aparecer como pendiente.`)) return;
+  if(legacy){ const n=clone(o); n.paid=false; n.method=null; n.paidAt=null; n.paidBy=null; fbSet('consum', n); return; }
+  softDelete('consum', o);
 }
 function confirmPago(id){
   if(!canConsum()) return;
@@ -1898,65 +1683,17 @@ function confirmPago(id){
 function rejectPago(id){
   if(!canConsum()) return;
   const p = consum.find(x=>x.id===id); if(!p) return;
-  if(!confirm(`¿Rechazar el pago de ${p.name} (${eur(p.amount)})?\n\nNo cuenta como pagado y se mueve a la Papelera.`)) return;
+  if(!confirm(`¿Descartar el pago de ${p.name} (${eur(p.amount)})?`)) return;
   softDelete('consum', p);
-}
-function cobrarPersona(name, method){
-  if(!canConsum()) return;
-  const x = consumLedger().people.find(p=>p.name===name); if(!x) return;
-  const amount = Math.round((x.saldo - x.declarado)*100)/100;
-  if(amount<=0) return;
-  if(!confirm(`${name} paga ${eur(amount)} ${method==='efectivo'?'en efectivo al bote':'por Bizum / transferencia'}.\n\n¿Marcar como cobrado?`)) return;
-  const now = new Date().toISOString();
-  fbSet('consum', {id:nextConsumId(), kind:'pay', name, amount, method, date:todayISO(), by:ME,
-    confirmed:true, confirmedBy:ME, confirmedAt:now, deleted:false});
-}
-function undoMove(t, id, legacy){
-  if(!canConsum()) return;
-  const o = consum.find(x=>x.id===id); if(!o) return;
-  if(!confirm('¿Deshacer este movimiento?')) return;
-  if(legacy){ const n=clone(o); n.paid=false; n.method=null; n.paidAt=null; n.paidBy=null; fbSet('consum', n); return; }
-  if(t==='pay' && o.by && o.by!==o.confirmedBy){
-    // Pago declarado por la persona: vuelve a "por confirmar"
-    const n=clone(o); n.confirmed=false; n.confirmedBy=null; n.confirmedAt=null; fbSet('consum', n); return;
-  }
-  softDelete('consum', o);
 }
 function deleteConsum(id){
   if(!canConsum()) return;
   const c = consum.find(x=>x.id===id); if(!c) return;
-  if(!confirm(`¿Eliminar el apunte de ${c.name} (${c.period||''} · ${eur(c.amount)})?\n\nSe mueve a la Papelera.`)) return;
+  if(!confirm(`¿Eliminar ${c.name} · ${c.period||''} · ${eur(c.amount)}?\n\nSe mueve a la Papelera.`)) return;
   softDelete('consum', c);
 }
 
-// — Bote: invitados e ingreso en banco —
-let boteMode = 'guest';
-function openBote(mode){
-  if(!canConsum()) return;
-  boteMode = mode;
-  const L = consumLedger();
-  document.getElementById('boteTitle').textContent = mode==='guest' ? 'Bote invitados' : 'Bote → banco';
-  document.getElementById('boteInfo').innerHTML = mode==='guest'
-    ? 'Efectivo del bote que no es de ningún miembro (gente de fuera). Entra en el Fondo de bebida.'
-    : `Efectivo del bote que ingresas en el banco. El Fondo de bebida no cambia: solo pasa de efectivo a banco. Ahora hay <b style="color:var(--text)">${eur(L.efectivoBote)}</b> en el bote.`;
-  document.getElementById('boteAmt').value = mode==='deposit' && L.efectivoBote>0 ? L.efectivoBote.toFixed(2) : '';
-  document.getElementById('boteNote').value = '';
-  document.getElementById('boteNote').placeholder = mode==='guest' ? 'Ej: Cena del sábado' : 'Ej: Ingreso cajero';
-  openModal('modalBote');
-}
-function saveBote(){
-  if(!canConsum()) return;
-  const amount = parseEur(document.getElementById('boteAmt').value);
-  if(amount<=0){ alert("Pon un importe válido."); return; }
-  if(boteMode==='deposit'){
-    const L = consumLedger();
-    if(amount > L.efectivoBote + 0.001 && !confirm(`En el bote constan ${eur(L.efectivoBote)} y vas a ingresar ${eur(amount)}. ¿Continuar?`)) return;
-  }
-  fbSet('consum', {id:nextConsumId(), kind:boteMode, amount, note:document.getElementById('boteNote').value.trim(), date:todayISO(), by:ME, deleted:false});
-  closeModal('modalBote');
-}
-
-// — Pasar la graella —
+// — Pasar la hoja —
 function openGraella(){
   if(!canConsum()) return;
   const d = new Date();
