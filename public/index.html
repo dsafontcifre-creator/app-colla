@@ -6,9 +6,9 @@
 <meta name="theme-color" content="#141410"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
-<meta name="apple-mobile-web-app-title" content="La Colla"/>
+<meta name="apple-mobile-web-app-title" content="Farem Curt"/>
 <title>Colla Farem Curt</title>
-<link rel="manifest" href='data:application/manifest+json,{"name":"Colla Farem Curt","short_name":"La Colla","start_url":".","display":"standalone","background_color":"%23f2ede2","theme_color":"%23141410","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 rx=%27110%27 fill=%27%23141410%27/%3E%3Ctext x=%27256%27 y=%27330%27 font-family=%27Arial Black,sans-serif%27 font-size=%27300%27 font-weight=%27900%27 fill=%27%237fff00%27 text-anchor=%27middle%27%3EC%3C/text%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}'/>
+<link rel="manifest" href='data:application/manifest+json,{"name":"Colla Farem Curt","short_name":"Farem Curt","start_url":".","display":"standalone","background_color":"%23f2ede2","theme_color":"%23141410","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 rx=%27110%27 fill=%27%23141410%27/%3E%3Ctext x=%27256%27 y=%27330%27 font-family=%27Arial Black,sans-serif%27 font-size=%27300%27 font-weight=%27900%27 fill=%27%237fff00%27 text-anchor=%27middle%27%3EC%3C/text%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}'/>
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23141410'/%3E%3Ctext x='256' y='330' font-family='Arial Black,sans-serif' font-size='300' font-weight='900' fill='%237fff00' text-anchor='middle'%3EC%3C/text%3E%3C/svg%3E"/>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
 <style>
@@ -61,7 +61,7 @@ textarea{resize:none;}
 .menu-header{background:var(--paper);border-bottom:1px solid var(--border);padding:36px 28px 28px;}
 .eyebrow{font-size:9px;letter-spacing:5px;color:var(--faint);text-transform:uppercase;margin-bottom:8px;}
 .logo-row{display:flex;align-items:center;gap:10px;}
-.logo{font-family:'Bebas Neue',sans-serif;font-size:48px;color:var(--text);letter-spacing:3px;line-height:1;}
+.logo{font-family:'Bebas Neue',sans-serif;font-size:clamp(34px,10.5vw,48px);color:var(--text);letter-spacing:2px;line-height:1;white-space:nowrap;}
 .dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px;}
 .menu-user{margin-top:14px;display:flex;align-items:center;gap:9px;}
 .menu-user-txt{font-size:11px;color:var(--muted);letter-spacing:.3px;}
@@ -209,7 +209,7 @@ textarea.inp{height:100px;}
 <div id="gate" style="display:none">
   <div class="gate-header">
     <div class="eyebrow">Castelló de la Plana</div>
-    <div class="logo-row"><div class="logo">LA COLLA</div><div class="dot"></div></div>
+    <div class="logo-row"><div class="logo">COLLA FAREM CURT</div><div class="dot"></div></div>
   </div>
   <div class="gate-body" id="gateBody"></div>
 </div>
@@ -219,7 +219,7 @@ textarea.inp{height:100px;}
   <div class="menu-header">
     <div class="eyebrow">Castelló de la Plana</div>
     <div class="logo-row">
-      <div class="logo">LA COLLA</div>
+      <div class="logo">COLLA FAREM CURT</div>
       <div class="dot"></div>
     </div>
     <div class="menu-user">
@@ -315,7 +315,7 @@ textarea.inp{height:100px;}
 <div class="modal-overlay" id="modalCompra" onclick="closeModalBg(event,'modalCompra')">
   <div class="modal-box">
     <div class="modal-title">Registrar Gasto</div>
-    <div class="inp-wrap"><label class="inp-label">Categoría</label><div class="pill-row" id="compraCatPills"></div></div>
+    <div class="inp-wrap"><label class="inp-label">Categoría</label><div class="pill-row" id="compraCatPills"></div><div id="compraCajaHint" style="font-size:11px;color:var(--muted);margin-top:-6px"></div></div>
     <div class="inp-wrap"><label class="inp-label">Concepto (opcional)</label><input class="inp" id="compraWhat" placeholder="Ej: Productos de limpieza"/></div>
     <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" id="compraAmt" placeholder="0.00"/></div>
     <div class="inp-wrap"><label class="inp-label">¿Quién lo pagó?</label>
@@ -335,12 +335,52 @@ textarea.inp{height:100px;}
 <div class="modal-overlay" id="modalIngreso" onclick="closeModalBg(event,'modalIngreso')">
   <div class="modal-box">
     <div class="modal-title">Ingreso Manual</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Para saldo inicial, aportaciones extra u otros ingresos que no sean cuotas.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Para saldo inicial, derramas, bote de consumiciones u otros ingresos que no sean cuotas mensuales.</div>
+    <div class="inp-wrap"><label class="inp-label">Entra en</label>
+      <div class="pill-row">
+        <span class="pill on" id="ingDestFondo" onclick="setIngresoDest('fondo')">Fondo de la colla</span>
+        <span class="pill" id="ingDestBebida" onclick="setIngresoDest('bebida')">Caja bebida</span>
+      </div>
+      <div id="ingresoDestHint" style="font-size:11px;color:var(--muted);margin-top:-6px"></div>
+    </div>
     <div class="inp-wrap"><label class="inp-label">Concepto</label><input class="inp" id="ingresoWhat" placeholder="Ej: Saldo inicial de la colla"/></div>
     <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" id="ingresoAmt" placeholder="0.00"/></div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modalIngreso')">Cancelar</button>
       <button class="btn-accent" onclick="addIngreso()">Añadir ingreso</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalTraspaso" onclick="closeModalBg(event,'modalTraspaso')">
+  <div class="modal-box">
+    <div class="modal-title">Mover entre cajas</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">El total en cuenta no cambia: el dinero solo cambia de caja.</div>
+    <div class="inp-wrap"><label class="inp-label">Movimiento</label><div class="pill-row" id="trasRoutePills"></div></div>
+    <div class="card" style="margin-bottom:16px;display:flex;justify-content:space-between;align-items:center">
+      <div style="font-size:12px;color:var(--muted)" id="trasOrigenLbl">En Reserva ahora</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text)" id="trasReserva">0.00 €</div>
+    </div>
+    <div class="inp-wrap"><label class="inp-label">Concepto</label><input class="inp" id="trasWhat" placeholder="Ej: Sobrante cuotas septiembre"/></div>
+    <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" inputmode="decimal" id="trasAmt" placeholder="90"/></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalTraspaso')">Cancelar</button>
+      <button class="btn-accent" onclick="addTraspaso()">Mover dinero</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalDoc" onclick="closeModalBg(event,'modalDoc')">
+  <div class="modal-box">
+    <div class="modal-title">Añadir Documento</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Sube el PDF a la carpeta de Drive de la colla, compártelo como "Cualquier persona con el enlace · Lector" y pega aquí el enlace.</div>
+    <div class="inp-wrap"><label class="inp-label">Tipo</label><div class="pill-row" id="docTypePills"></div></div>
+    <div class="inp-wrap"><label class="inp-label">Título</label><input class="inp" id="docTitle" placeholder="Ej: Acta nº2 · Reunió inicial"/></div>
+    <div class="inp-wrap"><label class="inp-label">Fecha</label><input class="inp" type="date" id="docDate"/></div>
+    <div class="inp-wrap"><label class="inp-label">Enlace al PDF</label><input class="inp" type="url" id="docUrl" placeholder="https://drive.google.com/..."/></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalDoc')">Cancelar</button>
+      <button class="btn-accent" onclick="addDoc()">Guardar</button>
     </div>
   </div>
 </div>
@@ -436,25 +476,51 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 12; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 13; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
 const GROUPS = [
   {id:1,  members:["David","Carmen"]},
-  {id:2,  members:["Inma","Roky"]},
+  {id:2,  members:["Inma","Roberto"]},
   {id:3,  members:["Carla","Fran"]},
   {id:4,  members:["Ari","Diego"]},
-  {id:5,  members:["Maria","Edu"]},
+  {id:5,  members:["María","Edu"]},
   {id:6,  members:["Patri","Gonzalo"]},
-  {id:7,  members:["Sergio","Sandri"]},
-  {id:8,  members:["Alejandro","Yani"]},
-  {id:9,  members:["Zurine","Carlos"]},
-  {id:10, members:["Guille","Lledo"]},
-  {id:11, members:["Marta","Raquel","Adrián"]},
+  {id:7,  members:["Sergio","Sandra"]},
+  {id:8,  members:["Alex","Yani"]},
+  {id:9,  members:["Zuri","Carlos"]},
+  {id:10, members:["Guille","Lledó"]},
+  {id:11, members:["Marta","Raquel","Adri"]},
 ];
 const MEMBERS = GROUPS.flatMap((g)=>g.members.map((name)=>({name,groupId:g.id})))
   .map((m,i)=>({...m,id:i+1}));
+
+// Nombres antiguos → oficiales. Los datos viejos de Firestore se leen normalizados
+// y se reescriben con el nombre nuevo la próxima vez que se guardan.
+const NAME_ALIAS = {Roky:"Roberto",Sandri:"Sandra",Alejandro:"Alex",Zurine:"Zuri","Adrián":"Adri",Lledo:"Lledó",Maria:"María"};
+const normName = n => (n && NAME_ALIAS[n]) ? NAME_ALIAS[n] : n;
+
+// Càrrecs acordats en junta (acta nº2, 13/09/2026)
+const CARGOS = [
+  {role:"Tresorer i gestió econòmica", who:"Edu"},
+  {role:"Organització de tasques de manteniment", who:"Diego"},
+  {role:"Redacció d’actes i documents", who:"Carla"},
+  {role:"Burocràcia", who:"Roberto"},
+  {role:"Desarrollo tecnológico", who:"David Safont"},
+  {role:"Adhesió al món de la festa", who:"Roberto i David Safont"},
+];
+
+// Documentos: solo estos miembros pueden añadir y retirar
+const DOC_EDITORS = ["Edu","Carla"];
+const DOC_TYPES = {
+  Estatutos:{color:"#3d8000"},
+  Acta:{color:"#5a6ea8"},
+  Otro:{color:"#6e6860"},
+};
+
+// Caja: alquiler mensual de referencia para la Reserva
+const RENT = 600;
 
 const EVENT_TYPES = {
   comida:{label:"Comida",color:"#3d8000"},
@@ -469,6 +535,7 @@ let compras = [];
 let turns = [];
 let quotas = [];
 let shopping = [];
+let docs = [];
 
 let activeEvId = null;
 let pollMulti = false;
@@ -479,7 +546,7 @@ let evExpWho = null;
 let evType = "comida";
 let expandedQuotas = null; // Set de ids de cuota expandidas. null = aún sin inicializar (se abre la más reciente)
 let currentSection = null;
-let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:false};
+let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:false,docs:false};
 
 // ───────────────────────── TURNOS POR DEFECTO (solo memoria) ───────────
 // La app NUNCA escribe datos automáticamente en Firebase. Si la colección
@@ -488,7 +555,9 @@ const DEFAULT_TURNS = GROUPS.map((g)=>({id:g.id,group:g.id,date:"",note:"",done:
 
 // ───────────────────────── FIRESTORE SYNC ──────────────────────────────
 let DB = null;
-const COLLECTIONS = ["events","compras","turns","quotas","shopping"];
+const COLLECTIONS = ["events","compras","turns","quotas","shopping","docs"];
+// El reset de la app NO toca los documentos oficiales (actas, estatutos)
+const RESET_COLLECTIONS = ["events","compras","turns","quotas","shopping"];
 
 function showSync(txt="Sincronizado"){
   const b = document.getElementById('syncBar');
@@ -542,9 +611,10 @@ function trashLabel(dt){
 function getTrashItems(){
   const items = [];
   shopping.filter(s=>s.deleted).forEach(s=>items.push({coll:'shopping', id:s.id, label:s.text, sub:'La compra', deletedAt:s.deletedAt, deletedBy:s.deletedBy, raw:s}));
-  compras.filter(c=>c.deleted).forEach(c=>items.push({coll:'compras', id:c.id, label:`${c.what} · ${c.amount.toFixed(2)} €`, sub:'Caja', deletedAt:c.deletedAt, deletedBy:c.deletedBy, raw:c}));
+  compras.filter(c=>c.deleted).forEach(c=>items.push({coll:'compras', id:c.id, label:`${c.what} · ${c.amount.toFixed(2)} €`, sub:c.transfer?'Caja · Traspaso':'Caja', deletedAt:c.deletedAt, deletedBy:c.deletedBy, raw:c}));
   quotas.filter(q=>q.deleted).forEach(q=>items.push({coll:'quotas', id:q.id, label:`${q.month} · ${q.concept}`, sub:'Cuotas', deletedAt:q.deletedAt, deletedBy:q.deletedBy, raw:q}));
   events.filter(e=>e.deleted).forEach(e=>items.push({coll:'events', id:e.id, label:e.title, sub:'Eventos', deletedAt:e.deletedAt, deletedBy:e.deletedBy, raw:e}));
+  docs.filter(d=>d.deleted).forEach(d=>items.push({coll:'docs', id:d.id, label:d.title, sub:'Documentos', deletedAt:d.deletedAt, deletedBy:d.deletedBy, raw:d}));
   items.sort((a,b)=>(b.deletedAt||'').localeCompare(a.deletedAt||''));
   return items;
 }
@@ -555,7 +625,20 @@ function restoreTrashItem(i){ const t=trashCache[i]; if(t) restoreItem(t.coll, t
 function permanentDeleteTrashItem(i){ const t=trashCache[i]; if(t) permanentDelete(t.coll, t.id, t.label); }
 
 // Mapea colección → variable local
+function normItem(o){
+  if(!o || typeof o!=="object") return o;
+  if(o.who) o.who = normName(o.who);
+  if(o.addedBy) o.addedBy = normName(o.addedBy);
+  if(o.deletedBy) o.deletedBy = normName(o.deletedBy);
+  if(o.reintegratedBy) o.reintegratedBy = normName(o.reintegratedBy);
+  if(Array.isArray(o.payments)) o.payments.forEach(p=>{ p.name = normName(p.name); });
+  if(Array.isArray(o.expenses)) o.expenses.forEach(x=>{ x.who = normName(x.who); });
+  if(Array.isArray(o.polls)) o.polls.forEach(p=>(p.options||[]).forEach(op=>{ op.votes = (op.votes||[]).map(normName); }));
+  return o;
+}
 function setLocal(coll, arr){
+  arr.forEach(normItem);
+  if(coll==="docs") docs = arr;
   if(coll==="events") events = arr;
   if(coll==="compras") compras = arr;
   if(coll==="turns"){
@@ -583,6 +666,8 @@ function subscribeAll(){
     }, err=>{
       console.error("onSnapshot error",coll,err);
       showSync("Error de conexión");
+      // Una colección con error no debe bloquear el arranque del resto
+      if(!dataReady[coll]){ dataReady[coll] = true; onData(coll, true); }
     });
   });
 }
@@ -635,7 +720,8 @@ window.__startApp = function(){
   const waitGate = setInterval(()=>{
     if(allReady()){
       clearInterval(waitGate);
-      const saved = localStorage.getItem('colla_me');
+      const saved = normName(localStorage.getItem('colla_me'));
+      if(saved) localStorage.setItem('colla_me', saved);
       if(saved && MEMBERS.some(m=>m.name===saved)){ ME = saved; enterApp(); }
       else renderGate();
     }
@@ -739,6 +825,9 @@ const fmtD = s => {
 const av = (name,cls="av-md av-off") => `<span class="av ${cls}">${ini(name)}</span>`;
 const tag = (text,color,bg) => `<span class="tag" style="color:${color};background:${bg||color+'18'}">${text}</span>`;
 const clone = o => JSON.parse(JSON.stringify(o));
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const eur = n => (Number(n)||0).toFixed(2) + " €";
+const todayISO = () => new Date().toISOString().split("T")[0];
 
 // ═══════════════════════════════ NAVIGATION ═══════════════════════════
 function goMenu(){
@@ -1047,52 +1136,171 @@ function savePoll(){
 }
 
 // ═══════════════════════════════ CAJA ════════════════════════════════
-const EXP_CATS = ["Compra","Luz","Agua","Alquiler","Fianza","Evento","Otro"];
-const CAT_COLORS = {Compra:"#3d8000",Luz:"#c07800",Agua:"#5a6ea8",Alquiler:"#9b59b6",Fianza:"#16a085",Evento:"#c0392b",Otro:"#6e6860"};
+const EXP_CATS = ["Compra","Bebida","Luz","Agua","Alquiler","Fianza","Evento","Otro"];
+const CAT_COLORS = {Compra:"#3d8000",Bebida:"#0e7c86",Luz:"#c07800",Agua:"#5a6ea8",Alquiler:"#9b59b6",Fianza:"#16a085",Evento:"#c0392b",Otro:"#6e6860"};
 let compraCat = "Compra";
 
-function renderCaja(){
-  // Ingresos: todas las cuotas confirmadas + ingresos manuales (excluye papelera)
-  const ingresosCuotas = quotas.filter(q=>!q.deleted).reduce((s,q)=> s + q.payments.filter(p=>p.confirmedByTreasurer).length * q.amount, 0);
-  const activeCompras = compras.filter(c=>!c.deleted);
-  const ingresosManual = activeCompras.filter(c=>c.income).reduce((s,c)=>s+c.amount,0);
-  // Gastos: todas las compras/gastos registrados (excluye ingresos manuales y papelera)
-  const gastosTotal = activeCompras.filter(c=>!c.income).reduce((s,c)=>s+c.amount,0);
-  const saldo = ingresosCuotas + ingresosManual - gastosTotal;
-  const pend = activeCompras.filter(c=>!c.income && !c.reintegrated);
-  const pendTotal = pend.reduce((s,c)=>s+c.amount,0);
+// ── Tres cajas ─────────────────────────────────────────────────────────
+// Reserva alquiler : cuotas mensuales confirmadas − gastos "Alquiler".
+// Caja bebida      : dotación (traspaso desde Fondo) + bote de consumiciones − gastos "Bebida".
+// Fondo de la colla: cuota "Inicial" + ingresos manuales − resto de gastos.
+// Los traspasos mueven dinero entre cajas; el total en cuenta no cambia.
+const CAJAS = {
+  fondo:  {label:"Fondo",           long:"Fondo de la colla", color:"#3d8000"},
+  bebida: {label:"Bebida",          long:"Caja bebida",       color:"#0e7c86"},
+  reserva:{label:"Reserva",         long:"Reserva alquiler",  color:"#141410"},
+};
+const TRANSFER_ROUTES = [
+  {from:"reserva", to:"fondo",  label:"Reserva → Fondo", what:m=>`Sobrante cuotas ${m}`},
+  {from:"fondo",   to:"bebida", label:"Fondo → Bebida",  what:()=>"Dotación caja bebida"},
+  {from:"bebida",  to:"fondo",  label:"Bebida → Fondo",  what:m=>`Beneficio bebida ${m}`},
+];
+const isInicialQuota = q => (q.month||'').toLowerCase().includes('inicial');
+const trFrom = c => c.from || 'reserva';   // traspasos sin ruta = Reserva → Fondo
+const trTo   = c => c.to   || 'fondo';
+function cajaOf(c){
+  if(c.transfer) return 'traspaso';
+  if(c.income) return c.caja==='bebida' ? 'bebida' : 'fondo';
+  if(c.cat==='Alquiler') return 'reserva';
+  if(c.cat==='Bebida') return 'bebida';
+  return 'fondo';
+}
+function cajaStats(){
+  const qs = quotas.filter(q=>!q.deleted);
+  const conf = q => (q.payments||[]).filter(p=>p.confirmedByTreasurer).length * (Number(q.amount)||0);
+  const cuotasMes = qs.filter(q=>!isInicialQuota(q)).reduce((s,q)=>s+conf(q),0);
+  const cuotaInicial = qs.filter(isInicialQuota).reduce((s,q)=>s+conf(q),0);
+  const act = compras.filter(c=>!c.deleted);
+  const amt = c => Number(c.amount)||0;
+  const sum = arr => arr.reduce((s,c)=>s+amt(c),0);
+  const trs = act.filter(c=>c.transfer);
+  const trIn  = k => sum(trs.filter(c=>trTo(c)===k));
+  const trOut = k => sum(trs.filter(c=>trFrom(c)===k));
+  const ingresos = k => sum(act.filter(c=>c.income && !c.transfer && cajaOf(c)===k));
+  const gastosAll = act.filter(c=>!c.income && !c.transfer);
+  const gastos = k => sum(gastosAll.filter(c=>cajaOf(c)===k));
 
-  let html = `<div class="card card-dark" style="margin-bottom:16px">
-    <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Saldo de la colla</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:48px;color:${saldo>=0?'var(--accent)':'#ff6b5e'};letter-spacing:2px;line-height:1">${saldo.toFixed(2)} €</div>
-    <div style="display:flex;gap:16px;margin-top:12px;flex-wrap:wrap">
-      <div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Cuotas</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">+ ${ingresosCuotas.toFixed(2)} €</div></div>
-      ${ingresosManual>0?`<div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Otros ingresos</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">+ ${ingresosManual.toFixed(2)} €</div></div>`:''}
-      <div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Gastos</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">− ${gastosTotal.toFixed(2)} €</div></div>
+  const reserva = cuotasMes - gastos('reserva') + trIn('reserva') - trOut('reserva');
+  const fondoIn  = cuotaInicial + ingresos('fondo') + trIn('fondo');
+  const fondoOut = gastos('fondo') + trOut('fondo');
+  const fondo = fondoIn - fondoOut;
+  const bebidaIn  = ingresos('bebida');
+  const bebidaOut = gastos('bebida');
+  const bebida = bebidaIn - bebidaOut + trIn('bebida') - trOut('bebida');
+  const dotacion = sum(trs.filter(c=>trFrom(c)==='fondo' && trTo(c)==='bebida'));
+  const pend = gastosAll.filter(c=>!c.reintegrated);
+  return {
+    cuotasMes, reserva, fondo, fondoIn, fondoOut,
+    bebida, bebidaIn, bebidaOut, dotacion, bebidaDiff: bebida - dotacion,
+    total: reserva + fondo + bebida,
+    act, pend, pendTotal: sum(pend),
+  };
+}
+
+function renderCaja(){
+  const st = cajaStats();
+  const isTr = ME===TREASURER;
+  // Si el alquiler de este mes ya está pagado, todo lo que queda en Reserva es sobrante
+  const ym = todayISO().slice(0,7);
+  const rentPaid = st.act.some(c=>!c.income && !c.transfer && c.cat==='Alquiler' && (c.date||'').startsWith(ym));
+  const sobrante = rentPaid ? st.reserva : st.reserva - RENT;
+  const rentPct = rentPaid ? 100 : Math.max(0, Math.min(100, Math.round((st.reserva/RENT)*100)));
+  const rentOk = rentPaid || st.reserva>=RENT;
+  const label9 = t => `<div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">${t}</div>`;
+
+  // Fondo: lo que la colla puede gastar
+  let html = `<div class="card card-dark" style="margin-bottom:10px">
+    ${label9('Disponible para gastar')}
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:${st.fondo>=0?'var(--accent)':'#ff6b5e'};letter-spacing:2px;line-height:1">${eur(st.fondo)}</div>
+    <div style="font-size:11px;color:var(--faint);margin-top:2px">Fondo de la colla · mejoras, básicos, luz, agua, eventos</div>
+    <div style="display:flex;gap:18px;margin-top:14px;flex-wrap:wrap">
+      <div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Entradas</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">+ ${eur(st.fondoIn)}</div></div>
+      <div><div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Salidas</div><div style="font-size:16px;color:#fff;font-weight:600;margin-top:2px">− ${eur(st.fondoOut)}</div></div>
     </div>
   </div>`;
 
-  if(pend.length>0) html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:14px">${pend.length} gasto${pend.length>1?'s':''} pendiente${pend.length>1?'s':''} de reintegro · ${pendTotal.toFixed(2)} €</div>`;
+  // Caja bebida
+  const diff = st.bebidaDiff;
+  const diffTxt = Math.abs(diff)<0.005 ? 'En equilibrio'
+    : (diff>0 ? `<b style="color:var(--accentD)">+ ${eur(diff)} de beneficio</b>` : `<b style="color:var(--neg)">− ${eur(-diff)} bajo la dotación</b>`);
+  html += `<div class="card" style="margin-bottom:10px;border-left:4px solid ${CAJAS.bebida.color}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div>
+        ${label9('Caja bebida')}
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--text);line-height:1">${eur(st.bebida)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">${st.dotacion>0?`Dotación ${eur(st.dotacion)} · ${diffTxt}`:'Sin dotación todavía'}</div>
+      </div>
+      ${isTr?`<button class="btn-ghost" style="font-size:9px;padding:8px 12px;flex-shrink:0;border-color:${CAJAS.bebida.color};color:${CAJAS.bebida.color}" onclick="openTraspaso(${st.dotacion>0&&diff>0?2:1})">Mover</button>`:''}
+    </div>
+    <div style="font-size:10px;color:var(--faint);margin-top:10px;line-height:1.5">${st.dotacion>0
+      ? 'Compra bebida con la categoría "Bebida" y mete el bote como ingreso en Caja bebida. Compárala con la dotación a final de mes: si baja sin motivo, falta alguna consumición por pagar.'
+      : (isTr?'Para arrancar, pulsa Mover → "Fondo → Bebida" con la dotación acordada (ej. 200 €).':'Edu la pondrá en marcha con la dotación acordada.')}</div>
+  </div>`;
+
+  // Reserva: comprometida para el alquiler
+  html += `<div class="card" style="margin-bottom:10px;border-left:4px solid var(--black)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+      <div>
+        ${label9('Reserva alquiler')}
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:var(--text);line-height:1">${eur(st.reserva)}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:3px">Cuotas del mes · no se toca</div>
+      </div>
+      ${isTr?`<button class="btn-accent" style="font-size:9px;padding:8px 12px;flex-shrink:0" onclick="openTraspaso(0)">Pasar a Fondo</button>`:''}
+    </div>
+    <div class="progress-wrap" style="margin-top:12px;height:6px"><div class="progress-bar" style="width:${rentPct}%;background:${rentOk?'var(--accent)':'var(--warn)'}"></div></div>
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:4px;letter-spacing:.5px">
+      <span>${rentPaid?`Alquiler de ${mesActual()} <b style="color:var(--accentD)">pagado</b>`:`Alquiler mensual: <b style="color:var(--text)">${eur(RENT)}</b>`}</span>
+      <span>${sobrante>0.005?`<b style="color:var(--accentD)">Sobran ${eur(sobrante)}</b>`:(rentOk?'Alquiler cubierto':`Faltan ${eur(RENT-st.reserva)}`)}</span>
+    </div>
+  </div>`;
+
+  // Total real (para cuadrar con el banco)
+  html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border:1px dashed var(--border);border-radius:6px;margin-bottom:14px">
+    <span style="font-size:11px;color:var(--muted)">Total en cuenta <span style="color:var(--faint)">(las tres cajas)</span></span>
+    <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${eur(st.total)}</span>
+  </div>`;
+
+  if(st.pend.length>0) html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:14px">${st.pend.length} gasto${st.pend.length>1?'s':''} pendiente${st.pend.length>1?'s':''} de reintegro · ${eur(st.pendTotal)}</div>`;
 
   html += `<div style="display:flex;gap:8px">
     <button class="btn-dashed" style="flex:1" onclick="initCompraPills();openModal('modalCompra')">+ Registrar gasto</button>
-    <button class="btn-dashed" style="flex:1;border-color:var(--accentD);color:var(--accentD)" onclick="openModal('modalIngreso')">+ Ingreso manual</button>
+    <button class="btn-dashed" style="flex:1;border-color:var(--accentD);color:var(--accentD)" onclick="openIngreso()">+ Ingreso manual</button>
   </div>`;
 
   html += `<span class="lbl" style="margin-top:6px">Gastos y movimientos</span>`;
-  if(activeCompras.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin movimientos registrados todavía.</div>`;
-  [...activeCompras].sort((a,b)=>b.id-a.id).forEach(c=>{
-    if(c.income){
-      html += `<div class="card" style="border-left:4px solid var(--accentD)">
+  if(st.act.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin movimientos registrados todavía.</div>`;
+
+  const cajaTag = c => { const k = CAJAS[cajaOf(c)]; return k ? tag(k.label, k.color) : ''; };
+
+  [...st.act].sort((a,b)=>b.id-a.id).forEach(c=>{
+    if(c.transfer){
+      const route = `${CAJAS[trFrom(c)]?.label||'?'} → ${CAJAS[trTo(c)]?.label||'?'}`;
+      html += `<div class="card" style="border-left:4px solid var(--black);background:var(--bg)">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;padding-right:10px">
             <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
-              ${tag('Ingreso','#3d8000')}
-              <span style="font-size:14px;color:var(--text)">${c.what}</span>
+              ${tag('Traspaso','#141410')} ${tag(route,'#6e6860')}
             </div>
-            <div style="font-size:12px;color:var(--muted)">Añadido por ${c.who} · ${c.date}</div>
+            <div style="font-size:14px;color:var(--text)">${esc(c.what)}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(c.who)} · ${c.date}</div>
           </div>
-          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accentD)">+ ${c.amount.toFixed(2)} €</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">⇄ ${eur(c.amount)}</div>
+        </div>
+        ${isTr?`<div style="text-align:right;margin-top:6px"><button class="shop-del" style="font-size:18px;color:var(--faint)" onclick="deleteCompra(${c.id})" title="Eliminar">×</button></div>`:''}
+      </div>`;
+      return;
+    }
+    if(c.income){
+      html += `<div class="card" style="border-left:4px solid ${cajaOf(c)==='bebida'?CAJAS.bebida.color:'var(--accentD)'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1;padding-right:10px">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
+              ${tag('Ingreso','#3d8000')} ${cajaTag(c)}
+              <span style="font-size:14px;color:var(--text)">${esc(c.what)}</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Añadido por ${esc(c.who)} · ${c.date}</div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accentD)">+ ${eur(c.amount)}</div>
         </div>
         <div style="text-align:right;margin-top:6px">
           <button class="shop-del" style="font-size:18px;color:var(--faint)" onclick="deleteCompra(${c.id})" title="Eliminar">×</button>
@@ -1106,30 +1314,85 @@ function renderCaja(){
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
         <div style="flex:1;padding-right:10px">
           <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
-            ${tag(cat,col)}
-            <span style="font-size:14px;color:var(--text)">${c.what}</span>
+            ${tag(cat,col)} ${cat!=='Bebida'?cajaTag(c):''}
+            <span style="font-size:14px;color:var(--text)">${esc(c.what)}</span>
           </div>
-          <div style="font-size:12px;color:var(--muted)">${c.direct?'Pagado directamente por la colla':'Pagó '+c.who} · ${c.date}</div>
+          <div style="font-size:12px;color:var(--muted)">${c.direct?'Pagado directamente por la colla':'Pagó '+esc(c.who)} · ${c.date}</div>
         </div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${c.amount.toFixed(2)} €</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">${eur(c.amount)}</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
         ${c.direct ? tag('Gasto de la colla','#5a6ea8')
-          : (c.reintegrated ? tag('Saldado · reintegrado por '+(c.reintegratedBy||'Edu'),'#3d8000')
-          : `${tag('Pendiente de reintegro','#c07800')} ${ME===TREASURER?`<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="doReintegrate(${c.id})">${c.who===TREASURER?'Marcar saldado':'Reintegrar a '+c.who}</button>`:''}`)}
+          : (c.reintegrated ? tag('Saldado · reintegrado por '+(c.reintegratedBy||TREASURER),'#3d8000')
+          : `${tag('Pendiente de reintegro','#c07800')} ${isTr?`<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="doReintegrate(${c.id})">${c.who===TREASURER?'Marcar saldado':'Reintegrar a '+esc(c.who)}</button>`:''}`)}
         <button class="shop-del" style="font-size:18px;color:var(--faint);margin-left:auto" onclick="deleteCompra(${c.id})" title="Eliminar">×</button>
       </div>
     </div>`;
   });
   document.getElementById('body-caja').innerHTML = html;
 }
+
+// ── Traspasos entre cajas (solo tesorero) ──
+let trasRoute = 0;
+const mesActual = () => new Date().toLocaleDateString("es-ES",{month:"long"});
+function openTraspaso(routeIdx){
+  if(ME!==TREASURER) return;
+  document.getElementById('trasWhat').value = '';
+  document.getElementById('trasAmt').value = '';
+  document.getElementById('trasRoutePills').innerHTML = TRANSFER_ROUTES.map((r,i)=>
+    `<span class="pill" id="trasRoute${i}" onclick="setTrasRoute(${i})">${r.label}</span>`
+  ).join('');
+  setTrasRoute(routeIdx||0);
+  openModal('modalTraspaso');
+}
+function setTrasRoute(i){
+  trasRoute = i;
+  const r = TRANSFER_ROUTES[i];
+  TRANSFER_ROUTES.forEach((_,j)=>{ const el=document.getElementById('trasRoute'+j); if(el) el.className='pill'+(j===i?' on':''); });
+  const st = cajaStats();
+  document.getElementById('trasOrigenLbl').textContent = `En ${CAJAS[r.from].long} ahora`;
+  document.getElementById('trasReserva').textContent = eur(st[r.from]);
+  document.getElementById('trasWhat').placeholder = 'Ej: ' + r.what(mesActual());
+  const amtEl = document.getElementById('trasAmt');
+  if(r.from==='bebida' && st.bebidaDiff>0) amtEl.placeholder = st.bebidaDiff.toFixed(2);
+  else if(r.from==='reserva' && st.reserva>RENT) amtEl.placeholder = (st.reserva-RENT).toFixed(2);
+  else if(r.to==='bebida') amtEl.placeholder = '200';
+  else amtEl.placeholder = '0.00';
+}
+function addTraspaso(){
+  if(ME!==TREASURER){ alert("Solo el tesorero puede mover dinero entre cajas."); return; }
+  const r = TRANSFER_ROUTES[trasRoute];
+  const amt = parseFloat(document.getElementById('trasAmt').value.trim().replace(',', '.'));
+  if(!amt || isNaN(amt) || amt<=0){ alert("Pon un importe válido (ej: 90)."); return; }
+  const st = cajaStats();
+  if(amt > st[r.from] + 0.001){
+    if(!confirm(`${CAJAS[r.from].long} tiene ${eur(st[r.from])} y quieres mover ${eur(amt)}.\n\nQuedará en negativo. ¿Continuar?`)) return;
+  }
+  const what = document.getElementById('trasWhat').value.trim() || r.what(mesActual());
+  const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
+  fbSet('compras', {id:nextId,cat:"Traspaso",who:ME,what,amount:amt,date:todayISO(),reintegrated:true,reintegratedBy:null,direct:true,income:false,transfer:true,from:r.from,to:r.to});
+  closeModal('modalTraspaso');
+}
+
+// ── Ingreso manual (Fondo o Caja bebida) ──
+let ingresoDest = 'fondo';
+function openIngreso(){ setIngresoDest('fondo'); openModal('modalIngreso'); }
+function setIngresoDest(d){
+  ingresoDest = d;
+  document.getElementById('ingDestFondo').className = 'pill'+(d==='fondo'?' on':'');
+  document.getElementById('ingDestBebida').className = 'pill'+(d==='bebida'?' on':'');
+  document.getElementById('ingresoWhat').placeholder = d==='bebida' ? `Ej: Bote consumiciones ${mesActual()}` : 'Ej: Saldo inicial de la colla';
+  document.getElementById('ingresoDestHint').textContent = d==='bebida'
+    ? 'Para el bote de consumiciones (llaunes, café…).'
+    : 'Para saldo inicial, derramas, altas y otros ingresos.';
+}
 function addIngreso(){
-  const what = document.getElementById('ingresoWhat').value.trim() || "Ingreso manual";
+  const what = document.getElementById('ingresoWhat').value.trim() || (ingresoDest==='bebida' ? `Bote consumiciones ${mesActual()}` : "Ingreso manual");
   const amtRaw = document.getElementById('ingresoAmt').value.trim().replace(',', '.');
   const amt = parseFloat(amtRaw);
   if(!amt || isNaN(amt) || amt<=0){ alert("Pon un importe válido (ej: 100 o 50.50)."); return; }
   const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
-  fbSet('compras', {id:nextId,cat:"Ingreso",who:ME,what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:true,reintegratedBy:null,direct:true,income:true});
+  fbSet('compras', {id:nextId,cat:"Ingreso",who:ME,what,amount:amt,date:todayISO(),reintegrated:true,reintegratedBy:null,direct:true,income:true,caja:ingresoDest});
   closeModal('modalIngreso');
   document.getElementById('ingresoWhat').value=''; document.getElementById('ingresoAmt').value='';
 }
@@ -1169,11 +1432,20 @@ function initCompraPills(){
   document.getElementById('compraCatPills').innerHTML = EXP_CATS.map(cat=>
     `<span class="pill${cat==='Compra'?' on':''}" onclick="setCompraCat('${cat}',this)">${cat}</span>`
   ).join('');
+  updateCajaHint();
   document.getElementById('compraWhoPills').innerHTML = MEMBERS.map(m=>
     `<span class="pill${m.name===compraWho?' on':''}" onclick="setCompraWho('${m.name}',this)">${av(m.name,'av '+(m.name===compraWho?'av-on':'av-off'))} ${m.name}</span>`
   ).join('');
 }
-function setCompraCat(cat,el){ compraCat=cat; document.querySelectorAll('#compraCatPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
+function setCompraCat(cat,el){ compraCat=cat; document.querySelectorAll('#compraCatPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); updateCajaHint(); }
+function updateCajaHint(){
+  const h = document.getElementById('compraCajaHint'); if(!h) return;
+  h.innerHTML = compraCat==='Alquiler'
+    ? 'Sale de la <b style="color:var(--text)">Reserva alquiler</b>'
+    : compraCat==='Bebida'
+      ? 'Sale de la <b style="color:#0e7c86">Caja bebida</b>'
+      : 'Sale del <b style="color:var(--accentD)">Fondo de la colla</b>';
+}
 function setCompraWho(name,el){ compraWho=name; document.querySelectorAll('#compraWhoPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
 function initEvExpPills(){
   evExpWho = ME;
@@ -1448,17 +1720,19 @@ function renderColla(){
     <div style="text-align:right"><div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Tesorero</div>
     <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff">${TREASURER}</div></div>
   </div>
+  <span class="lbl">Junta · càrrecs</span>
+  <div class="card" style="padding:4px 16px;margin-bottom:20px">
+    ${CARGOS.map(c=>`<div class="quota-row" style="align-items:flex-start;gap:12px">
+      <div style="font-size:12px;color:var(--muted);line-height:1.4;flex:1;min-width:0">${esc(c.role)}</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:19px;color:var(--text);letter-spacing:.5px;text-align:right;line-height:1.15">${esc(c.who)}</div>
+    </div>`).join('')}
+  </div>
   <span class="lbl">Grupos (${GROUPS.length})</span>`;
   GROUPS.forEach(g=>{
     const avs = g.members.map((n,i)=>`<span style="margin-left:${i>0?'-8px':'0'};z-index:${i};position:relative">${av(n,'av av-lg '+(g.members.includes(ME)&&n===ME?'av-on':(i===0?'av-on':'av-off')))}</span>`).join('');
     html += `<div class="group-card"><div class="group-avs">${avs}</div><div class="group-name">${g.members.join(" & ")}</div></div>`;
   });
-  html += `<div class="divider"></div>
-  <span class="lbl">Documentos</span>
-  <div class="card" style="display:flex;justify-content:space-between;align-items:center">
-    <div><div style="font-size:14px;color:var(--text);margin-bottom:3px">Estatutos de la colla</div><div style="font-size:11px;color:var(--faint)">Documento oficial · PDF</div></div>
-    <button class="btn-ghost" onclick="alert('Añade aquí la URL del PDF de los estatutos cuando lo tengáis.')">Próximamente</button>
-  </div>`;
+  html += renderDocsHTML();
 
   const trash = getTrashItems();
   trashCache = trash;
@@ -1497,11 +1771,69 @@ function renderColla(){
     <span class="lbl" style="color:var(--neg)">Administración · solo tesorero</span>
     <div class="warn-card" style="background:#fbeae8;border-color:rgba(192,57,43,.3)">
       <div style="font-size:13px;color:var(--text);margin-bottom:4px;font-weight:500">Vaciar todos los datos</div>
-      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Borra eventos, caja, lista de la compra, turnos y cuotas para toda la colla. Úsalo solo para empezar de cero. No se puede deshacer.</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Borra eventos, caja, lista de la compra, turnos y cuotas para toda la colla. Los documentos se conservan. Úsalo solo para empezar de cero. No se puede deshacer.</div>
       <button class="btn-accent" style="background:var(--neg);color:#fff;width:100%" onclick="resetAllData()">Vaciar y reiniciar la app</button>
     </div>`;
   }
   document.getElementById('body-colla').innerHTML = html;
+}
+
+// ── Documentos (actas, estatutos) ──
+let docType = "Acta";
+const canEditDocs = () => DOC_EDITORS.includes(ME);
+const fmtDocDate = d => d ? new Date(d+"T12:00:00").toLocaleDateString("es-ES",{day:'numeric',month:'short',year:'numeric'}) : '';
+function renderDocsHTML(){
+  const order = {Estatutos:0, Acta:1, Otro:2};
+  const list = docs.filter(d=>!d.deleted).sort((a,b)=>{
+    const t = (order[a.type]??9)-(order[b.type]??9);
+    return t!==0 ? t : (b.date||'').localeCompare(a.date||'');
+  });
+  let h = `<div class="divider"></div><span class="lbl">Documentos (${list.length})</span>`;
+  if(list.length===0){
+    h += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">${canEditDocs()?'Aún no hay documentos. Añade los estatutos o la última acta.':`Aún no hay documentos. Los suben ${DOC_EDITORS.join(' y ')}.`}</div>`;
+  }
+  list.forEach(d=>{
+    const dt = DOC_TYPES[d.type]||DOC_TYPES.Otro;
+    h += `<div class="card" style="display:flex;align-items:center;gap:12px">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">${tag(esc(d.type||'Otro'),dt.color)}${d.date?`<span style="font-size:11px;color:var(--faint)">${fmtDocDate(d.date)}</span>`:''}</div>
+        <div style="font-size:14px;color:var(--text);line-height:1.35">${esc(d.title)}</div>
+        <div style="font-size:11px;color:var(--faint);margin-top:2px">Subido por ${esc(d.addedBy||'?')}</div>
+      </div>
+      <a class="btn-accent" style="text-decoration:none;flex-shrink:0;font-size:9px;padding:9px 13px" href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">Abrir PDF</a>
+      ${canEditDocs()?`<button class="shop-del" style="font-size:20px" onclick="deleteDoc(${d.id})" title="Retirar">×</button>`:''}
+    </div>`;
+  });
+  if(canEditDocs()) h += `<button class="btn-dashed" onclick="openDocModal()">+ Añadir documento</button>`;
+  return h;
+}
+function openDocModal(){
+  if(!canEditDocs()) return;
+  docType = "Acta";
+  document.getElementById('docTypePills').innerHTML = Object.keys(DOC_TYPES).map(k=>
+    `<span class="pill${k===docType?' on':''}" onclick="setDocType('${k}',this)">${k}</span>`
+  ).join('');
+  ['docTitle','docUrl'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('docDate').value = todayISO();
+  openModal('modalDoc');
+}
+function setDocType(k,el){ docType=k; document.querySelectorAll('#docTypePills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
+function addDoc(){
+  if(!canEditDocs()){ alert(`Solo ${DOC_EDITORS.join(' y ')} pueden añadir documentos.`); return; }
+  const title = document.getElementById('docTitle').value.trim();
+  const url = document.getElementById('docUrl').value.trim();
+  const date = document.getElementById('docDate').value;
+  if(!title){ alert("Ponle un título al documento."); return; }
+  if(!/^https:\/\/\S+$/i.test(url)){ alert("Pega un enlace válido que empiece por https://"); return; }
+  const nextId = (docs.reduce((m,d)=>Math.max(m,d.id||0),0))+1;
+  fbSet('docs', {id:nextId,title,type:docType,date,url,addedBy:ME,deleted:false});
+  closeModal('modalDoc');
+}
+function deleteDoc(id){
+  if(!canEditDocs()) return;
+  const d = docs.find(x=>x.id===id); if(!d) return;
+  if(!confirm(`¿Retirar "${d.title}"?\n\nSe mueve a la Papelera (Colla) por si hay que recuperarlo.`)) return;
+  softDelete('docs', d);
 }
 
 // Reset total: borra todas las colecciones y sube la versión (obliga a todos
@@ -1512,7 +1844,7 @@ async function resetAllData(){
   showSync("Vaciando…");
   try{
     // 1) Borra todos los documentos de todas las colecciones
-    for(const coll of COLLECTIONS){
+    for(const coll of RESET_COLLECTIONS){
       const snap = await DB.getDocs(DB.collection(DB.db, coll));
       for(const d of snap.docs){ await DB.deleteDoc(DB.doc(DB.db, coll, d.id)); }
     }
