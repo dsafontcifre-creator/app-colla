@@ -352,8 +352,8 @@ textarea.inp{height:100px;}
 <div class="modal-overlay" id="modalIngreso" onclick="closeModalBg(event,'modalIngreso')">
   <div class="modal-box">
     <div class="modal-title">Ingreso Manual</div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Para saldo inicial, derramas, altas u otros ingresos que no sean cuotas. Lo que pague gente de fuera por bebida, en "Bebida".</div>
-    <div class="inp-wrap"><label class="inp-label">Entra en</label>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Suma a lo disponible para gastar. Para el sobrante de las cuotas de cada mes, derramas, altas u otros ingresos.</div>
+    <div class="inp-wrap" id="ingresoDestWrap"><label class="inp-label">Entra en</label>
       <div class="pill-row">
         <span class="pill on" id="ingDestFondo" onclick="setIngresoDest('fondo')">Bote general</span>
         <span class="pill" id="ingDestBebida" onclick="setIngresoDest('bebida')">Bebida</span>
@@ -506,7 +506,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 20; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 22; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -557,6 +557,9 @@ const CONSUM_MANAGERS = ["Edu","Marta"];
 const RENT = 600;
 // Fondo de bebida: dinero fijo que la colla reserva para comprar bebida
 const BEBIDA_BASE = 200;
+// Bebida y consumiciones: desactivado por ahora (decisión del tesorero).
+// Poner a true para volver a mostrar la pestaña y el fondo de bebida.
+const BEBIDA_ON = false;
 
 const EVENT_TYPES = {
   comida:{label:"Comida",color:"#3d8000"},
@@ -934,12 +937,13 @@ const MENU_ITEMS = [
 function getBadge(key){
   if(key==='eventos') return events.filter(e=>!e.deleted).reduce((s,e)=>s+(e.polls||[]).filter(p=>p.open).length,0)||null;
   if(key==='consum'){
+    if(!BEBIDA_ON) return null;
     const L = consumLedger();
     if(CONSUM_MANAGERS.includes(ME) && L.toConfirm.length) return L.toConfirm.length;
     const mine = L.people.find(x=>x.name===ME);
     return mine && mine.saldo > 0.005 ? '!' : null;
   }
-  if(key==='caja') return compras.filter(c=>!c.deleted && !c.reintegrated).length||null;
+  if(key==='caja') return cajaStats().pend.length||null;
   if(key==='tareas') return tasks.filter(t=>!t.deleted && !t.done).length||null;
   if(key==='compra') return shopping.filter(s=>!s.deleted && !s.done).length||null;
   if(key==='turnos'){
@@ -955,10 +959,10 @@ function getBadge(key){
 function renderMenu(){
   const list = document.getElementById('menuList');
   if(!list) return;
-  list.innerHTML = MENU_ITEMS.map(item=>{
+  list.innerHTML = MENU_ITEMS.filter(item=>BEBIDA_ON || item.key!=='consum').map((item,idx)=>{
     const b = getBadge(item.key);
     return `<div class="menu-row" onclick="goSection('${item.key}')">
-      <span class="menu-num">${item.num}</span>
+      <span class="menu-num">${String(idx+1).padStart(2,'0')}</span>
       <span class="menu-label">${item.label}</span>
       ${b ? `<span class="menu-badge">${b}</span>` : ''}
       <span class="menu-arrow">›</span>
@@ -1219,45 +1223,43 @@ function savePoll(){
 }
 
 // ═══════════════════════════════ CAJA ════════════════════════════════
-const EXP_CATS = ["Compra","Bebida","Luz","Agua","Alquiler","Fianza","Evento","Otro"];
+const EXP_CATS = ["Compra","Bebida","Luz","Agua","Fianza","Evento","Otro"].filter(c=>BEBIDA_ON || c!=="Bebida");
 const CAT_COLORS = {Compra:"#3d8000",Bebida:"#0e7c86",Luz:"#c07800",Agua:"#5a6ea8",Alquiler:"#9b59b6",Fianza:"#16a085",Evento:"#c0392b",Otro:"#6e6860"};
 let compraCat = "Compra";
 
-// ── Cuentas de la colla (simplificado) ───────────────────────────────────
-// Todo el dinero está en un solo sitio. La app lo reparte sola, sin traspasos:
-//   · Alquiler del mes: se apartan 600 € hasta que se marca como pagado.
-//   · Fondo de bebida: 200 € + lo cobrado de consumiciones − lo comprado de bebida.
-//   · Se puede gastar: todo lo demás.
+// ── Cuentas de la colla ──────────────────────────────────────────────────
+// Las cuotas mensuales pagan el alquiler y NO se muestran a la colla.
+// Edu apunta como ingreso lo que sobra cada mes. Lo que ve todo el mundo es:
+//   Disponible = dinero inicial (cuota "Inicial") + ingresos − gastos
+// (Los gastos de categoría Alquiler y los traspasos antiguos no cuentan.)
 const isInicialQuota = q => (q.month||'').toLowerCase().includes('inicial');
 const BEBIDA_COLOR = "#0e7c86";
 const mesActual = () => new Date().toLocaleDateString("es-ES",{month:"long"});
 const canMoney = () => CONSUM_MANAGERS.includes(ME);
+const confirmedAmount = q => (q.payments||[]).filter(p=>p.confirmedByTreasurer).length*(Number(q.amount)||0);
+const currentQuota = () => quotas.filter(q=>!q.deleted && !isInicialQuota(q)).sort((a,b)=>b.id-a.id)[0] || null;
 function cajaStats(){
   const amt = c => Number(c.amount)||0;
   const sum = a => a.reduce((s,c)=>s+amt(c),0);
-  const qs = quotas.filter(q=>!q.deleted);
-  const cuotas = qs.reduce((s,q)=>s+(q.payments||[]).filter(p=>p.confirmedByTreasurer).length*(Number(q.amount)||0),0);
-  const act = compras.filter(c=>!c.deleted && !c.transfer);   // los traspasos antiguos ya no cuentan
-  const ingresos = act.filter(c=>c.income);
-  const ingresosBebida = sum(ingresos.filter(c=>c.caja==='bebida'));
-  const gastosAll = act.filter(c=>!c.income);
-  const gastos = sum(gastosAll);
-  const gastosBebida = sum(gastosAll.filter(c=>c.cat==='Bebida'));
-  const L = consumLedger();
-  const cobrado = L.cobradoTotal;
-  const total = cuotas + sum(ingresos) + cobrado - gastos;
-  const bebida = BEBIDA_BASE + cobrado + ingresosBebida - gastosBebida;
-  const ym = todayISO().slice(0,7);
-  const rentPaidItem = gastosAll.find(c=>c.cat==='Alquiler' && (c.date||'').startsWith(ym));
-  const alquiler = rentPaidItem ? 0 : RENT;
-  const disponible = total - bebida - alquiler;
-  const pend = gastosAll.filter(c=>!c.reintegrated);
   const r2 = n => Math.round(n*100)/100;
+  const inicial = quotas.filter(q=>!q.deleted && isInicialQuota(q)).reduce((s,q)=>s+confirmedAmount(q),0);
+  const act = compras.filter(c=>!c.deleted && !c.transfer && c.cat!=='Alquiler');
+  const isBeb = c => BEBIDA_ON && (c.income ? c.caja==='bebida' : c.cat==='Bebida');
+  const ingresosL = act.filter(c=>c.income && !isBeb(c));
+  const gastosL = act.filter(c=>!c.income && !isBeb(c));
+  const ingresos = sum(ingresosL), gastos = sum(gastosL);
+  const L = consumLedger();
+  const cobrado = BEBIDA_ON ? L.cobradoTotal : 0;
+  const ingresosBebida = sum(act.filter(c=>c.income && isBeb(c)));
+  const gastosBebida = sum(act.filter(c=>!c.income && isBeb(c)));
+  const bebida = BEBIDA_ON ? r2(BEBIDA_BASE + cobrado + ingresosBebida - gastosBebida) : 0;
+  const disponible = r2(inicial + ingresos - gastos - (BEBIDA_ON ? BEBIDA_BASE : 0));
+  const curQ = currentQuota();
+  const pend = gastosL.filter(c=>!c.reintegrated);
   return {
-    cuotas, total:r2(total), bebida:r2(bebida), alquiler, disponible:r2(disponible),
-    rentPaid: !!rentPaidItem, rentPaidItem,
-    cobrado, gastosBebida, ingresosBebida,
-    pendienteCobrar: L.pendienteTotal,
+    inicial, ingresos, gastos, disponible, bebida, cobrado, ingresosBebida, gastosBebida,
+    pendienteCobrar: BEBIDA_ON ? L.pendienteTotal : 0,
+    curQ, cuotasMes: curQ ? confirmedAmount(curQ) : 0,
     L, act, pend, pendTotal: sum(pend),
   };
 }
@@ -1265,85 +1267,67 @@ function cajaStats(){
 function renderCaja(){
   const st = cajaStats();
   const isTr = ME===TREASURER;
-  const mes = mesActual();
-  const legend = (dot,label,val,col) => `<div style="display:flex;align-items:center;gap:9px;padding:6px 0;border-top:1px solid rgba(255,255,255,.08)">
-    <span style="width:10px;height:10px;border-radius:50%;background:${dot};flex-shrink:0"></span>
-    <span style="flex:1;font-size:12px;color:#d8d0c0">${label}</span>
-    <span style="font-size:15px;font-weight:600;color:${col||'#fff'}">${val}</span>
-  </div>`;
-  const pos = n => Math.max(0,n);
-  const barTotal = pos(st.disponible) + pos(st.bebida) + st.alquiler || 1;
-  const seg = (v,c) => v>0 ? `<div style="width:${(v/barTotal*100).toFixed(2)}%;background:${c}"></div>` : '';
+  const line = (l,v) => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(255,255,255,.08)"><span style="font-size:12px;color:#d8d0c0">${l}</span><span style="font-size:14px;font-weight:600;color:#fff">${v}</span></div>`;
 
-  // ── Lo importante: cuánto se puede gastar
+  // ── Lo que ve todo el mundo: disponible para gastar
   let html = `<div class="card card-dark" style="margin-bottom:10px">
-    <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Se puede gastar</div>
-    <div style="font-family:'Bebas Neue',sans-serif;font-size:58px;color:${st.disponible>=0?'var(--accent)':'#ff6b5e'};letter-spacing:2px;line-height:1">${eur(st.disponible)}</div>
-    <div style="font-size:11px;color:var(--faint);margin-top:3px">La colla tiene <b style="color:#fff">${eur(st.total)}</b> en total</div>
-    <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;background:rgba(255,255,255,.1);margin:14px 0 8px">
-      ${seg(pos(st.disponible),'var(--accent)')}${seg(pos(st.bebida),'#2bb3bf')}${seg(st.alquiler,'#8a847a')}
-    </div>
-    ${legend('var(--accent)','Se puede gastar',eur(st.disponible), st.disponible>=0?'var(--accent)':'#ff6b5e')}
-    ${legend('#2bb3bf','Reservado para bebida',eur(st.bebida))}
-    ${legend('#8a847a', st.rentPaid?`Alquiler de ${mes} · pagado ✓`:`Apartado para el alquiler de ${mes}`, st.rentPaid?'—':eur(st.alquiler))}
+    <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Disponible para gastar</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:60px;color:${st.disponible>=0?'var(--accent)':'#ff6b5e'};letter-spacing:2px;line-height:1">${eur(st.disponible)}</div>
+    <div style="font-size:11px;color:var(--faint);margin:4px 0 12px">Para compras, luz, agua, limpieza y mejoras</div>
+    ${line('Dinero con el que empezamos', '+ '+eur(st.inicial))}
+    ${line('Ingresos (sobrantes, derramas, altas…)', '+ '+eur(st.ingresos))}
+    ${line('Lo que hemos gastado', '− '+eur(st.gastos))}
   </div>`;
 
-  if(st.disponible<0){
-    html += `<div style="font-size:12px;color:var(--neg);background:#fbeae8;border:1px solid rgba(192,57,43,.3);border-radius:6px;padding:9px 12px;margin-bottom:10px;line-height:1.45">Ahora mismo no llega para el alquiler y la bebida: faltan <b>${eur(-st.disponible)}</b>. Mira abajo quién falta por pagar.</div>`;
+  // ── Solo el tesorero: cuotas del mes
+  if(isTr && st.curQ){
+    const q = st.curQ;
+    const nConf = (q.payments||[]).filter(p=>p.confirmedByTreasurer).length;
+    const tot = MEMBERS.length * (Number(q.amount)||0);
+    const falta = Math.max(0, RENT - st.cuotasMes);
+    const rentItem = compras.find(c=>!c.deleted && c.cat==='Alquiler' && c.quotaId===q.id);
+    html += `<div class="card" style="border-left:4px solid var(--black)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:9px;letter-spacing:3px;color:var(--faint);text-transform:uppercase">Cuotas · <span style="text-transform:capitalize">${esc(q.month)}</span></span>
+        ${tag('Solo lo ves tú','#141410')}
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--text)">${eur(st.cuotasMes)} <span style="font-size:16px;color:var(--muted)">de ${eur(tot)}</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">${nConf} de ${MEMBERS.length} confirmadas · alquiler ${eur(RENT)} · ${falta>0?`faltan ${eur(falta)} para el alquiler`:`<b style="color:var(--accentD)">sobran ${eur(st.cuotasMes-RENT)}</b>`}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+        <span style="font-size:13px;color:${rentItem?'var(--accentD)':'var(--text)'}">${rentItem?`Alquiler pagado ✓ · ${eur(rentItem.amount)}`:'Alquiler sin pagar'}</span>
+        ${rentItem
+          ? `<button class="btn-ghost" style="font-size:9px;padding:5px 10px" onclick="unmarkRent(${rentItem.id})">Deshacer</button>`
+          : `<button class="btn-ghost" style="font-size:9px;padding:6px 11px;border-color:var(--accentD);color:var(--accentD)" onclick="markRentPaid()">Marcar pagado</button>`}
+      </div>
+      <button class="btn-accent" style="width:100%;margin-top:12px" onclick="openSobrante()">+ Pasar sobrante al disponible</button>
+    </div>`;
   }
 
-  // ── Alquiler del mes
-  html += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px;border-left:4px solid ${st.rentPaid?'var(--accent)':'#8a847a'}">
-    <div>
-      <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Alquiler · <span style="text-transform:capitalize">${mes}</span></div>
-      <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;line-height:1.05;color:${st.rentPaid?'var(--accentD)':'var(--text)'}">${st.rentPaid?`Pagado · ${eur(st.rentPaidItem.amount)}`:`Pendiente · ${eur(RENT)}`}</div>
-    </div>
-    ${!st.rentPaid && canMoney()?`<button class="btn-accent" style="flex-shrink:0" onclick="markRentPaid()">Marcar pagado</button>`:''}
-  </div>`;
+  // ── Bebida (solo si está activada)
+  if(BEBIDA_ON){
+    html += `<div class="card" style="border-left:4px solid ${BEBIDA_COLOR}">
+      <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Fondo de bebida</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--text)">${eur(st.bebida)}</div>
+      ${st.pendienteCobrar>0.005?`<div style="font-size:12px;color:var(--warn);margin-top:4px;cursor:pointer" onclick="goSection('consum')">Pendiente de cobrar ${eur(st.pendienteCobrar)} ›</div>`:''}
+    </div>`;
+  }
 
-  // ── Fondo de bebida
-  const bDiff = st.bebida - BEBIDA_BASE;
-  html += `<div class="card" style="border-left:4px solid ${BEBIDA_COLOR}">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
-      <div>
-        <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Fondo de bebida</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--text)">${eur(st.bebida)}</div>
+  // ── Quién falta por pagar la cuota (sin importes)
+  if(st.curQ){
+    const morosos = (st.curQ.payments||[]).filter(p=>!p.selfDeclared && !p.confirmedByTreasurer).map(p=>p.name);
+    const chip = n => `<span style="display:inline-block;font-size:11px;padding:3px 9px;border-radius:12px;background:#c0392b18;color:#c0392b;margin:0 4px 5px 0">${esc(n)}</span>`;
+    html += `<div class="card" style="cursor:pointer" onclick="goSection('cuotas')">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${morosos.length?'8px':'0'}">
+        <span style="font-size:13px;color:var(--text);font-weight:500">Cuota de <span style="text-transform:capitalize">${esc(st.curQ.month)}</span></span>
+        <span style="font-size:11px;color:${morosos.length?'var(--neg)':'var(--accentD)'}">${morosos.length?`Faltan ${morosos.length} por pagar`:'Todos han pagado ✓'} ›</span>
       </div>
-      <div style="text-align:right;font-size:11px;line-height:1.4;padding-top:2px">
-        ${Math.abs(bDiff)<0.005?'<span style="color:var(--muted)">Justo en la base</span>'
-          :(bDiff>0?`<b style="color:var(--accentD)">+ ${eur(bDiff)}</b><br><span style="color:var(--faint)">de beneficio</span>`
-                   :`<b style="color:var(--neg)">− ${eur(-bDiff)}</b><br><span style="color:var(--faint)">bajo la base</span>`)}
-      </div>
-    </div>
-    <div style="margin-top:10px;border-top:1px solid var(--line);padding-top:6px;font-size:12px;color:var(--muted)">
-      <div style="display:flex;justify-content:space-between;padding:2px 0"><span>Base</span><span style="color:var(--text)">${eur(BEBIDA_BASE)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:2px 0"><span>Cobrado de consumiciones</span><span style="color:var(--text)">+ ${eur(st.cobrado + st.ingresosBebida)}</span></div>
-      <div style="display:flex;justify-content:space-between;padding:2px 0"><span>Comprado de bebida</span><span style="color:var(--text)">− ${eur(st.gastosBebida)}</span></div>
-      ${st.pendienteCobrar>0.005?`<div style="display:flex;justify-content:space-between;padding:2px 0;cursor:pointer" onclick="goSection('consum')"><span style="color:var(--warn)">Pendiente de cobrar ›</span><span style="color:var(--warn)">${eur(st.pendienteCobrar)}</span></div>`:''}
-    </div>
-  </div>`;
+      <div>${morosos.map(chip).join('')}</div>
+    </div>`;
+  }
 
-  // ── Falta por pagar: cuota del mes + consumiciones
-  const curQ = quotas.filter(q=>!q.deleted && !isInicialQuota(q)).sort((a,b)=>b.id-a.id)[0];
-  const morosos = curQ ? (curQ.payments||[]).filter(p=>!p.selfDeclared && !p.confirmedByTreasurer).map(p=>p.name) : [];
-  const porConf = curQ ? (curQ.payments||[]).filter(p=>p.selfDeclared && !p.confirmedByTreasurer).length : 0;
-  const deud = st.L.deudores;
-  const chip = (t,col) => `<span style="display:inline-block;font-size:11px;padding:3px 9px;border-radius:12px;background:${col}18;color:${col};margin:0 4px 5px 0;white-space:nowrap">${t}</span>`;
-  html += `<div class="card" style="margin-bottom:14px">
-    <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:10px">Falta por pagar</div>
-    ${curQ?`<div style="cursor:pointer" onclick="goSection('cuotas')">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span style="font-size:13px;color:var(--text);font-weight:500">Cuota · <span style="text-transform:capitalize">${esc(curQ.month)}</span></span><span style="font-size:11px;color:var(--faint)">${morosos.length?`${morosos.length} sin pagar`:'Todos al día'}${porConf?` · ${porConf} por confirmar`:''} ›</span></div>
-      <div>${morosos.map(n=>chip(esc(n),'#c0392b')).join('')}</div>
-    </div>`:''}
-    <div style="cursor:pointer;${curQ?'border-top:1px solid var(--line);margin-top:6px;padding-top:10px':''}" onclick="goSection('consum')">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><span style="font-size:13px;color:var(--text);font-weight:500">Consumiciones</span><span style="font-size:11px;color:var(--faint)">${deud.length?`${deud.length} con deuda`:'Nadie debe'} ›</span></div>
-      <div>${deud.map(d=>chip(`${esc(d.name)} ${eur(d.saldo)}`,'#c07800')).join('')}</div>
-    </div>
-  </div>`;
+  if(st.pend.length>0) html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:8px 12px;margin:4px 0 14px">${st.pend.length} gasto${st.pend.length>1?'s':''} adelantado${st.pend.length>1?'s':''} pendiente${st.pend.length>1?'s':''} de devolver · ${eur(st.pendTotal)}</div>`;
 
-  if(st.pend.length>0) html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:14px">${st.pend.length} gasto${st.pend.length>1?'s':''} adelantado${st.pend.length>1?'s':''} pendiente${st.pend.length>1?'s':''} de devolver · ${eur(st.pendTotal)}</div>`;
-
-  html += `<div style="display:flex;gap:8px">
+  html += `<div style="display:flex;gap:8px;margin-top:4px">
     <button class="btn-dashed" style="flex:1" onclick="initCompraPills();openModal('modalCompra')">+ Registrar gasto</button>
     <button class="btn-dashed" style="flex:1;border-color:var(--accentD);color:var(--accentD)" onclick="openIngreso()">+ Ingreso</button>
   </div>`;
@@ -1353,7 +1337,7 @@ function renderCaja(){
 
   [...st.act].sort((a,b)=>b.id-a.id).forEach(c=>{
     if(c.income){
-      const beb = c.caja==='bebida';
+      const beb = BEBIDA_ON && c.caja==='bebida';
       html += `<div class="card" style="border-left:4px solid ${beb?BEBIDA_COLOR:'var(--accentD)'}">
         <div style="display:flex;justify-content:space-between;align-items:flex-start">
           <div style="flex:1;padding-right:10px">
@@ -1395,30 +1379,50 @@ function renderCaja(){
   document.getElementById('body-caja').innerHTML = html;
 }
 
-// ── Alquiler: un toque
+// ── Sobrante de cuotas (tesorero): ingreso con el concepto ya puesto
+function openSobrante(){
+  if(ME!==TREASURER) return;
+  const q = currentQuota();
+  openIngreso();
+  document.getElementById('ingresoWhat').value = `Sobrante cuotas ${q ? q.month : mesActual()}`;
+  const sob = q ? confirmedAmount(q) - RENT : 0;
+  document.getElementById('ingresoAmt').value = sob>0 ? sob.toFixed(2) : '';
+}
+
+// ── Alquiler (solo tesorero; no se muestra ni cuenta para la colla)
 function markRentPaid(){
-  if(!canMoney()) return;
-  const mes = mesActual();
-  const v = prompt(`Alquiler de ${mes} pagado.\n\nImporte (€):`, String(RENT));
+  if(ME!==TREASURER) return;
+  const q = currentQuota(); if(!q) return;
+  const v = prompt(`Alquiler de ${q.month} pagado.\n\nImporte (€):`, String(RENT));
   if(v===null) return;
   const amount = parseFloat(String(v).trim().replace(',', '.'));
   if(!amount || isNaN(amount) || amount<=0){ alert("Pon un importe válido."); return; }
   const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
-  const y = new Date().getFullYear();
-  fbSet('compras', {id:nextId,cat:"Alquiler",who:"La colla",what:`Alquiler ${mes} ${y}`,amount,date:todayISO(),reintegrated:true,reintegratedBy:null,direct:true});
+  fbSet('compras', {id:nextId,cat:"Alquiler",who:"La colla",what:`Alquiler ${q.month}`,amount,date:todayISO(),reintegrated:true,reintegratedBy:null,direct:true,quotaId:q.id});
+}
+function unmarkRent(id){
+  if(ME!==TREASURER) return;
+  const c = compras.find(x=>x.id===id); if(!c) return;
+  if(!confirm(`¿Quitar "${c.what}" como pagado?`)) return;
+  softDelete('compras', c);
 }
 
 // ── Ingreso manual (bote general o bebida)
 let ingresoDest = 'fondo';
-function openIngreso(){ setIngresoDest('fondo'); openModal('modalIngreso'); }
+function openIngreso(){
+  setIngresoDest('fondo');
+  document.getElementById('ingresoDestWrap').style.display = BEBIDA_ON ? 'block' : 'none';
+  document.getElementById('ingresoWhat').value=''; document.getElementById('ingresoAmt').value='';
+  openModal('modalIngreso');
+}
 function setIngresoDest(d){
   ingresoDest = d;
   document.getElementById('ingDestFondo').className = 'pill'+(d==='fondo'?' on':'');
   document.getElementById('ingDestBebida').className = 'pill'+(d==='bebida'?' on':'');
-  document.getElementById('ingresoWhat').placeholder = d==='bebida' ? 'Ej: Bebida de invitados' : 'Ej: Saldo inicial de la colla';
+  document.getElementById('ingresoWhat').placeholder = d==='bebida' ? 'Ej: Bebida de invitados' : 'Ej: Sobrante cuotas octubre';
   document.getElementById('ingresoDestHint').textContent = d==='bebida'
     ? 'Suma al Fondo de bebida.'
-    : 'Suma a lo que se puede gastar.';
+    : 'Suma a lo disponible para gastar.';
 }
 function addIngreso(){
   const what = document.getElementById('ingresoWhat').value.trim() || (ingresoDest==='bebida' ? 'Bebida' : "Ingreso manual");
@@ -2169,7 +2173,7 @@ function renderCuotas(){
               ${isCurrent?tag('Mes actual','#3d8000'):''}
               ${pending===0 && confirmed===MEMBERS.length?tag('Cerrada','#a8a098'):''}
             </div>
-            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text);line-height:1.15">${q.concept} · ${q.amount} €</div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text);line-height:1.15">${q.concept}${ME===TREASURER?` · ${q.amount} €`:''}</div>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
             ${ME===TREASURER?`<button class="btn-ghost" style="font-size:9px;padding:5px 10px;pointer-events:auto" onclick="event.stopPropagation();editQuota(${q.id})" title="Editar cuota">Editar</button><button class="shop-del" style="font-size:18px;color:var(--neg);pointer-events:auto" onclick="event.stopPropagation();deleteQuota(${q.id})" title="Eliminar cuota">×</button>`:''}
@@ -2179,7 +2183,7 @@ function renderCuotas(){
         <div style="pointer-events:none">
         <div class="progress-wrap" style="margin-top:10px"><div class="progress-bar" style="width:${pct}%"></div></div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:4px;letter-spacing:.5px">
-          <span><b style="color:var(--accentD)">${recaudado} €</b> de ${total} € recaudados</span>
+          <span>${ME===TREASURER?`<b style="color:var(--accentD)">${recaudado} €</b> de ${total} € recaudados`:`<b style="color:var(--accentD)">${confirmed+paid}</b> de ${MEMBERS.length} han pagado`}</span>
           <span>${confirmed} confirmados · ${paid} por confirmar · ${pending} pendientes</span>
         </div>
         </div>
