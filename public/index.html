@@ -515,7 +515,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 23; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 24; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -2310,11 +2310,20 @@ function renderColla(){
       <div style="font-family:'Bebas Neue',sans-serif;font-size:19px;color:var(--text);letter-spacing:.5px;text-align:right;line-height:1.15">${esc(c.who)}</div>
     </div>`).join('')}
   </div>
-  <span class="lbl">Grupos (${GROUPS.length})</span>`;
-  GROUPS.forEach(g=>{
-    const avs = g.members.map((n,i)=>`<span style="margin-left:${i>0?'-8px':'0'};z-index:${i};position:relative">${av(n,'av av-lg '+(g.members.includes(ME)&&n===ME?'av-on':(i===0?'av-on':'av-off')))}</span>`).join('');
-    html += `<div class="group-card"><div class="group-avs">${avs}</div><div class="group-name">${g.members.join(" & ")}</div></div>`;
-  });
+  <span class="lbl">Membres (${MEMBERS.length})</span>`;
+  // Lista plana en orden alfabético. localeCompare('es') coloca bien acentos y Ñ.
+  const sortedMembers = [...MEMBERS].sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  html += `<div class="card" style="padding:12px">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 10px">
+      ${sortedMembers.map(m=>{
+        const isMe = m.name===ME;
+        return `<div style="display:flex;align-items:center;gap:8px;min-width:0">
+          ${av(m.name,'av av-md '+(isMe?'av-on':'av-off'))}
+          <span style="font-size:13px;color:var(--${isMe?'text':'muted'});font-weight:${isMe?600:400};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}${isMe?' <span style="font-size:9px;color:var(--faint);font-weight:400">(tú)</span>':''}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
   html += renderDocsHTML();
 
   const trash = getTrashItems();
