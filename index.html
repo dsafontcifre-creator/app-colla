@@ -1,0 +1,2722 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#141410"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Farem Curt"/>
+<title>Colla Farem Curt</title>
+<link rel="manifest" href='data:application/manifest+json,{"name":"Colla Farem Curt","short_name":"Farem Curt","start_url":".","display":"standalone","background_color":"%23f2ede2","theme_color":"%23141410","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 512 512%27%3E%3Crect width=%27512%27 height=%27512%27 rx=%27110%27 fill=%27%23141410%27/%3E%3Ctext x=%27256%27 y=%27330%27 font-family=%27Arial Black,sans-serif%27 font-size=%27300%27 font-weight=%27900%27 fill=%27%237fff00%27 text-anchor=%27middle%27%3EC%3C/text%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml","purpose":"any maskable"}]}'/>
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='110' fill='%23141410'/%3E%3Ctext x='256' y='330' font-family='Arial Black,sans-serif' font-size='300' font-weight='900' fill='%237fff00' text-anchor='middle'%3EC%3C/text%3E%3C/svg%3E"/>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#f2ede2;--paper:#faf7f0;--border:#d8d0c0;
+  --text:#141410;--muted:#6e6860;--faint:#a8a098;
+  --accent:#7fff00;--accentD:#3d8000;
+  --line:#e4ddd0;--neg:#c0392b;--warn:#c07800;--warnL:#fff4e0;
+  --black:#141410;
+}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);max-width:480px;margin:0 auto;min-height:100vh;-webkit-tap-highlight-color:transparent;}
+::-webkit-scrollbar{display:none;}
+input,textarea,select{outline:none;font-family:'DM Sans',sans-serif;}
+input:focus,textarea:focus{border-color:var(--accentD)!important;}
+textarea{resize:none;}
+
+/* LOGIN / ¿QUIÉN ERES? */
+#gate{position:fixed;inset:0;background:var(--bg);z-index:1000;display:flex;flex-direction:column;max-width:480px;margin:0 auto;overflow-y:auto;}
+.gate-header{background:var(--paper);border-bottom:1px solid var(--border);padding:44px 28px 30px;}
+.gate-body{flex:1;padding:24px 22px 60px;}
+.gate-q{font-family:'Bebas Neue',sans-serif;font-size:30px;letter-spacing:1px;margin-bottom:4px;color:var(--text);}
+.gate-sub{font-size:12px;color:var(--muted);margin-bottom:22px;letter-spacing:.3px;}
+.who-grid{display:flex;flex-direction:column;gap:8px;}
+.who-group{margin-bottom:4px;}
+.who-group-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);margin:14px 0 8px;}
+.who-btn{width:100%;display:flex;align-items:center;gap:13px;background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:13px 15px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .14s;text-align:left;}
+.who-btn:hover{border-color:var(--accentD);transform:translateX(3px);}
+.who-btn:active{transform:scale(.98);}
+.who-name{font-size:15px;color:var(--text);font-weight:500;flex:1;}
+.who-tre{font-size:8px;letter-spacing:2px;text-transform:uppercase;font-weight:700;color:var(--accentD);background:rgba(127,255,0,.16);padding:3px 7px;border-radius:4px;}
+
+/* PIN */
+.pin-box{background:var(--paper);border:1px solid var(--border);border-radius:10px;padding:26px 22px;margin-top:8px;}
+.pin-dots{display:flex;gap:12px;justify-content:center;margin:20px 0 24px;}
+.pin-dot{width:15px;height:15px;border-radius:50%;border:2px solid var(--border);transition:all .15s;}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.pin-key{aspect-ratio:1.6;background:var(--bg);border:1px solid var(--border);border-radius:8px;font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;}
+.pin-key:active{background:var(--accent);color:var(--black);transform:scale(.95);}
+.pin-key.fn{font-size:13px;letter-spacing:1px;font-family:'DM Sans',sans-serif;color:var(--muted);}
+.pin-err{color:var(--neg);font-size:12px;text-align:center;margin-top:14px;height:16px;letter-spacing:.3px;}
+
+/* SYNC BANNER */
+#syncBar{position:fixed;top:0;left:50%;transform:translateX(-50%);background:var(--black);color:var(--accent);font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:7px 18px;border-radius:0 0 10px 10px;z-index:900;opacity:0;transition:opacity .3s;pointer-events:none;font-weight:700;}
+#syncBar.show{opacity:1;}
+
+/* MENU */
+.menu{min-height:100vh;background:var(--bg);display:flex;flex-direction:column;}
+.menu-header{background:var(--paper);border-bottom:1px solid var(--border);padding:36px 28px 28px;}
+.eyebrow{font-size:9px;letter-spacing:5px;color:var(--faint);text-transform:uppercase;margin-bottom:8px;}
+.logo-row{display:flex;align-items:flex-end;gap:10px;}
+/* LOGOTIPO · "COLLA" en DM Sans light como antetítulo, "FAREM CURT" en Bebas
+   a tamaño grande. Bebas Neue solo tiene un grosor, así que la jerarquía
+   light/bold se consigue cambiando de fuente, tamaño y color — no con
+   font-weight, que el navegador falsearía. */
+.logo{display:flex;flex-direction:column;line-height:1;}
+.logo-colla{font-family:'DM Sans',sans-serif;font-weight:300;font-size:clamp(12px,3.4vw,15px);letter-spacing:clamp(5px,1.7vw,8px);text-transform:uppercase;color:var(--muted);margin-bottom:clamp(3px,1vw,5px);white-space:nowrap;}
+.logo-farem{font-family:'Bebas Neue',sans-serif;font-size:clamp(38px,11.5vw,54px);color:var(--text);letter-spacing:2px;line-height:.92;white-space:nowrap;}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-bottom:6px;}
+.menu-user{margin-top:14px;display:flex;align-items:center;gap:9px;}
+.menu-user-txt{font-size:11px;color:var(--muted);letter-spacing:.3px;}
+.menu-user-txt b{color:var(--text);font-weight:700;}
+.menu-switch{margin-left:auto;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint);background:none;border:1px solid var(--border);border-radius:5px;padding:5px 10px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.menu-switch:hover{border-color:var(--accentD);color:var(--accentD);}
+.menu-list{flex:1;padding:0 28px;}
+.menu-row{border-bottom:1px solid var(--line);padding:22px 0;display:flex;align-items:baseline;gap:16px;cursor:pointer;}
+.menu-row:hover .menu-num,.menu-row:hover .menu-label,.menu-row:hover .menu-arrow{color:var(--accent)!important;}
+.menu-num{font-size:11px;color:var(--faint);letter-spacing:2px;min-width:24px;transition:color .15s;}
+.menu-label{font-family:'Bebas Neue',sans-serif;font-size:clamp(32px,10.5vw,44px);white-space:nowrap;color:var(--text);letter-spacing:1px;line-height:1;flex:1;transition:color .15s;}
+.menu-arrow{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--faint);transition:color .15s;}
+.menu-badge{width:22px;height:22px;border-radius:50%;background:var(--accent);color:var(--black);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.menu-footer{padding:20px 28px;border-top:1px solid var(--line);font-size:10px;color:var(--faint);letter-spacing:2px;}
+
+/* SECTION */
+.section{min-height:100vh;background:var(--bg);display:none;}
+.section.active{display:block;}
+.sec-header{background:var(--paper);border-bottom:1px solid var(--border);padding:calc(20px + env(safe-area-inset-top)) 20px 0;position:sticky;top:0;z-index:200;}
+.back-btn{display:inline-flex;align-items:center;gap:10px;background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:12px 18px;cursor:pointer;margin-bottom:16px;color:var(--text);-webkit-tap-highlight-color:rgba(127,255,0,.3);touch-action:manipulation;user-select:none;min-height:44px;}
+.back-btn:active{background:var(--accent);border-color:var(--accent);}
+.back-arrow{font-family:'Bebas Neue',sans-serif;font-size:22px;line-height:1;color:var(--accent);}
+.back-label{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;font-weight:500;}
+.sec-title{font-family:'Bebas Neue',sans-serif;font-size:38px;letter-spacing:2px;color:var(--text);line-height:1;margin-bottom:16px;}
+.sec-body{padding:20px 16px 80px;}
+
+/* CARDS */
+.card{background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:10px;transition:box-shadow .18s;}
+.card:hover{box-shadow:0 3px 14px rgba(0,0,0,.07);}
+.card-click{cursor:pointer;}
+.card-dark{background:var(--black);border:none;}
+.card-title{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text);letter-spacing:.5px;}
+.card-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+
+/* LABELS */
+.lbl{font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:8px;display:block;}
+.tag{font-size:9px;letter-spacing:2px;text-transform:uppercase;font-weight:600;padding:2px 8px;border-radius:3px;white-space:nowrap;display:inline-block;}
+
+/* BUTTONS */
+.btn-accent{background:var(--accent);color:var(--black);border:none;border-radius:5px;padding:10px 20px;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:700;}
+.btn-ghost{background:none;border:1px solid var(--border);border-radius:5px;padding:8px 14px;font-size:10px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);}
+.btn-ghost:hover{border-color:var(--accentD);color:var(--accentD);}
+.btn-dashed{width:100%;background:none;border:1px dashed var(--border);border-radius:6px;padding:13px;color:var(--muted);font-size:10px;letter-spacing:2.5px;text-transform:uppercase;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:10px;}
+
+/* FAB */
+.fab{position:fixed;bottom:28px;right:20px;width:54px;height:54px;border-radius:50%;background:var(--accent);color:var(--black);border:none;font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(127,255,0,.4);font-weight:700;z-index:100;transition:transform .15s;}
+.fab:hover{transform:scale(1.06);}
+.fab:active{transform:scale(.94);}
+
+/* INPUTS */
+.inp-wrap{margin-bottom:14px;}
+.inp-label{font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:5px;display:block;}
+.inp{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:10px 12px;color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;}
+textarea.inp{height:100px;}
+
+/* PILLS */
+.pill-row{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:14px;}
+.pill-scroll{max-height:160px;overflow-y:auto;border:1px solid var(--line);border-radius:6px;padding:8px;}
+.pill{display:inline-flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;user-select:none;}
+.pill.on{background:var(--accent);color:var(--black);border-color:var(--accent);}
+.pill:hover{opacity:.82;}
+
+/* AVATAR */
+.av{border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;font-family:'DM Sans',sans-serif;}
+.av-sm{width:22px;height:22px;font-size:8px;background:var(--accent);color:var(--black);border:2px solid var(--accent);}
+.av-md{width:28px;height:28px;font-size:10px;}
+.av-lg{width:36px;height:36px;font-size:13px;}
+.av-on{background:var(--accent);color:var(--black);border:2px solid var(--accent);}
+.av-off{background:var(--line);color:var(--muted);border:1px solid var(--border);}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--line);margin:12px 0;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(20,20,16,.55);display:flex;align-items:flex-end;z-index:300;display:none;}
+.modal-overlay.open{display:flex;}
+.modal-box{background:var(--paper);border-radius:14px 14px 0 0;padding:24px;width:100%;max-width:480px;margin:0 auto;max-height:90vh;overflow-y:auto;border-top:4px solid var(--accent);padding-bottom:calc(24px + env(safe-area-inset-bottom));}
+.modal-title{font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--text);margin-bottom:20px;letter-spacing:1px;}
+.modal-footer{display:flex;gap:10px;justify-content:flex-end;margin-top:16px;position:sticky;bottom:0;background:var(--paper);padding-top:14px;border-top:1px solid var(--line);}
+.modal-footer .btn-accent{padding:13px 22px;min-height:46px;}
+.modal-footer .btn-ghost{padding:13px 18px;min-height:46px;}
+
+/* PROGRESS BAR */
+.progress-wrap{height:5px;background:var(--line);border-radius:3px;margin-bottom:4px;overflow:hidden;}
+.progress-bar{height:100%;background:var(--accent);border-radius:3px;transition:width .4s;}
+
+/* POLL */
+.poll-opt{border-radius:6px;border:1px solid var(--border);overflow:hidden;cursor:pointer;margin-bottom:8px;position:relative;}
+.poll-opt.voted{border-color:var(--accent);background:rgba(127,255,0,.07);}
+.poll-opt-inner{padding:10px 12px;position:relative;}
+.poll-fill{position:absolute;left:0;top:0;bottom:0;background:rgba(127,255,0,.15);border-radius:6px;transition:width .4s;}
+.poll-content{position:relative;display:flex;justify-content:space-between;align-items:center;}
+.poll-check{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;margin-right:8px;}
+.poll-check.checked{background:var(--accent);border-color:var(--accent);}
+
+/* TURNOS */
+.turn-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);}
+.turn-row:last-child{border-bottom:none;}
+.turn-avs{display:flex;}
+.turn-avs .av:not(:first-child){margin-left:-8px;}
+
+/* SHOPPING */
+.shop-item{display:flex;align-items:center;gap:12px;background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:13px 16px;margin-bottom:8px;}
+.shop-check{width:22px;height:22px;border-radius:4px;border:2px solid var(--border);background:none;cursor:pointer;flex-shrink:0;}
+.shop-check.done{background:var(--accent);border-color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--black);font-weight:700;}
+.shop-del{background:none;border:none;color:var(--faint);font-size:20px;cursor:pointer;line-height:1;}
+
+/* CUOTAS */
+.quota-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);}
+.quota-row:last-child{border-bottom:none;}
+
+/* EVENT DETAIL */
+.ev-type-tag{display:inline-block;margin-bottom:6px;}
+.ev-big-title{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:1px;color:var(--text);line-height:1;margin-bottom:4px;}
+.ev-date{font-size:12px;color:var(--muted);margin-bottom:14px;text-transform:capitalize;}
+
+/* ATTEND PILLS */
+.attend-grid{display:flex;flex-wrap:wrap;gap:5px;}
+
+/* COLLA */
+.group-card{background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:16px;margin-bottom:10px;display:flex;align-items:center;gap:14px;}
+.group-avs{display:flex;}
+.group-avs .av:not(:first-child){margin-left:-8px;}
+.group-name{font-size:15px;color:var(--text);font-weight:500;}
+
+/* WARN CARD */
+.warn-card{background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:16px;margin-bottom:10px;}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:var(--bg);z-index:1100;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;max-width:480px;margin:0 auto;}
+.spin{width:38px;height:38px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.load-txt{font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════ LOADER ═════════════════════════════ -->
+<div id="loader"><div class="spin"></div><div class="load-txt">Conectando…</div></div>
+
+<!-- ═══════════════════════════════ SYNC BAR ════════════════════════════ -->
+<div id="syncBar">Sincronizado</div>
+
+<!-- ═══════════════════════════════ GATE ═══════════════════════════════ -->
+<div id="gate" style="display:none">
+  <div class="gate-header">
+    <div class="eyebrow">Castelló de la Plana</div>
+    <div class="logo-row">
+      <div class="logo"><span class="logo-colla">Colla</span><span class="logo-farem">Farem Curt</span></div>
+      <div class="dot"></div>
+    </div>
+  </div>
+  <div class="gate-body" id="gateBody"></div>
+</div>
+
+<!-- ═══════════════════════════════ MENU ═══════════════════════════════ -->
+<div class="menu" id="mainMenu" style="display:none">
+  <div class="menu-header">
+    <div class="eyebrow">Castelló de la Plana</div>
+    <div class="logo-row">
+      <div class="logo"><span class="logo-colla">Colla</span><span class="logo-farem">Farem Curt</span></div>
+      <div class="dot"></div>
+    </div>
+    <div class="menu-user">
+      <span class="av av-md av-on" id="meAv"></span>
+      <span class="menu-user-txt">Hola, <b id="meName"></b></span>
+      <button class="menu-switch" onclick="logout()">Cambiar</button>
+    </div>
+  </div>
+  <div class="menu-list" id="menuList"></div>
+  <div class="menu-footer" id="menuFooter"></div>
+</div>
+
+<!-- ═══════════════════════════════ SECTIONS ═══════════════════════════ -->
+<div class="section" id="sec-eventos">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
+    <div class="sec-title">Eventos</div>
+  </div>
+  <div class="sec-body" id="body-eventos"></div>
+  <button class="fab" onclick="openEventoModal()">+</button>
+</div>
+
+<div class="section" id="sec-caja">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
+    <div class="sec-title">Caja</div>
+  </div>
+  <div class="sec-body" id="body-caja"></div>
+</div>
+
+<div class="section" id="sec-consum">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
+    <div class="sec-title">Consumiciones</div>
+  </div>
+  <div class="sec-body" id="body-consum"></div>
+</div>
+
+<div class="section" id="sec-compra">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
+    <div class="sec-title">Lista de la compra</div>
+  </div>
+  <div class="sec-body" id="body-compra"></div>
+  <button class="fab" onclick="openModal('modalShop')">+</button>
+</div>
+
+<div class="section" id="sec-tareas">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
+    <div class="sec-title">Tareas y mejoras</div>
+  </div>
+  <div class="sec-body" id="body-tareas"></div>
+  <button class="fab" onclick="openTaskModal()" aria-label="Añadir tarea">+</button>
+</div>
+
+<div class="section" id="sec-turnos">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
+    <div class="sec-title">Turnos</div>
+  </div>
+  <div class="sec-body" id="body-turnos"></div>
+</div>
+
+<div class="section" id="sec-cuotas">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
+    <div class="sec-title">Cuotas</div>
+  </div>
+  <div class="sec-body" id="body-cuotas"></div>
+</div>
+
+<div class="section" id="sec-colla">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goMenu()"><span class="back-arrow">←</span><span class="back-label">Menú</span></button>
+    <div class="sec-title">Colla</div>
+  </div>
+  <div class="sec-body" id="body-colla"></div>
+</div>
+
+<!-- EVENT DETAIL -->
+<div class="section" id="sec-evdetail">
+  <div class="sec-header">
+    <button class="back-btn" onclick="goSection('eventos')"><span class="back-arrow">←</span><span class="back-label">Eventos</span></button>
+    <div id="evdetail-header"></div>
+  </div>
+  <div class="sec-body" id="body-evdetail"></div>
+</div>
+
+<!-- ═══════════════════════════════ MODALS ════════════════════════════ -->
+<div class="modal-overlay" id="modalEvento" onclick="closeModalBg(event,'modalEvento')">
+  <div class="modal-box">
+    <div class="modal-title">Nuevo Evento</div>
+    <div class="inp-wrap">
+      <label class="inp-label">Tipo</label>
+      <div class="pill-row" id="evTypePills"></div>
+    </div>
+    <div class="inp-wrap"><label class="inp-label">Título</label><input class="inp" id="evTitle" placeholder="Ej: Paella valenciana"/></div>
+    <div class="inp-wrap"><label class="inp-label">Fecha</label><input class="inp" type="date" id="evDate"/></div>
+    <div class="inp-wrap"><label class="inp-label">Hora</label><input class="inp" type="time" id="evTime"/></div>
+    <div class="inp-wrap"><label class="inp-label">Descripción</label><input class="inp" id="evDesc" placeholder="Detalles..."/></div>
+    <div id="evAgendaWrap" style="display:none" class="inp-wrap"><label class="inp-label">Orden del día</label><textarea class="inp" id="evAgenda" placeholder="1. Punto uno&#10;2. Punto dos"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalEvento')">Cancelar</button>
+      <button class="btn-accent" onclick="addEvento()">Crear</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalCompra" onclick="closeModalBg(event,'modalCompra')">
+  <div class="modal-box">
+    <div class="modal-title">Registrar Gasto</div>
+    <div class="inp-wrap"><label class="inp-label">Categoría</label><div class="pill-row" id="compraCatPills"></div><div id="compraCajaHint" style="font-size:11px;color:var(--muted);margin-top:-6px"></div></div>
+    <div class="inp-wrap"><label class="inp-label">Concepto (opcional)</label><input class="inp" id="compraWhat" placeholder="Ej: Productos de limpieza"/></div>
+    <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" id="compraAmt" placeholder="0.00"/></div>
+    <div class="inp-wrap"><label class="inp-label">¿Quién lo pagó?</label>
+      <div class="pill-row">
+        <span class="pill on" id="payModeMember" onclick="setPayMode('member')">Lo adelantó un miembro</span>
+        <span class="pill" id="payModeColla" onclick="setPayMode('colla')">Pagado por la colla</span>
+      </div>
+    </div>
+    <div class="inp-wrap" id="compraWhoWrap"><label class="inp-label">Miembro que lo adelantó</label><div class="pill-row pill-scroll" id="compraWhoPills"></div></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalCompra')">Cancelar</button>
+      <button class="btn-accent" onclick="addCompra()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalIngreso" onclick="closeModalBg(event,'modalIngreso')">
+  <div class="modal-box">
+    <div class="modal-title">Ingreso Manual</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Suma a lo disponible para gastar. Para el sobrante de las cuotas de cada mes, derramas, altas u otros ingresos.</div>
+    <div class="inp-wrap" id="ingresoDestWrap"><label class="inp-label">Entra en</label>
+      <div class="pill-row">
+        <span class="pill on" id="ingDestFondo" onclick="setIngresoDest('fondo')">Bote general</span>
+        <span class="pill" id="ingDestBebida" onclick="setIngresoDest('bebida')">Bebida</span>
+      </div>
+      <div id="ingresoDestHint" style="font-size:11px;color:var(--muted);margin-top:-6px"></div>
+    </div>
+    <div class="inp-wrap"><label class="inp-label">Concepto</label><input class="inp" id="ingresoWhat" placeholder="Ej: Saldo inicial de la colla"/></div>
+    <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" id="ingresoAmt" placeholder="0.00"/></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalIngreso')">Cancelar</button>
+      <button class="btn-accent" onclick="addIngreso()">Añadir ingreso</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalDoc" onclick="closeModalBg(event,'modalDoc')">
+  <div class="modal-box">
+    <div class="modal-title">Añadir Documento</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Sube el PDF a la carpeta de Drive de la colla, compártelo como "Cualquier persona con el enlace · Lector" y pega aquí el enlace.</div>
+    <div class="inp-wrap"><label class="inp-label">Tipo</label><div class="pill-row" id="docTypePills"></div></div>
+    <div class="inp-wrap"><label class="inp-label">Título</label><input class="inp" id="docTitle" placeholder="Ej: Acta nº2 · Reunió inicial"/></div>
+    <div class="inp-wrap"><label class="inp-label">Fecha</label><input class="inp" type="date" id="docDate"/></div>
+    <div class="inp-wrap"><label class="inp-label">Enlace al PDF</label><input class="inp" type="url" id="docUrl" placeholder="https://drive.google.com/..."/></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalDoc')">Cancelar</button>
+      <button class="btn-accent" onclick="addDoc()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalShop" onclick="closeModalBg(event,'modalShop')">
+  <div class="modal-box">
+    <div class="modal-title">Añadir Necesidad</div>
+    <div class="inp-wrap"><label class="inp-label">Qué hace falta</label><input class="inp" id="shopText" placeholder="Ej: Lejía, bombilla..."/></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalShop')">Cancelar</button>
+      <button class="btn-accent" onclick="addShopItem()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalPoll" onclick="closeModalBg(event,'modalPoll')">
+  <div class="modal-box">
+    <div class="modal-title">Nueva Votación</div>
+    <div class="inp-wrap"><label class="inp-label">Pregunta</label><input class="inp" id="pollTitle" placeholder="Ej: ¿Qué día preferís?"/></div>
+    <div class="inp-wrap">
+      <label class="inp-label">Tipo</label>
+      <div class="pill-row">
+        <span class="pill on" id="pollTypeSingle" onclick="setPollType(false)">Una opción</span>
+        <span class="pill" id="pollTypeMulti" onclick="setPollType(true)">Varias opciones</span>
+      </div>
+    </div>
+    <div id="pollOptsWrap"></div>
+    <button class="btn-ghost" onclick="addPollOpt()" style="width:100%;margin-bottom:14px;">+ Añadir opción</button>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalPoll')">Cancelar</button>
+      <button class="btn-accent" onclick="savePoll()">Crear</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalEvExp" onclick="closeModalBg(event,'modalEvExp')">
+  <div class="modal-box">
+    <div class="modal-title">Gasto del Evento</div>
+    <div class="inp-wrap"><label class="inp-label">Qué se compró</label><input class="inp" id="evExpWhat" placeholder="Ej: Arroz y verduras"/></div>
+    <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" id="evExpAmt" placeholder="0.00"/></div>
+    <div class="inp-wrap">
+      <label class="inp-label">¿Menjar o begudes?</label>
+      <div class="pill-row" id="evExpKindPills"></div>
+      <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.45">El menjar se reparte entre los adultos. Las bebidas, entre todos los que estén en la mesa.</div>
+    </div>
+    <div class="inp-wrap"><label class="inp-label">Quién pagó</label><div class="pill-row" id="evExpWhoPills"></div></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalEvExp')">Cancelar</button>
+      <button class="btn-accent" onclick="addEvExp()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalGuest" onclick="closeModalBg(event,'modalGuest')">
+  <div class="modal-box">
+    <div class="modal-title">Xiquet/a o convidat/da</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Apunta ací qui portes que no estiga a l'app. Quedarà a nom teu.</div>
+    <div class="inp-wrap"><label class="inp-label">Nom</label><input class="inp" id="guestName" placeholder="Ex: Lucía"/></div>
+    <div class="inp-wrap">
+      <label class="inp-label">Què menja</label>
+      <div class="pill-row" id="guestRacioPills"></div>
+      <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.45">Això li diu a qui va a comprar quants plats fan falta.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalGuest')">Cancel·lar</button>
+      <button class="btn-accent" onclick="addGuest()">Afegir</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalGraella" onclick="closeModalBg(event,'modalGraella')">
+  <div class="modal-box">
+    <div class="modal-title">Pasar la hoja</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Pon solo lo que cada persona <b>tiene pendiente</b> en la hoja (lo marcado como pagado no). Lo de un invitado va a nombre de quien lo invita. Deja en blanco a quien no deba nada.</div>
+    <div class="inp-wrap"><label class="inp-label">Periodo</label><input class="inp" id="graPeriod" placeholder="Ej: 1–15 octubre"/></div>
+    <div class="inp-wrap"><label class="inp-label">Importe por persona (€)</label>
+      <div id="graRows" style="border:1px solid var(--line);border-radius:6px;padding:4px 12px;max-height:46vh;overflow-y:auto"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:var(--muted)">
+      <span>Total de la hoja</span><b id="graTotal" style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text);font-weight:400">0.00 €</b>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalGraella')">Cancelar</button>
+      <button class="btn-accent" onclick="saveGraella()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalTask" onclick="closeModalBg(event,'modalTask')">
+  <div class="modal-box">
+    <div class="modal-title" id="taskModalTitle">Nueva tarea</div>
+    <div class="inp-wrap"><label class="inp-label">Qué hay que hacer</label><input class="inp" id="taskText" placeholder="Ej: Poner grifo nuevo en la cocina"/></div>
+    <div class="inp-wrap"><label class="inp-label">Quién se encarga (opcional)</label><div class="pill-row pill-scroll" id="taskWhoPills"></div></div>
+    <div class="inp-wrap"><label class="inp-label">Coste aproximado € (opcional)</label><input class="inp" type="text" inputmode="decimal" id="taskCost" placeholder="Ej: 85"/></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalTask')">Cancelar</button>
+      <button class="btn-accent" onclick="saveTask()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalTurnNote" onclick="closeModalBg(event,'modalTurnNote')">
+  <div class="modal-box">
+    <div class="modal-title">Nota del turno</div>
+    <div class="inp-wrap"><label class="inp-label">Observación</label><textarea class="inp" id="turnNoteText" placeholder="Ej: Falta lejía. No hemos podido fregar la terraza."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalTurnNote')">Cancelar</button>
+      <button class="btn-accent" onclick="saveTurnNote()">Guardar</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+// ═══════════════════════════════════════════════════════════════════════
+//  FIREBASE
+// ═══════════════════════════════════════════════════════════════════════
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDocs }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAPCswvXmDJlTn7PKrdOb_WCKcTqfyEgNA",
+  authDomain: "app-colla.firebaseapp.com",
+  projectId: "app-colla",
+  storageBucket: "app-colla.firebasestorage.app",
+  messagingSenderId: "235447122137",
+  appId: "1:235447122137:web:d06e1e6e487159ec7e26c8",
+  measurementId: "G-FX4HDRRS3P"
+};
+
+const fbApp = initializeApp(firebaseConfig);
+const db = getFirestore(fbApp);
+
+// Exponer helpers de Firestore al scope global (el resto del código no es módulo)
+window.DB = { db, collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDocs };
+window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<script>
+// El grueso de la app se carga aquí (no-module) una vez Firebase está listo.
+window.addEventListener('firebase-ready', () => { window.__startApp(); });
+</script>
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+//  COLLA FAREM CURT · app definitiva con Firebase
+// ═══════════════════════════════════════════════════════════════════════
+
+// ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
+const APP_VERSION = 25; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+
+// ─────────────────────── ACOMPANYANTS (xiquets i convidats) ───────────────
+// No són usuaris de l'app: pengen del membre que els apunta. El tipus de ració
+// serveix sobretot a qui va a comprar — diu quants plats fan falta.
+// Pagaments (acord de junta): els acompanyants no paguen menjar, sí begudes.
+// "No menja" no paga res.
+const RACIONS = {
+  full: {label:"Ració completa", short:"completa", racions:1,   pagaBeguda:true,  color:"#3d8000"},
+  half: {label:"Mitja ració",    short:"mitja",    racions:0.5, pagaBeguda:true,  color:"#c07800"},
+  none: {label:"No menja",       short:"no menja", racions:0,   pagaBeguda:false, color:"#a8a098"},
+};
+// Tipus d'esdeveniment on es poden apuntar acompanyants
+const TIPUS_AMB_ACOMPANYANTS = ["comida","cena"];
+const TREASURER = "Edu";
+let ME = null; // se define en el login
+
+const GROUPS = [
+  {id:1,  members:["David","Carmen"]},
+  {id:2,  members:["Inma","Roberto"]},
+  {id:3,  members:["Carla","Fran"]},
+  {id:4,  members:["Ari","Diego"]},
+  {id:5,  members:["María","Edu"]},
+  {id:6,  members:["Patri","Gonzalo"]},
+  {id:7,  members:["Sergio","Sandra"]},
+  {id:8,  members:["Alex","Yani"]},
+  {id:9,  members:["Zuri","Carlos"]},
+  {id:10, members:["Guille","Lledó"]},
+  {id:11, members:["Marta","Raquel","Adri"]},
+];
+const MEMBERS = GROUPS.flatMap((g)=>g.members.map((name)=>({name,groupId:g.id})))
+  .map((m,i)=>({...m,id:i+1}));
+
+// Nombres antiguos → oficiales. Los datos viejos de Firestore se leen normalizados
+// y se reescriben con el nombre nuevo la próxima vez que se guardan.
+const NAME_ALIAS = {Roky:"Roberto",Sandri:"Sandra",Alejandro:"Alex",Zurine:"Zuri","Adrián":"Adri",Lledo:"Lledó",Maria:"María"};
+const normName = n => (n && NAME_ALIAS[n]) ? NAME_ALIAS[n] : n;
+
+// Càrrecs acordats en junta (acta nº2, 13/09/2026)
+const CARGOS = [
+  {role:"Tresorer i gestió econòmica", who:"Edu"},
+  {role:"Organització de tasques de manteniment", who:"Diego"},
+  {role:"Redacció d’actes i documents", who:"Carla"},
+  {role:"Burocràcia", who:"Roberto"},
+  {role:"Desarrollo tecnológico", who:"David Safont"},
+  {role:"Adhesió al món de la festa", who:"Roberto i David Safont"},
+];
+
+// Carpetas de Google Drive de la colla. Son accesos fijos: todo lo que Edu y
+// Carla suban ahí aparece solo, sin tocar la app. Para cambiar un enlace,
+// edita la URL aquí y sube APP_VERSION.
+const DRIVE_FOLDERS = [
+  {label:"Estatuts",  desc:"Els estatuts oficials de la colla",  color:"#3d8000",
+   url:"https://drive.google.com/drive/folders/1_gHAyghcxzmuCiMYe1T3Iywml-_CXl5u?usp=drive_link"},
+  {label:"Actes",     desc:"Actes de les reunions de la junta",  color:"#5a6ea8",
+   url:"https://drive.google.com/drive/folders/1eFMZXcuec-ElKfK2yCNuLjVuQC_bb8SQ?usp=drive_link"},
+];
+
+// Documentos: solo estos miembros pueden añadir y retirar
+const DOC_EDITORS = ["Edu","Carla"];
+const DOC_TYPES = {
+  Estatutos:{color:"#3d8000"},
+  Acta:{color:"#5a6ea8"},
+  Otro:{color:"#6e6860"},
+};
+
+// Gestión del dinero del día a día: pasar la hoja de consumiciones, cobrar
+// y marcar el alquiler pagado. (Confirmar cuotas sigue siendo solo del tesorero.)
+const CONSUM_MANAGERS = ["Edu","Marta"];
+
+// Caja: alquiler mensual que se aparta hasta que se paga
+const RENT = 600;
+// Fondo de bebida: dinero fijo que la colla reserva para comprar bebida
+const BEBIDA_BASE = 200;
+// Bebida y consumiciones: desactivado por ahora (decisión del tesorero).
+// Poner a true para volver a mostrar la pestaña y el fondo de bebida.
+const BEBIDA_ON = false;
+
+const EVENT_TYPES = {
+  comida:{label:"Comida",color:"#3d8000"},
+  cena:{label:"Cena",color:"#5a6ea8"},
+  reunion:{label:"Reunión",color:"#c07800"},
+  otro:{label:"Evento",color:"#6e6860"},
+};
+
+// ───────────────────────── ESTADO (espejo de Firestore) ────────────────
+let events = [];
+let compras = [];
+let turns = [];
+let quotas = [];
+let shopping = [];
+let docs = [];
+let consum = [];
+let tasks = [];
+
+let activeEvId = null;
+let pollMulti = false;
+let pollOpts = ["","",""];
+let editTurnId = null;
+let compraWho = null;
+let evExpWho = null;
+let evType = "comida";
+let expandedQuotas = null; // Set de ids de cuota expandidas. null = aún sin inicializar (se abre la más reciente)
+let currentSection = null;
+let dataReady = {events:false,compras:false,turns:false,quotas:false,shopping:false,docs:false,consum:false,tasks:false};
+
+// ───────────────────────── TURNOS POR EQUIPOS (acta nº2) ───────────────
+// 4 equipos, 2 meses cada uno. La rueda arranca en noviembre de 2026.
+// Marzo, junio, julio y agosto: sin turno.
+// El calendario se calcula en la app; en Firestore solo se guarda el
+// checklist, la nota y el cierre de cada turno (id = añoInicio*10 + equipo).
+const TEAMS = [
+  {id:1, months:[10,11], members:["Zuri","Carlos","Patri","Gonzalo","Raquel","Adri"]},
+  {id:2, months:[0,1],   members:["Inma","Roberto","Sandra","Sergio","Alex","Yani"]},
+  {id:3, months:[3,4],   members:["Ari","Diego","Guille","Lledó","Marta"]},
+  {id:4, months:[8,9],   members:["Carmen","David","María","Edu","Fran","Carla"]},
+];
+const ROTA_START = new Date(2026,10,1); // 1 nov 2026
+const TURN_SUPERVISORS = ["Diego"];      // Organització de tasques de manteniment
+const CLEAN_CHECKS = [
+  {key:"wc",      label:"WC a fondo",           sub:"Desinfección de WC, pica…"},
+  {key:"cocina",  label:"Cocina a fondo",       sub:"Armarios por dentro, etc."},
+  {key:"superf",  label:"Todas las superficies", sub:"Del local entero"},
+  {key:"nevera",  label:"Nevera por dentro",    sub:"Limpia por dentro"},
+];
+
+// ───────────────────────── FIRESTORE SYNC ──────────────────────────────
+let DB = null;
+const COLLECTIONS = ["events","compras","turns","quotas","shopping","docs","consum","tasks"];
+// El reset de la app NO toca los documentos oficiales (actas, estatutos)
+const RESET_COLLECTIONS = ["events","compras","turns","quotas","shopping","consum","tasks"];
+
+function showSync(txt="Sincronizado"){
+  const b = document.getElementById('syncBar');
+  b.textContent = txt; b.classList.add('show');
+  clearTimeout(window.__syncT);
+  window.__syncT = setTimeout(()=>b.classList.remove('show'),1400);
+}
+
+// Guarda un documento (un item) en su colección. id = clave del doc.
+async function fbSet(coll, item){
+  try{
+    await DB.setDoc(DB.doc(DB.db, coll, String(item.id)), item);
+    showSync("Guardado");
+  }catch(e){ console.error("Error guardando",coll,e); showSync("Error de red"); }
+}
+async function fbDelete(coll, id){
+  try{
+    await DB.deleteDoc(DB.doc(DB.db, coll, String(id)));
+    showSync("Guardado");
+  }catch(e){ console.error("Error borrando",coll,e); showSync("Error de red"); }
+}
+
+// ───────────────────────── PAPELERA (soft-delete) ───────────────────────
+// Nada se borra de verdad al pulsar "×": se archiva con fecha y autor.
+// Se puede restaurar en cualquier momento desde Colla → Papelera.
+// Solo el tesorero puede vaciar la papelera de verdad (borrado definitivo).
+function softDelete(coll, item){
+  const next = clone(item);
+  next.deleted = true;
+  next.deletedAt = new Date().toISOString();
+  next.deletedBy = ME;
+  fbSet(coll, next);
+}
+function restoreItem(coll, item){
+  const next = clone(item);
+  next.deleted = false;
+  next.deletedAt = null;
+  next.deletedBy = null;
+  fbSet(coll, next);
+}
+function permanentDelete(coll, id, label){
+  if(ME!==TREASURER){ alert("Solo el tesorero puede borrar definitivamente."); return; }
+  if(!confirm(`¿Eliminar PARA SIEMPRE "${label}"?\n\nEsto no se puede deshacer ni recuperar.`)) return;
+  fbDelete(coll, id);
+}
+function trashLabel(dt){
+  if(!dt) return '';
+  const d = new Date(dt);
+  return d.toLocaleDateString("es-ES",{day:'numeric',month:'short'}) + ' · ' + d.toLocaleTimeString("es-ES",{hour:'2-digit',minute:'2-digit'});
+}
+function getTrashItems(){
+  const items = [];
+  shopping.filter(s=>s.deleted).forEach(s=>items.push({coll:'shopping', id:s.id, label:s.text, sub:'La compra', deletedAt:s.deletedAt, deletedBy:s.deletedBy, raw:s}));
+  compras.filter(c=>c.deleted).forEach(c=>items.push({coll:'compras', id:c.id, label:`${c.what} · ${c.amount.toFixed(2)} €`, sub:c.transfer?'Caja · Traspaso':'Caja', deletedAt:c.deletedAt, deletedBy:c.deletedBy, raw:c}));
+  quotas.filter(q=>q.deleted).forEach(q=>items.push({coll:'quotas', id:q.id, label:`${q.month} · ${q.concept}`, sub:'Cuotas', deletedAt:q.deletedAt, deletedBy:q.deletedBy, raw:q}));
+  events.filter(e=>e.deleted).forEach(e=>items.push({coll:'events', id:e.id, label:e.title, sub:'Eventos', deletedAt:e.deletedAt, deletedBy:e.deletedBy, raw:e}));
+  tasks.filter(t=>t.deleted).forEach(t=>items.push({coll:'tasks', id:t.id, label:t.text, sub:'Tareas', deletedAt:t.deletedAt, deletedBy:t.deletedBy, raw:t}));
+  consum.filter(c=>c.deleted).forEach(c=>{
+    const a = `${(Number(c.amount)||0).toFixed(2)} €`;
+    const label = c.kind==='pay' ? `Pago de ${c.name} · ${a}`
+      : c.kind==='guest' ? `Bote invitados · ${a}`
+      : c.kind==='deposit' ? `Ingreso del bote en banco · ${a}`
+      : `${c.name} · ${c.period||''} · ${a}`;
+    items.push({coll:'consum', id:c.id, label, sub:'Consumiciones', deletedAt:c.deletedAt, deletedBy:c.deletedBy, raw:c});
+  });
+  docs.filter(d=>d.deleted).forEach(d=>items.push({coll:'docs', id:d.id, label:d.title, sub:'Documentos', deletedAt:d.deletedAt, deletedBy:d.deletedBy, raw:d}));
+  items.sort((a,b)=>(b.deletedAt||'').localeCompare(a.deletedAt||''));
+  return items;
+}
+let trashOpen = false;
+let trashCache = [];
+function toggleTrash(){ trashOpen=!trashOpen; renderColla(); }
+function restoreTrashItem(i){ const t=trashCache[i]; if(t) restoreItem(t.coll, t.raw); }
+function permanentDeleteTrashItem(i){ const t=trashCache[i]; if(t) permanentDelete(t.coll, t.id, t.label); }
+
+// Mapea colección → variable local
+function normItem(o){
+  if(!o || typeof o!=="object") return o;
+  if(o.who) o.who = normName(o.who);
+  if(o.addedBy) o.addedBy = normName(o.addedBy);
+  if(o.name) o.name = normName(o.name);
+  if(o.by) o.by = normName(o.by);
+  if(o.paidBy) o.paidBy = normName(o.paidBy);
+  if(o.doneBy) o.doneBy = normName(o.doneBy);
+  if(o.deletedBy) o.deletedBy = normName(o.deletedBy);
+  if(o.reintegratedBy) o.reintegratedBy = normName(o.reintegratedBy);
+  if(Array.isArray(o.payments)) o.payments.forEach(p=>{ p.name = normName(p.name); });
+  if(Array.isArray(o.expenses)) o.expenses.forEach(x=>{ x.who = normName(x.who); });
+  if(Array.isArray(o.polls)) o.polls.forEach(p=>(p.options||[]).forEach(op=>{ op.votes = (op.votes||[]).map(normName); }));
+  return o;
+}
+function setLocal(coll, arr){
+  arr.forEach(normItem);
+  if(coll==="docs") docs = arr;
+  if(coll==="consum") consum = arr;
+  if(coll==="tasks") tasks = arr;
+  if(coll==="events") events = arr;
+  if(coll==="compras") compras = arr;
+  if(coll==="turns"){
+    // Solo registros del sistema de equipos (los de parejas antiguos se ignoran)
+    turns = arr.filter(t=>t && t.team);
+  }
+  if(coll==="quotas") quotas = arr;
+  if(coll==="shopping") shopping = arr;
+}
+
+// Suscribe a todas las colecciones en tiempo real
+function subscribeAll(){
+  COLLECTIONS.forEach(coll=>{
+    DB.onSnapshot(DB.collection(DB.db, coll), snap=>{
+      const arr = [];
+      snap.forEach(d=>arr.push(d.data()));
+      // ordena por id numérico para estabilidad
+      arr.sort((a,b)=>(a.id||0)-(b.id||0));
+      setLocal(coll, arr);
+      dataReady[coll] = true;
+      onData(coll, snap.empty);
+    }, err=>{
+      console.error("onSnapshot error",coll,err);
+      showSync("Error de conexión");
+      // Una colección con error no debe bloquear el arranque del resto
+      if(!dataReady[coll]){ dataReady[coll] = true; onData(coll, true); }
+    });
+  });
+}
+
+// La app NO siembra datos automáticamente. Firebase manda siempre.
+function allReady(){ return COLLECTIONS.every(c=>dataReady[c]); }
+
+function onData(coll, empty){
+  if(allReady()){
+    document.getElementById('loader').style.display='none';
+    // Si ya estamos logueados y en una sección, re-render en vivo
+    if(ME){
+      if(currentSection) renderSection(currentSection);
+      if(document.getElementById('sec-evdetail').classList.contains('active')) renderEvDetail();
+      renderMenu();
+    }
+  }
+}
+
+// ───────────────────────── CONTROL DE VERSIÓN ──────────────────────────
+// Un doc en Firestore (meta/app) guarda la versión mínima requerida.
+// Si esta app es más vieja, se recarga sola → mata las versiones zombi.
+let versionChecked = false;
+function watchVersion(){
+  DB.onSnapshot(DB.doc(DB.db,"meta","app"), snap=>{
+    const data = snap.exists() ? snap.data() : null;
+    const required = data && typeof data.minVersion==="number" ? data.minVersion : 0;
+    if(required > APP_VERSION){
+      // Esta app está obsoleta → recarga forzando red (sin caché)
+      try{ localStorage.setItem('colla_reload', Date.now()); }catch(e){}
+      location.reload(true);
+      return;
+    }
+    versionChecked = true;
+  }, err=>{ versionChecked = true; });
+}
+
+// ───────────────────────── ARRANQUE ────────────────────────────────────
+window.__startApp = function(){
+  DB = window.DB;
+  watchVersion();
+  subscribeAll();
+  initEvTypePills();
+  // failsafe: si en 6s no ha cargado, mostrar login igual
+  setTimeout(()=>{
+    document.getElementById('loader').style.display='none';
+    if(!ME) renderGate();
+  }, 6000);
+  // mostrar login en cuanto haya datos (o ya)
+  const waitGate = setInterval(()=>{
+    if(allReady()){
+      clearInterval(waitGate);
+      const saved = normName(localStorage.getItem('colla_me'));
+      if(saved) localStorage.setItem('colla_me', saved);
+      if(saved && MEMBERS.some(m=>m.name===saved)){ ME = saved; enterApp(); }
+      else renderGate();
+    }
+  }, 120);
+};
+
+// ═══════════════════════════════ LOGIN ═══════════════════════════════
+function renderGate(){
+  document.getElementById('loader').style.display='none';
+  document.getElementById('gate').style.display='flex';
+  document.getElementById('mainMenu').style.display='none';
+  const body = document.getElementById('gateBody');
+  let html = `<div class="gate-q">¿Quién eres?</div>
+    <div class="gate-sub">Toca tu nombre para entrar.</div>
+    <div class="who-grid">`;
+  GROUPS.forEach(g=>{
+    html += `<div class="who-group"><div class="who-group-label">Grupo ${g.id} · ${g.members.join(" & ")}</div>`;
+    g.members.forEach(name=>{
+      const isTre = name===TREASURER;
+      html += `<button class="who-btn" onclick="pickMe('${name}')">
+        ${av(name,'av av-md '+(isTre?'av-on':'av-off'))}
+        <span class="who-name">${name}</span>
+        ${isTre?`<span class="who-tre">Tesorero</span>`:''}
+      </button>`;
+    });
+    html += `</div>`;
+  });
+  html += `</div>`;
+  body.innerHTML = html;
+}
+
+let pinBuffer = "";
+function pickMe(name){
+  ME = name;
+  localStorage.setItem('colla_me', name);
+  enterApp();
+}
+
+function renderPin(){
+  pinBuffer = "";
+  const body = document.getElementById('gateBody');
+  body.innerHTML = `
+    <button class="btn-ghost" style="margin-bottom:18px" onclick="renderGate()">← Volver</button>
+    <div class="gate-q">Hola, Edu</div>
+    <div class="gate-sub">Introduce tu clave de tesorero.</div>
+    <div class="pin-box">
+      <div class="pin-dots" id="pinDots"></div>
+      <div class="pin-pad" id="pinPad"></div>
+      <div class="pin-err" id="pinErr"></div>
+    </div>`;
+  renderPinDots();
+  const keys = ['1','2','3','4','5','6','7','8','9','','0','⌫'];
+  document.getElementById('pinPad').innerHTML = keys.map(k=>{
+    if(k==='') return `<div></div>`;
+    if(k==='⌫') return `<button class="pin-key fn" onclick="pinDel()">⌫</button>`;
+    return `<button class="pin-key" onclick="pinPress('${k}')">${k}</button>`;
+  }).join('');
+}
+function renderPinDots(){
+  let h=''; for(let i=0;i<4;i++) h+=`<div class="pin-dot ${i<pinBuffer.length?'filled':''}"></div>`;
+  document.getElementById('pinDots').innerHTML=h;
+}
+function pinPress(d){
+  if(pinBuffer.length>=4) return;
+  pinBuffer+=d; renderPinDots();
+  if(pinBuffer.length===4){
+    setTimeout(()=>{
+      if(pinBuffer===TREASURER_PIN){
+        ME = TREASURER; localStorage.setItem('colla_me',TREASURER); enterApp();
+      } else {
+        document.getElementById('pinErr').textContent='Clave incorrecta';
+        pinBuffer=''; renderPinDots();
+      }
+    },120);
+  }
+}
+function pinDel(){ pinBuffer=pinBuffer.slice(0,-1); document.getElementById('pinErr').textContent=''; renderPinDots(); }
+
+function enterApp(){
+  compraWho = ME; evExpWho = ME;
+  document.getElementById('gate').style.display='none';
+  document.getElementById('meAv').textContent = ini(ME);
+  document.getElementById('meName').textContent = ME + (ME===TREASURER?' · Tesorero':'');
+  goMenu();
+}
+function logout(){
+  ME=null; localStorage.removeItem('colla_me');
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('mainMenu').style.display='none';
+  renderGate();
+}
+
+// ═══════════════════════════════ HELPERS ══════════════════════════════
+const ini = n => n ? n[0].toUpperCase() : "?";
+const gm = id => MEMBERS.find(m=>m.id===id);
+const gg = id => GROUPS.find(g=>g.id===id);
+const fmtD = s => {
+  const d = new Date(s+"T12:00:00");
+  return { day:d.getDate(), mon:d.toLocaleDateString("es-ES",{month:"short"}), wday:d.toLocaleDateString("es-ES",{weekday:"long"}) };
+};
+const av = (name,cls="av-md av-off") => `<span class="av ${cls}">${ini(name)}</span>`;
+const tag = (text,color,bg) => `<span class="tag" style="color:${color};background:${bg||color+'18'}">${text}</span>`;
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = v => String(v ?? "").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const eur = n => (Number(n)||0).toFixed(2) + " €";
+const todayISO = () => new Date().toISOString().split("T")[0];
+
+// ═══════════════════════════════ NAVIGATION ═══════════════════════════
+function goMenu(){
+  currentSection=null;
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('mainMenu').style.display='flex';
+  renderMenu();
+}
+function goSection(key){
+  currentSection=key;
+  document.getElementById('mainMenu').style.display='none';
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  const s = document.getElementById('sec-'+key);
+  if(s) s.classList.add('active');
+  renderSection(key);
+}
+function renderSection(key){
+  if(key==='eventos') renderEventos();
+  if(key==='caja') renderCaja();
+  if(key==='compra') renderCompra();
+  if(key==='turnos') renderTurnos();
+  if(key==='cuotas') renderCuotas();
+  if(key==='colla') renderColla();
+  if(key==='consum') renderConsum();
+  if(key==='tareas') renderTareas();
+}
+
+// ═══════════════════════════════ MENU ═════════════════════════════════
+const MENU_ITEMS = [
+  {key:"eventos",label:"Eventos",num:"01"},
+  {key:"caja",label:"Caja",num:"02"},
+  {key:"consum",label:"Consumiciones",num:"03"},
+  {key:"compra",label:"La compra",num:"04"},
+  {key:"tareas",label:"Tareas",num:"05"},
+  {key:"turnos",label:"Turnos",num:"06"},
+  {key:"cuotas",label:"Cuotas",num:"07"},
+  {key:"colla",label:"Colla",num:"08"},
+];
+function getBadge(key){
+  if(key==='eventos') return events.filter(e=>!e.deleted).reduce((s,e)=>s+(e.polls||[]).filter(p=>p.open).length,0)||null;
+  if(key==='consum'){
+    if(!BEBIDA_ON) return null;
+    const L = consumLedger();
+    if(CONSUM_MANAGERS.includes(ME) && L.toConfirm.length) return L.toConfirm.length;
+    const mine = L.people.find(x=>x.name===ME);
+    return mine && mine.saldo > 0.005 ? '!' : null;
+  }
+  if(key==='caja') return cajaStats().pend.length||null;
+  if(key==='tareas') return tasks.filter(t=>!t.deleted && !t.done).length||null;
+  if(key==='compra') return shopping.filter(s=>!s.deleted && !s.done).length||null;
+  if(key==='turnos'){
+    const cur = currentTurn();
+    if(!cur || !canEditTurn(cur)) return null;
+    const rec = turnRecord(cur.id);
+    if(rec.closed) return null;
+    return CLEAN_CHECKS.filter(c=>!rec.checks[c.key]).length || null;
+  }
+  if(key==='cuotas') return quotas.filter(q=>!q.deleted).reduce((s,q)=>s+(q.payments||[]).filter(p=>!p.confirmedByTreasurer&&p.selfDeclared).length,0)||null;
+  return null;
+}
+function renderMenu(){
+  const list = document.getElementById('menuList');
+  if(!list) return;
+  list.innerHTML = MENU_ITEMS.filter(item=>BEBIDA_ON || item.key!=='consum').map((item,idx)=>{
+    const b = getBadge(item.key);
+    return `<div class="menu-row" onclick="goSection('${item.key}')">
+      <span class="menu-num">${String(idx+1).padStart(2,'0')}</span>
+      <span class="menu-label">${item.label}</span>
+      ${b ? `<span class="menu-badge">${b}</span>` : ''}
+      <span class="menu-arrow">›</span>
+    </div>`;
+  }).join('');
+  document.getElementById('menuFooter').textContent = `${MEMBERS.length} miembros · Tesorero: ${TREASURER}`;
+}
+</script>
+<script>
+// ═══════════════════════════════ EVENTOS ═════════════════════════════
+function renderEventos(){
+  const sorted = events.filter(e=>!e.deleted).sort((a,b)=>a.date>b.date?1:-1);
+  document.getElementById('body-eventos').innerHTML = `
+    <span class="lbl">Próximos eventos</span>
+    ${sorted.length===0?`<div style="font-size:13px;color:var(--faint);font-style:italic">Aún no hay eventos. Crea el primero con el botón +.</div>`:''}
+    ${sorted.map(ev=>{
+      const {day,mon} = fmtD(ev.date);
+      const total = (ev.expenses||[]).reduce((s,x)=>s+x.amount,0);
+      const et = EVENT_TYPES[ev.type]||EVENT_TYPES.otro;
+      const openP = (ev.polls||[]).filter(p=>p.open).length;
+      const atavs = ev.attendees.slice(0,9).map(id=>av(gm(id)?.name,'av av-sm av-on')).join('');
+      return `<div class="card card-click" onclick="openEvDetail(${ev.id})">
+        <div style="display:flex;gap:14px;align-items:flex-start">
+          <div style="text-align:center;min-width:42px;flex-shrink:0">
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:34px;line-height:1;color:var(--text)">${day}</div>
+            <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--faint)">${mon}</div>
+          </div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:5px;flex-wrap:wrap">
+              <div class="card-title">${ev.title}</div>
+              ${tag(et.label,et.color)}
+            </div>
+            ${ev.description ? `<div style="font-size:12px;color:var(--muted);font-style:italic;margin-bottom:8px">${ev.description}</div>` : ''}
+            <div style="display:flex;gap:6px;flex-wrap:wrap">
+              ${tag(ev.attendees.length+' apuntados','#6e6860')}
+              ${evGuests(ev).length>0 ? tag('+'+evGuests(ev).length+(evGuests(ev).length>1?' acompanyants':' acompanyant'),'#5a6ea8') : ''}
+              ${total>0 ? tag(total.toFixed(2)+' €','#3d8000') : ''}
+              ${openP>0 ? tag(openP+' votación'+(openP>1?'es':''),'#5a6ea8') : ''}
+              ${ev.type==='reunion'&&ev.agenda ? tag('Orden del día','#c07800') : ''}
+            </div>
+            ${ev.attendees.length>0 ? `<div style="margin-top:8px;display:flex;gap:3px;flex-wrap:wrap">${atavs}${ev.attendees.length>9?`<span style="font-size:11px;color:var(--faint);align-self:center">+${ev.attendees.length-9}</span>`:''}</div>` : ''}
+          </div>
+          <span style="color:var(--faint);font-size:20px;align-self:center">›</span>
+        </div>
+      </div>`;
+    }).join('')}
+  `;
+}
+
+function openEvDetail(evId){
+  activeEvId = evId;
+  currentSection=null;
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-evdetail').classList.add('active');
+  renderEvDetail();
+}
+
+function renderEvDetail(){
+  const ev = events.find(e=>e.id===activeEvId);
+  if(!ev || ev.deleted){ goSection('eventos'); return; }
+  const {day,mon,wday} = fmtD(ev.date);
+  const et = EVENT_TYPES[ev.type]||EVENT_TYPES.otro;
+  const isReu = ev.type==='reunion';
+  const total = (ev.expenses||[]).reduce((s,x)=>s+x.amount,0);
+  const ambAcomp = TIPUS_AMB_ACOMPANYANTS.includes(ev.type);
+  const S = evSplit(ev);
+
+  document.getElementById('evdetail-header').innerHTML = `
+    <div>${tag(et.label,et.color)}</div>
+    <div class="ev-big-title">${ev.title}</div>
+    <div class="ev-date">${wday} ${day} ${mon} · ${ev.time}</div>
+  `;
+
+  let html = '';
+  if(ev.description) html += `<div style="font-size:13px;color:var(--muted);font-style:italic;margin-bottom:18px">${ev.description}</div>`;
+  if(isReu && ev.agenda){
+    html += `<span class="lbl">Orden del día</span>
+    <div class="warn-card"><div style="font-size:13px;color:var(--text);white-space:pre-line;line-height:1.7">${ev.agenda}</div></div>`;
+  }
+  if((ev.polls||[]).length>0){
+    html += `<span class="lbl" style="margin-top:16px">Votaciones</span>`;
+    ev.polls.forEach(p=>{ html += renderPollHTML(p, ev.id); });
+  }
+  html += `<button class="btn-dashed" onclick="openPollModal()">+ Nueva votación</button>`;
+
+  html += `<span class="lbl" style="margin-top:8px">Apuntados (${ev.attendees.length})</span>
+  <div class="card"><div class="attend-grid">
+    ${MEMBERS.map(m=>{
+      const on = ev.attendees.includes(m.id);
+      return `<span class="pill${on?' on':''}" onclick="toggleAtt(${ev.id},${m.id})">
+        ${av(m.name, 'av '+(on?'av-on':'av-off'))} ${m.name}
+      </span>`;
+    }).join('')}
+  </div></div>`;
+
+  // ── Acompanyants: xiquets i convidats, només en menjars i sopars ────────
+  if(ambAcomp){
+    const guests = evGuests(ev);
+    html += `<span class="lbl" style="margin-top:18px">Xiquets i convidats (${guests.length})</span>`;
+    if(guests.length===0){
+      html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Ningú de moment. Si portes xiquets o algú de fora, apunta'ls ací.</div>`;
+    } else {
+      html += `<div class="card" style="padding:6px 16px">`;
+      guests.forEach(g=>{
+        const r = racioOf(g);
+        const meu = g.by===ME;
+        html += `<div class="quota-row">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            ${av(g.name,'av av-md '+(meu?'av-on':'av-off'))}
+            <div style="min-width:0">
+              <div style="font-size:14px;color:var(--text)">${esc(g.name)}</div>
+              <div style="font-size:11px;color:var(--faint);margin-top:2px">El porta ${esc(g.by||'?')}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+            <button class="btn-ghost" style="font-size:9px;padding:5px 10px;border-color:${r.color};color:${r.color}" onclick="cycleGuestRacio(${ev.id},${g.id})">${r.label}</button>
+            <button class="shop-del" style="font-size:18px" onclick="removeGuest(${ev.id},${g.id})" title="Traure">×</button>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+    html += `<button class="btn-dashed" onclick="openGuestModal()">+ Afegir xiquet/a o convidat/da</button>`;
+
+    // Resum per a qui va a comprar
+    if(S.persones>0){
+      html += `<div class="card" style="border-left:4px solid var(--accentD);display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div style="min-width:0">
+          <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Per a la compra</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--text);line-height:1">${S.racions % 1 === 0 ? S.racions : S.racions.toFixed(1)} racions</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${S.completes} completes${S.mitges>0?` · ${S.mitges} mitges`:''}${S.senseMenjar>0?` · ${S.senseMenjar} sense menjar`:''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);margin-bottom:4px">A taula</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--accentD);line-height:1">${S.persones}</div>
+        </div>
+      </div>`;
+    }
+  }
+
+  if(!isReu){
+    html += `<span class="lbl" style="margin-top:18px">Gastos del evento</span>`;
+    if((ev.expenses||[]).length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin gastos registrados.</div>`;
+    (ev.expenses||[]).forEach(x=>{
+      const esBeguda = x.kind==='begudes';
+      const etiqueta = x.kind==='menjar' ? tag('Menjar','#3d8000') : (esBeguda ? tag('Begudes','#5a6ea8') : tag('Sense classificar','#c07800'));
+      html += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">${etiqueta}<span style="font-size:14px;color:var(--text)">${esc(x.what)}</span></div>
+          <div style="font-size:12px;color:var(--muted)">Pagó ${esc(x.who)}</div>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text);flex-shrink:0">${x.amount.toFixed(2)} €</div>
+      </div></div>`;
+    });
+    html += `<button class="btn-dashed" onclick="openModal('modalEvExp');initEvExpPills()">+ Añadir gasto</button>`;
+
+    if(S.total>0){
+      if(S.senseClassificar>0){
+        html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:9px 12px;margin-bottom:10px;line-height:1.5">Hi ha ${S.senseClassificar.toFixed(2)} € sense classificar. Van a menjar i es reparteixen entre els adults, com sempre.</div>`;
+      }
+      html += `<div class="card card-dark">
+        <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Total de l'esdeveniment</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;color:#fff;line-height:1">${S.total.toFixed(2)} €</div>
+        <div style="height:1px;background:rgba(255,255,255,.14);margin:14px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="min-width:0">
+            <div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Menjar</div>
+            <div style="font-size:11px;color:var(--faint);margin-top:2px">${S.menjar.toFixed(2)} € entre ${S.paguenMenjar} adults</div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent);flex-shrink:0">${S.perMenjar.toFixed(2)} €</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="min-width:0">
+            <div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Begudes</div>
+            <div style="font-size:11px;color:var(--faint);margin-top:2px">${S.begudes.toFixed(2)} € entre ${S.paguenBegudes} persones</div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent);flex-shrink:0">${S.perBeguda.toFixed(2)} €</div>
+        </div>
+      </div>`;
+
+      if(S.adults>0){
+        html += `<span class="lbl" style="margin-top:14px">Què paga cadascú</span>
+        <div class="card" style="padding:6px 16px">
+          ${ev.attendees.map(id=>{
+            const m = gm(id); if(!m) return '';
+            const meus = evGuests(ev).filter(g=>g.by===m.name);
+            const beuen = meus.filter(g=>racioOf(g).pagaBeguda).length;
+            const q = quotaDe(ev, id);
+            const jo = m.name===ME;
+            return `<div class="quota-row">
+              <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                ${av(m.name,'av av-md '+(jo?'av-on':'av-off'))}
+                <div style="min-width:0">
+                  <div style="font-size:14px;color:${jo?'var(--text)':'var(--muted)'};font-weight:${jo?600:400}">${esc(m.name)}${jo?' <span style="font-size:9px;color:var(--faint);font-weight:400">(tu)</span>':''}</div>
+                  <div style="font-size:11px;color:var(--faint);margin-top:2px">1 adult${meus.length>0?` + ${meus.map(g=>esc(g.name)).join(', ')}`:''}${beuen>0?` · ${beuen} beguda${beuen>1?'es':''} més`:''}</div>
+                </div>
+              </div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text);flex-shrink:0">${q.toFixed(2)} €</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.5">Els xiquets i convidats no paguen menjar. Sí paguen begudes, excepte els marcats com a "No menja".</div>`;
+      }
+    }
+  }
+  html += `<div class="divider" style="margin-top:24px"></div>
+    <button class="btn-ghost" style="width:100%;border-color:rgba(192,57,43,.4);color:var(--neg);letter-spacing:2px" onclick="deleteEvento(${ev.id})">Eliminar evento</button>`;
+  document.getElementById('body-evdetail').innerHTML = html;
+}
+
+function deleteEvento(evId){
+  const ev = events.find(e=>e.id===evId);
+  if(!ev) return;
+  if(!confirm(`¿Eliminar "${ev.title}"?\n\nSe mueve a la Papelera (Colla) por si hay que recuperarlo.`)) return;
+  softDelete('events', ev);
+  goSection('eventos');
+}
+
+function renderPollHTML(p, evId){
+  const totalV = [...new Set(p.options.flatMap(o=>o.votes))].length;
+  const myVotes = p.options.filter(o=>o.votes.includes(ME)).map(o=>o.id);
+  const maxV = Math.max(...p.options.map(o=>o.votes.length),1);
+  let html = `<div class="card" style="border-left:4px solid var(--accent)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--text);letter-spacing:.5px;margin-bottom:6px">${p.title}</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          ${tag(p.multi?'Varias opciones':'Una opción','#a8a098')}
+          ${tag(totalV+' votos','#a8a098')}
+          ${!p.open?tag('Cerrada','#c0392b'):''}
+        </div>
+      </div>
+      ${p.open?`<button class="btn-ghost" style="font-size:9px;padding:4px 10px" onclick="closePoll(${evId},${p.id})">Cerrar</button>`:''}
+    </div>`;
+  p.options.forEach(opt=>{
+    const voted = myVotes.includes(opt.id);
+    const pct = Math.round((opt.votes.length/maxV)*100);
+    const winner = !p.open && opt.votes.length===maxV && opt.votes.length>0;
+    html += `<div class="poll-opt${voted?' voted':''}" onclick="${p.open?`castVote(${evId},${p.id},${opt.id},${p.multi})`:''}">
+      <div class="poll-opt-inner">
+        <div class="poll-fill" style="width:${pct}%"></div>
+        <div class="poll-content">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div class="poll-check${voted?' checked':''}">${voted?'✓':''}</div>
+            <span style="font-size:13px;color:var(--text)">${opt.text}</span>
+            ${winner?tag('Ganadora','#3d8000'):''}
+          </div>
+          <div style="display:flex;align-items:center;gap:4px">
+            <span style="font-size:12px;color:var(--muted)">${opt.votes.length}</span>
+            ${opt.votes.slice(0,4).map(v=>av(v,'av av-sm '+(v===ME?'av-on':'av-off'))).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+  });
+  if(p.open) html += `<div style="font-size:11px;color:var(--faint);margin-top:10px;font-style:italic">${p.multi?'Puedes seleccionar varias opciones':'Selecciona una opción'} · Toca para votar</div>`;
+  html += `</div>`;
+  return html;
+}
+
+// — Mutaciones de eventos → Firestore —
+// ── Helpers d'acompanyants i de repartiment ──────────────────────────────
+function evGuests(ev){ return (ev && Array.isArray(ev.guests)) ? ev.guests : []; }
+function racioOf(g){ return RACIONS[g && g.racio] ? RACIONS[g.racio] : RACIONS.full; }
+
+// Compta el que necessita qui va a comprar i qui paga cada bossa.
+function evCounts(ev){
+  const guests = evGuests(ev);
+  const adults = ev.attendees.length;
+  let racionsGuests = 0, guestsQueBeuen = 0, completes = 0, mitges = 0, senseMenjar = 0;
+  guests.forEach(g=>{
+    const r = racioOf(g);
+    racionsGuests += r.racions;
+    if(r.pagaBeguda) guestsQueBeuen++;
+    if(r.racions===1) completes++; else if(r.racions>0) mitges++; else senseMenjar++;
+  });
+  return {
+    adults, guests: guests.length,
+    persones: adults + guests.length,
+    racions: adults + racionsGuests,   // plats a comprar
+    completes: adults + completes, mitges, senseMenjar,
+    paguenMenjar: adults,              // acord de junta: els xiquets no paguen menjar
+    paguenBegudes: adults + guestsQueBeuen,
+  };
+}
+
+// Reparteix els gastos en dues bosses. Els gastos antics sense classificar
+// cauen a "menjar", que és com es repartia fins ara: res no canvia sol.
+function evSplit(ev){
+  const xs = ev.expenses||[];
+  const c = evCounts(ev);
+  let menjar = 0, begudes = 0, senseClassificar = 0;
+  xs.forEach(x=>{
+    if(x.kind==='begudes') begudes += x.amount;
+    else { menjar += x.amount; if(x.kind!=='menjar') senseClassificar += x.amount; }
+  });
+  return {
+    ...c, menjar, begudes, senseClassificar,
+    total: menjar + begudes,
+    perMenjar: c.paguenMenjar>0 ? menjar/c.paguenMenjar : 0,
+    perBeguda: c.paguenBegudes>0 ? begudes/c.paguenBegudes : 0,
+  };
+}
+
+// El que li toca pagar a un membre: la seua part de menjar + les begudes
+// seues i de qui porta.
+function quotaDe(ev, memberId){
+  const s = evSplit(ev);
+  if(!ev.attendees.includes(memberId)) return 0;
+  const m = gm(memberId);
+  const meus = evGuests(ev).filter(g=>g.by===(m&&m.name) && racioOf(g).pagaBeguda).length;
+  return s.perMenjar + s.perBeguda*(1+meus);
+}
+
+// ── Mutacions d'acompanyants ─────────────────────────────────────────────
+let guestRacio = 'full';
+function openGuestModal(){
+  guestRacio = 'full';
+  document.getElementById('guestName').value = '';
+  document.getElementById('guestRacioPills').innerHTML = Object.entries(RACIONS).map(([k,v])=>
+    `<span class="pill${k==='full'?' on':''}" onclick="setGuestRacio('${k}',this)">${v.label}</span>`
+  ).join('');
+  openModal('modalGuest');
+}
+function setGuestRacio(k,el){
+  guestRacio = k;
+  document.querySelectorAll('#guestRacioPills .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+function addGuest(){
+  const ev = events.find(e=>e.id===activeEvId); if(!ev) return;
+  const name = document.getElementById('guestName').value.trim();
+  if(!name){ alert("Posa el nom de l'acompanyant."); return; }
+  const next = clone(ev);
+  if(!Array.isArray(next.guests)) next.guests = [];
+  const gid = next.guests.reduce((m,g)=>Math.max(m,g.id||0),0)+1;
+  next.guests.push({id:gid, by:ME, name, racio:guestRacio});
+  // Qui porta acompanyants s'apunta sol: no té sentit portar algú i no vindre.
+  const me = MEMBERS.find(m=>m.name===ME);
+  if(me && !next.attendees.includes(me.id)) next.attendees.push(me.id);
+  fbSet('events', next);
+  closeModal('modalGuest');
+}
+function removeGuest(evId, gid){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const g = evGuests(ev).find(x=>x.id===gid); if(!g) return;
+  if(!confirm(`Traure a ${g.name} de l'esdeveniment?`)) return;
+  const next = clone(ev);
+  next.guests = evGuests(next).filter(x=>x.id!==gid);
+  fbSet('events', next);
+}
+function cycleGuestRacio(evId, gid){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const next = clone(ev);
+  const g = evGuests(next).find(x=>x.id===gid); if(!g) return;
+  const keys = Object.keys(RACIONS);
+  g.racio = keys[(keys.indexOf(g.racio in RACIONS ? g.racio : 'full')+1)%keys.length];
+  fbSet('events', next);
+}
+
+function toggleAtt(evId,mid){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const next = clone(ev);
+  const idx = next.attendees.indexOf(mid);
+  if(idx>-1) next.attendees.splice(idx,1); else next.attendees.push(mid);
+  fbSet('events', next);
+}
+function castVote(evId,pollId,optId,multi){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const next = clone(ev);
+  const p = next.polls.find(x=>x.id===pollId);
+  if(!p||!p.open) return;
+  p.options.forEach(o=>{
+    if(o.id===optId){
+      const i=o.votes.indexOf(ME);
+      if(i>-1) o.votes.splice(i,1); else o.votes.push(ME);
+    } else if(!multi){
+      const i=o.votes.indexOf(ME);
+      if(i>-1) o.votes.splice(i,1);
+    }
+  });
+  fbSet('events', next);
+}
+function closePoll(evId,pollId){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const next = clone(ev);
+  const p = next.polls.find(x=>x.id===pollId);
+  if(p) p.open=false;
+  fbSet('events', next);
+}
+function openEventoModal(){ initEvTypePills(); openModal('modalEvento'); }
+function addEvento(){
+  const title = document.getElementById('evTitle').value.trim();
+  const date = document.getElementById('evDate').value;
+  if(!title||!date) return;
+  const nextId = (events.reduce((m,e)=>Math.max(m,e.id),0))+1;
+  fbSet('events', {
+    id: nextId, title, type: evType, date,
+    time: document.getElementById('evTime').value,
+    description: document.getElementById('evDesc').value,
+    agenda: document.getElementById('evAgenda').value,
+    attendees:[], guests:[], expenses:[], polls:[],
+  });
+  closeModal('modalEvento');
+  ['evTitle','evDate','evTime','evDesc','evAgenda'].forEach(id=>document.getElementById(id).value='');
+}
+function addEvExp(){
+  const ev = events.find(e=>e.id===activeEvId); if(!ev) return;
+  const what = document.getElementById('evExpWhat').value.trim();
+  const amt = parseFloat(document.getElementById('evExpAmt').value);
+  if(!what||!amt) return;
+  const next = clone(ev);
+  const eid = (next.expenses.reduce((m,x)=>Math.max(m,x.id),0))+1;
+  next.expenses.push({id:eid,who:evExpWho,what,amount:amt,kind:evExpKind});
+  fbSet('events', next);
+  closeModal('modalEvExp');
+  document.getElementById('evExpWhat').value=''; document.getElementById('evExpAmt').value='';
+}
+
+// — Poll modal —
+function openPollModal(){
+  pollOpts = ["","",""]; pollMulti = false; renderPollOpts();
+  document.getElementById('pollTitle').value='';
+  document.getElementById('pollTypeSingle').className='pill on';
+  document.getElementById('pollTypeMulti').className='pill';
+  openModal('modalPoll');
+}
+function setPollType(multi){
+  pollMulti = multi;
+  document.getElementById('pollTypeSingle').className='pill'+(multi?'':' on');
+  document.getElementById('pollTypeMulti').className='pill'+(multi?' on':'');
+}
+function renderPollOpts(){
+  document.getElementById('pollOptsWrap').innerHTML = pollOpts.map((o,i)=>
+    `<div class="inp-wrap"><label class="inp-label">Opción ${i+1}</label><input class="inp" value="${o}" oninput="pollOpts[${i}]=this.value" placeholder="Opción ${i+1}"/></div>`
+  ).join('');
+}
+function addPollOpt(){ pollOpts.push(""); renderPollOpts(); }
+function savePoll(){
+  const ev = events.find(e=>e.id===activeEvId); if(!ev) return;
+  const title = document.getElementById('pollTitle').value.trim(); if(!title) return;
+  const opts = pollOpts.filter(o=>o.trim()).map((text,i)=>({id:i+1,text,votes:[]}));
+  if(opts.length<2) return;
+  const next = clone(ev);
+  const pid = (next.polls.reduce((m,p)=>Math.max(m,p.id),0))+1;
+  next.polls.push({id:pid,title,multi:pollMulti,open:true,options:opts});
+  fbSet('events', next);
+  closeModal('modalPoll');
+}
+
+// ═══════════════════════════════ CAJA ════════════════════════════════
+const EXP_CATS = ["Compra","Bebida","Luz","Agua","Fianza","Evento","Otro"].filter(c=>BEBIDA_ON || c!=="Bebida");
+const CAT_COLORS = {Compra:"#3d8000",Bebida:"#0e7c86",Luz:"#c07800",Agua:"#5a6ea8",Alquiler:"#9b59b6",Fianza:"#16a085",Evento:"#c0392b",Otro:"#6e6860"};
+let compraCat = "Compra";
+
+// ── Cuentas de la colla ──────────────────────────────────────────────────
+// Las cuotas mensuales pagan el alquiler y NO se muestran a la colla.
+// Edu apunta como ingreso lo que sobra cada mes. Lo que ve todo el mundo es:
+//   Disponible = dinero inicial (cuota "Inicial") + ingresos − gastos
+// (Los gastos de categoría Alquiler y los traspasos antiguos no cuentan.)
+const isInicialQuota = q => (q.month||'').toLowerCase().includes('inicial');
+const BEBIDA_COLOR = "#0e7c86";
+const mesActual = () => new Date().toLocaleDateString("es-ES",{month:"long"});
+const canMoney = () => CONSUM_MANAGERS.includes(ME);
+const confirmedAmount = q => (q.payments||[]).filter(p=>p.confirmedByTreasurer).length*(Number(q.amount)||0);
+const currentQuota = () => quotas.filter(q=>!q.deleted && !isInicialQuota(q)).sort((a,b)=>b.id-a.id)[0] || null;
+function cajaStats(){
+  const amt = c => Number(c.amount)||0;
+  const sum = a => a.reduce((s,c)=>s+amt(c),0);
+  const r2 = n => Math.round(n*100)/100;
+  const inicial = quotas.filter(q=>!q.deleted && isInicialQuota(q)).reduce((s,q)=>s+confirmedAmount(q),0);
+  const act = compras.filter(c=>!c.deleted && !c.transfer && c.cat!=='Alquiler');
+  const isBeb = c => BEBIDA_ON && (c.income ? c.caja==='bebida' : c.cat==='Bebida');
+  const ingresosL = act.filter(c=>c.income && !isBeb(c));
+  const gastosL = act.filter(c=>!c.income && !isBeb(c));
+  const ingresos = sum(ingresosL), gastos = sum(gastosL);
+  const L = consumLedger();
+  const cobrado = BEBIDA_ON ? L.cobradoTotal : 0;
+  const ingresosBebida = sum(act.filter(c=>c.income && isBeb(c)));
+  const gastosBebida = sum(act.filter(c=>!c.income && isBeb(c)));
+  const bebida = BEBIDA_ON ? r2(BEBIDA_BASE + cobrado + ingresosBebida - gastosBebida) : 0;
+  const disponible = r2(inicial + ingresos - gastos - (BEBIDA_ON ? BEBIDA_BASE : 0));
+  const curQ = currentQuota();
+  const pend = gastosL.filter(c=>!c.reintegrated);
+  return {
+    inicial, ingresos, gastos, disponible, bebida, cobrado, ingresosBebida, gastosBebida,
+    pendienteCobrar: BEBIDA_ON ? L.pendienteTotal : 0,
+    curQ, cuotasMes: curQ ? confirmedAmount(curQ) : 0,
+    L, act, pend, pendTotal: sum(pend),
+  };
+}
+
+function renderCaja(){
+  const st = cajaStats();
+  const isTr = ME===TREASURER;
+  const line = (l,v) => `<div style="display:flex;justify-content:space-between;padding:4px 0;border-top:1px solid rgba(255,255,255,.08)"><span style="font-size:12px;color:#d8d0c0">${l}</span><span style="font-size:14px;font-weight:600;color:#fff">${v}</span></div>`;
+
+  // ── Lo que ve todo el mundo: disponible para gastar
+  let html = `<div class="card card-dark" style="margin-bottom:10px">
+    <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Disponible para gastar</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:60px;color:${st.disponible>=0?'var(--accent)':'#ff6b5e'};letter-spacing:2px;line-height:1">${eur(st.disponible)}</div>
+    <div style="font-size:11px;color:var(--faint);margin:4px 0 12px">Para compras, luz, agua, limpieza y mejoras</div>
+    ${line('Dinero con el que empezamos', '+ '+eur(st.inicial))}
+    ${line('Ingresos (sobrantes, derramas, altas…)', '+ '+eur(st.ingresos))}
+    ${line('Lo que hemos gastado', '− '+eur(st.gastos))}
+  </div>`;
+
+  // ── Solo el tesorero: cuotas del mes
+  if(isTr && st.curQ){
+    const q = st.curQ;
+    const nConf = (q.payments||[]).filter(p=>p.confirmedByTreasurer).length;
+    const tot = MEMBERS.length * (Number(q.amount)||0);
+    const falta = Math.max(0, RENT - st.cuotasMes);
+    const rentItem = compras.find(c=>!c.deleted && c.cat==='Alquiler' && c.quotaId===q.id);
+    html += `<div class="card" style="border-left:4px solid var(--black)">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px">
+        <span style="font-size:9px;letter-spacing:3px;color:var(--faint);text-transform:uppercase">Cuotas · <span style="text-transform:capitalize">${esc(q.month)}</span></span>
+        ${tag('Solo lo ves tú','#141410')}
+      </div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--text)">${eur(st.cuotasMes)} <span style="font-size:16px;color:var(--muted)">de ${eur(tot)}</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">${nConf} de ${MEMBERS.length} confirmadas · alquiler ${eur(RENT)} · ${falta>0?`faltan ${eur(falta)} para el alquiler`:`<b style="color:var(--accentD)">sobran ${eur(st.cuotasMes-RENT)}</b>`}</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+        <span style="font-size:13px;color:${rentItem?'var(--accentD)':'var(--text)'}">${rentItem?`Alquiler pagado ✓ · ${eur(rentItem.amount)}`:'Alquiler sin pagar'}</span>
+        ${rentItem
+          ? `<button class="btn-ghost" style="font-size:9px;padding:5px 10px" onclick="unmarkRent(${rentItem.id})">Deshacer</button>`
+          : `<button class="btn-ghost" style="font-size:9px;padding:6px 11px;border-color:var(--accentD);color:var(--accentD)" onclick="markRentPaid()">Marcar pagado</button>`}
+      </div>
+      <button class="btn-accent" style="width:100%;margin-top:12px" onclick="openSobrante()">+ Pasar sobrante al disponible</button>
+    </div>`;
+  }
+
+  // ── Bebida (solo si está activada)
+  if(BEBIDA_ON){
+    html += `<div class="card" style="border-left:4px solid ${BEBIDA_COLOR}">
+      <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:3px">Fondo de bebida</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;line-height:1;color:var(--text)">${eur(st.bebida)}</div>
+      ${st.pendienteCobrar>0.005?`<div style="font-size:12px;color:var(--warn);margin-top:4px;cursor:pointer" onclick="goSection('consum')">Pendiente de cobrar ${eur(st.pendienteCobrar)} ›</div>`:''}
+    </div>`;
+  }
+
+  // ── Quién falta por pagar la cuota (sin importes)
+  if(st.curQ){
+    const morosos = (st.curQ.payments||[]).filter(p=>!p.selfDeclared && !p.confirmedByTreasurer).map(p=>p.name);
+    const chip = n => `<span style="display:inline-block;font-size:11px;padding:3px 9px;border-radius:12px;background:#c0392b18;color:#c0392b;margin:0 4px 5px 0">${esc(n)}</span>`;
+    html += `<div class="card" style="cursor:pointer" onclick="goSection('cuotas')">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:${morosos.length?'8px':'0'}">
+        <span style="font-size:13px;color:var(--text);font-weight:500">Cuota de <span style="text-transform:capitalize">${esc(st.curQ.month)}</span></span>
+        <span style="font-size:11px;color:${morosos.length?'var(--neg)':'var(--accentD)'}">${morosos.length?`Faltan ${morosos.length} por pagar`:'Todos han pagado ✓'} ›</span>
+      </div>
+      <div>${morosos.map(chip).join('')}</div>
+    </div>`;
+  }
+
+  if(st.pend.length>0) html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:8px 12px;margin:4px 0 14px">${st.pend.length} gasto${st.pend.length>1?'s':''} adelantado${st.pend.length>1?'s':''} pendiente${st.pend.length>1?'s':''} de devolver · ${eur(st.pendTotal)}</div>`;
+
+  html += `<div style="display:flex;gap:8px;margin-top:4px">
+    <button class="btn-dashed" style="flex:1" onclick="initCompraPills();openModal('modalCompra')">+ Registrar gasto</button>
+    <button class="btn-dashed" style="flex:1;border-color:var(--accentD);color:var(--accentD)" onclick="openIngreso()">+ Ingreso</button>
+  </div>`;
+
+  html += `<span class="lbl" style="margin-top:6px">Gastos e ingresos</span>`;
+  if(st.act.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin movimientos registrados todavía.</div>`;
+
+  [...st.act].sort((a,b)=>b.id-a.id).forEach(c=>{
+    if(c.income){
+      const beb = BEBIDA_ON && c.caja==='bebida';
+      html += `<div class="card" style="border-left:4px solid ${beb?BEBIDA_COLOR:'var(--accentD)'}">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div style="flex:1;padding-right:10px">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
+              ${tag('Ingreso','#3d8000')} ${beb?tag('Bebida',BEBIDA_COLOR):''}
+              <span style="font-size:14px;color:var(--text)">${esc(c.what)}</span>
+            </div>
+            <div style="font-size:12px;color:var(--muted)">Añadido por ${esc(c.who)} · ${c.date}</div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--accentD)">+ ${eur(c.amount)}</div>
+        </div>
+        <div style="text-align:right;margin-top:6px">
+          <button class="shop-del" style="font-size:18px;color:var(--faint)" onclick="deleteCompra(${c.id})" title="Eliminar">×</button>
+        </div>
+      </div>`;
+      return;
+    }
+    const cat = c.cat||"Otro";
+    const col = CAT_COLORS[cat]||"#6e6860";
+    html += `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div style="flex:1;padding-right:10px">
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">
+            ${tag(cat,col)}
+            <span style="font-size:14px;color:var(--text)">${esc(c.what)}</span>
+          </div>
+          <div style="font-size:12px;color:var(--muted)">${c.direct?'Pagado por la colla':'Lo adelantó '+esc(c.who)} · ${c.date}</div>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text)">− ${eur(c.amount)}</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        ${c.direct ? ''
+          : (c.reintegrated ? tag('Devuelto por '+(c.reintegratedBy||TREASURER),'#3d8000')
+          : `${tag('Pendiente de devolver','#c07800')} ${isTr?`<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="doReintegrate(${c.id})">${c.who===TREASURER?'Marcar saldado':'Devolver a '+esc(c.who)}</button>`:''}`)}
+        <button class="shop-del" style="font-size:18px;color:var(--faint);margin-left:auto" onclick="deleteCompra(${c.id})" title="Eliminar">×</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('body-caja').innerHTML = html;
+}
+
+// ── Sobrante de cuotas (tesorero): ingreso con el concepto ya puesto
+function openSobrante(){
+  if(ME!==TREASURER) return;
+  const q = currentQuota();
+  openIngreso();
+  document.getElementById('ingresoWhat').value = `Sobrante cuotas ${q ? q.month : mesActual()}`;
+  const sob = q ? confirmedAmount(q) - RENT : 0;
+  document.getElementById('ingresoAmt').value = sob>0 ? sob.toFixed(2) : '';
+}
+
+// ── Alquiler (solo tesorero; no se muestra ni cuenta para la colla)
+function markRentPaid(){
+  if(ME!==TREASURER) return;
+  const q = currentQuota(); if(!q) return;
+  const v = prompt(`Alquiler de ${q.month} pagado.\n\nImporte (€):`, String(RENT));
+  if(v===null) return;
+  const amount = parseFloat(String(v).trim().replace(',', '.'));
+  if(!amount || isNaN(amount) || amount<=0){ alert("Pon un importe válido."); return; }
+  const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
+  fbSet('compras', {id:nextId,cat:"Alquiler",who:"La colla",what:`Alquiler ${q.month}`,amount,date:todayISO(),reintegrated:true,reintegratedBy:null,direct:true,quotaId:q.id});
+}
+function unmarkRent(id){
+  if(ME!==TREASURER) return;
+  const c = compras.find(x=>x.id===id); if(!c) return;
+  if(!confirm(`¿Quitar "${c.what}" como pagado?`)) return;
+  softDelete('compras', c);
+}
+
+// ── Ingreso manual (bote general o bebida)
+let ingresoDest = 'fondo';
+function openIngreso(){
+  setIngresoDest('fondo');
+  document.getElementById('ingresoDestWrap').style.display = BEBIDA_ON ? 'block' : 'none';
+  document.getElementById('ingresoWhat').value=''; document.getElementById('ingresoAmt').value='';
+  openModal('modalIngreso');
+}
+function setIngresoDest(d){
+  ingresoDest = d;
+  document.getElementById('ingDestFondo').className = 'pill'+(d==='fondo'?' on':'');
+  document.getElementById('ingDestBebida').className = 'pill'+(d==='bebida'?' on':'');
+  document.getElementById('ingresoWhat').placeholder = d==='bebida' ? 'Ej: Bebida de invitados' : 'Ej: Sobrante cuotas octubre';
+  document.getElementById('ingresoDestHint').textContent = d==='bebida'
+    ? 'Suma al Fondo de bebida.'
+    : 'Suma a lo disponible para gastar.';
+}
+function addIngreso(){
+  const what = document.getElementById('ingresoWhat').value.trim() || (ingresoDest==='bebida' ? 'Bebida' : "Ingreso manual");
+  const amt = parseFloat(document.getElementById('ingresoAmt').value.trim().replace(',', '.'));
+  if(!amt || isNaN(amt) || amt<=0){ alert("Pon un importe válido (ej: 100 o 50.50)."); return; }
+  const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
+  fbSet('compras', {id:nextId,cat:"Ingreso",who:ME,what,amount:amt,date:todayISO(),reintegrated:true,reintegratedBy:null,direct:true,income:true,caja:ingresoDest});
+  closeModal('modalIngreso');
+  document.getElementById('ingresoWhat').value=''; document.getElementById('ingresoAmt').value='';
+}
+function doReintegrate(id){ const c=compras.find(x=>x.id===id); if(c){const n=clone(c);n.reintegrated=true;n.reintegratedBy=ME;fbSet('compras',n);} }
+function deleteCompra(id){
+  const c=compras.find(x=>x.id===id); if(!c) return;
+  if(!confirm(`¿Eliminar el gasto "${c.what}" (${c.amount.toFixed(2)} €)?\n\nSe mueve a la Papelera (Colla) por si hay que recuperarlo.`)) return;
+  softDelete('compras', c);
+}
+let compraPayMode = "member"; // "member" = lo adelanta alguien | "colla" = paga la colla directa
+function setPayMode(mode){
+  compraPayMode = mode;
+  document.getElementById('payModeMember').className = 'pill'+(mode==='member'?' on':'');
+  document.getElementById('payModeColla').className = 'pill'+(mode==='colla'?' on':'');
+  document.getElementById('compraWhoWrap').style.display = mode==='member'?'block':'none';
+}
+function addCompra(){
+  let what = document.getElementById('compraWhat').value.trim();
+  const amtRaw = document.getElementById('compraAmt').value.trim().replace(',', '.');
+  const amt = parseFloat(amtRaw);
+  if(!amt || isNaN(amt) || amt<=0){ alert("Pon un importe válido (ej: 20 o 12.50)."); return; }
+  if(compraPayMode==='member' && !compraWho){ alert("Selecciona quién lo adelantó."); return; }
+  if(!what) what = compraCat;
+  const nextId = (compras.reduce((m,c)=>Math.max(m,c.id),0))+1;
+  if(compraPayMode==='colla'){
+    // Pagado por la colla: no hay reintegro, nace saldado
+    fbSet('compras', {id:nextId,cat:compraCat,who:"La colla",what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:true,reintegratedBy:null,direct:true});
+  } else {
+    fbSet('compras', {id:nextId,cat:compraCat,who:compraWho,what,amount:amt,date:new Date().toISOString().split("T")[0],reintegrated:false,reintegratedBy:null,direct:false});
+  }
+  closeModal('modalCompra');
+  document.getElementById('compraWhat').value=''; document.getElementById('compraAmt').value='';
+}
+function initCompraPills(){
+  compraWho = ME; compraCat = "Compra"; compraPayMode = "member";
+  setPayMode('member');
+  document.getElementById('compraCatPills').innerHTML = EXP_CATS.map(cat=>
+    `<span class="pill${cat==='Compra'?' on':''}" onclick="setCompraCat('${cat}',this)">${cat}</span>`
+  ).join('');
+  updateCajaHint();
+  document.getElementById('compraWhoPills').innerHTML = MEMBERS.map(m=>
+    `<span class="pill${m.name===compraWho?' on':''}" onclick="setCompraWho('${m.name}',this)">${av(m.name,'av '+(m.name===compraWho?'av-on':'av-off'))} ${m.name}</span>`
+  ).join('');
+}
+function setCompraCat(cat,el){ compraCat=cat; document.querySelectorAll('#compraCatPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); updateCajaHint(); }
+function updateCajaHint(){
+  const h = document.getElementById('compraCajaHint'); if(!h) return;
+  h.innerHTML = compraCat==='Alquiler'
+    ? 'Marca el alquiler del mes como <b style="color:var(--text)">pagado</b>'
+    : compraCat==='Bebida'
+      ? 'Sale del <b style="color:#0e7c86">Fondo de bebida</b>'
+      : 'Sale de lo que <b style="color:var(--accentD)">se puede gastar</b>';
+}
+function setCompraWho(name,el){ compraWho=name; document.querySelectorAll('#compraWhoPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
+let evExpKind = 'menjar';
+function setEvExpKind(k,el){
+  evExpKind = k;
+  document.querySelectorAll('#evExpKindPills .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+function initEvExpPills(){
+  evExpWho = ME;
+  evExpKind = 'menjar';
+  document.getElementById('evExpKindPills').innerHTML =
+    `<span class="pill on" onclick="setEvExpKind('menjar',this)">Menjar</span>
+     <span class="pill" onclick="setEvExpKind('begudes',this)">Begudes</span>`;
+  document.getElementById('evExpWhoPills').innerHTML = MEMBERS.map(m=>
+    `<span class="pill${m.name===evExpWho?' on':''}" onclick="setEvExpWho('${m.name}',this)">${av(m.name,'av '+(m.name===evExpWho?'av-on':'av-off'))} ${m.name}</span>`
+  ).join('');
+}
+function setEvExpWho(name,el){ evExpWho=name; document.querySelectorAll('#evExpWhoPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
+
+// ═══════════════════════════════ COMPRA ══════════════════════════════
+function renderCompra(){
+  const pending = shopping.filter(s=>!s.deleted && !s.done);
+  const done = shopping.filter(s=>!s.deleted && s.done);
+  let html = `<span class="lbl">Necesidades del local (${pending.length} pendientes)</span>`;
+  if(pending.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Todo en orden.</div>`;
+  pending.forEach(item=>{
+    html += `<div class="shop-item">
+      <button class="shop-check" onclick="toggleShop(${item.id})"></button>
+      <div style="flex:1"><div style="font-size:14px;color:var(--text)">${item.text}</div><div style="font-size:11px;color:var(--faint);margin-top:2px">Añadido por ${item.addedBy}</div></div>
+      <button class="shop-del" onclick="removeShop(${item.id})">×</button>
+    </div>`;
+  });
+  if(done.length>0){
+    html += `<span class="lbl" style="margin-top:20px">Comprado</span>`;
+    done.forEach(item=>{
+      html += `<div class="shop-item" style="opacity:.55;border-color:var(--line)">
+        <button class="shop-check done" onclick="toggleShop(${item.id})">✓</button>
+        <div style="flex:1;text-decoration:line-through;color:var(--muted);font-size:14px">${item.text}</div>
+        <button class="shop-del" onclick="removeShop(${item.id})">×</button>
+      </div>`;
+    });
+  }
+  document.getElementById('body-compra').innerHTML = html;
+}
+function toggleShop(id){ const s=shopping.find(x=>x.id===id); if(s){const n=clone(s);n.done=!n.done;fbSet('shopping',n);} }
+function removeShop(id){ const s=shopping.find(x=>x.id===id); if(s) softDelete('shopping', s); }
+function addShopItem(){
+  const text=document.getElementById('shopText').value.trim(); if(!text) return;
+  const nextId = (shopping.reduce((m,s)=>Math.max(m,s.id),0))+1;
+  fbSet('shopping', {id:nextId,text,done:false,addedBy:ME});
+  closeModal('modalShop'); document.getElementById('shopText').value='';
+}
+
+// ═══════════════════════════════ CONSUMICIONES ═══════════════════════
+// Se apunta en la hoja de la nevera. Quien paga al momento lo marca en la hoja.
+// Edu o Marta pasan a la app lo que queda pendiente y lo cobran
+// (efectivo o Bizum). Lo cobrado suma al Fondo de bebida.
+// Tipos en "consum":  charge (apunte de la hoja) · pay (cobro)
+// Compatibilidad: charge con paid:true (v15), guest/deposit/pagos declarados (v16-17).
+const canConsum = () => CONSUM_MANAGERS.includes(ME);
+const CONSUM_BOSS = CONSUM_MANAGERS.join(' o ');
+const METHODS = {efectivo:{label:"Efectivo",color:"#c07800"}, bizum:{label:"Bizum / transf.",color:"#5a6ea8"}};
+const parseEur = v => { const n = parseFloat(String(v||'').trim().replace(',', '.')); return isNaN(n) ? 0 : Math.round(n*100)/100; };
+let expandedConsum = new Set();
+function toggleConsumExpand(name){ expandedConsum.has(name) ? expandedConsum.delete(name) : expandedConsum.add(name); renderConsum(); }
+
+function consumLedger(){
+  const amt = c => Number(c.amount)||0;
+  const sum = a => a.reduce((s,c)=>s+amt(c),0);
+  const act = consum.filter(c=>!c.deleted);
+  const charges = act.filter(c=>!c.kind || c.kind==='charge');
+  const legacyPays = charges.filter(c=>c.paid).map(c=>({
+    id:c.id, legacy:true, kind:'pay', name:c.name, amount:c.amount, method:c.method||'bizum',
+    date:(c.paidAt||'').slice(0,10), by:c.paidBy, confirmed:true, confirmedBy:c.paidBy, confirmedAt:c.paidAt,
+  }));
+  const pays = [...act.filter(c=>c.kind==='pay'), ...legacyPays];
+  const confirmed = pays.filter(p=>p.confirmed);
+  const toConfirm = pays.filter(p=>!p.confirmed);
+  const guests = act.filter(c=>c.kind==='guest');
+  const order = n => { const i = MEMBERS.findIndex(m=>m.name===n); return i<0 ? 999 : i; };
+  const names = [...new Set([...charges.map(c=>c.name), ...pays.map(p=>p.name)])];
+  const people = names.map(n=>{
+    const ch = charges.filter(c=>c.name===n);
+    const cp = confirmed.filter(p=>p.name===n);
+    const cargado = sum(ch), pagado = sum(cp);
+    return {name:n, charges:ch, pays:cp, cargado, pagado, saldo: Math.round((cargado-pagado)*100)/100};
+  }).sort((a,b)=>order(a.name)-order(b.name));
+  return {
+    charges, confirmed, toConfirm, guests, people,
+    cobradoTotal: sum(confirmed) + sum(guests),
+    pendienteTotal: Math.round(people.reduce((s,x)=>s+Math.max(0,x.saldo),0)*100)/100,
+    deudores: people.filter(x=>x.saldo>0.005),
+  };
+}
+
+function renderConsum(){
+  const L = consumLedger();
+  const mgr = canConsum();
+  const st = cajaStats();
+  const amt = c => Number(c.amount)||0;
+  const sum = a => a.reduce((s,c)=>s+amt(c),0);
+  const ym = todayISO().slice(0,7);
+  const mesTxt = new Date().toLocaleDateString("es-ES",{month:"long",year:"numeric"});
+  const me = L.people.find(x=>x.name===ME);
+
+  let html = `<div class="card card-dark" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+      <div>
+        <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Falta por cobrar</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:${L.pendienteTotal>0.005?'#ffb13d':'var(--accent)'};letter-spacing:2px;line-height:1">${eur(L.pendienteTotal)}</div>
+        <div style="font-size:11px;color:var(--faint);margin-top:2px">${L.deudores.length?`${L.deudores.length} persona${L.deudores.length>1?'s':''} con consumiciones sin pagar`:'Todo cobrado'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Fondo de bebida</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:#2bb3bf;line-height:1.1">${eur(st.bebida)}</div>
+      </div>
+    </div>
+  </div>`;
+
+  // ── Cómo funciona (3 pasos)
+  const step = (n,t) => `<div style="display:flex;gap:10px;align-items:flex-start;padding:5px 0"><span style="width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--black);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${n}</span><span style="font-size:12px;color:var(--muted);line-height:1.45">${t}</span></div>`;
+  html += `<div class="card" style="margin-bottom:12px;padding:10px 14px">
+    ${step(1,'Apunta lo que tomas en la <b style="color:var(--text)">hoja de la nevera</b>.')}
+    ${step(2,'Si pagas en el momento (efectivo o Bizum), <b style="color:var(--text)">márcalo como pagado en la hoja</b>.')}
+    ${step(3,`${CONSUM_BOSS} pasa aquí lo pendiente y lo cobra, cada 15 días o a final de mes como tarde.`)}
+  </div>`;
+
+  // ── Tu cuenta
+  if(ME){
+    const saldo = me ? me.saldo : 0;
+    html += `<div class="card" style="border-left:4px solid ${saldo>0.005?'var(--warn)':'var(--accent)'};margin-bottom:12px;display:flex;align-items:center;gap:12px">
+      ${av(ME,'av av-lg '+(saldo>0.005?'av-off':'av-on'))}
+      <div style="flex:1">
+        <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:2px">Tu cuenta</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;color:${saldo>0.005?'var(--warn)':'var(--accentD)'}">${saldo>0.005?`Debes ${eur(saldo)}`:(saldo<-0.005?`A favor ${eur(-saldo)}`:'Al día ✓')}</div>
+      </div>
+    </div>`;
+  }
+
+  if(mgr) html += `<button class="btn-dashed" style="border-color:var(--accentD);color:var(--accentD)" onclick="openGraella()">+ Pasar la hoja</button>`;
+
+  // ── Pagos declarados de versiones anteriores (solo si quedan)
+  if(mgr && L.toConfirm.length){
+    html += `<span class="lbl" style="margin-top:6px;color:var(--warn)">Pagos por confirmar (${L.toConfirm.length})</span>`;
+    L.toConfirm.forEach(p=>{
+      html += `<div class="card" style="border-left:4px solid var(--warn);display:flex;align-items:center;gap:10px">
+        <div style="flex:1;min-width:0"><div style="font-size:14px;color:var(--text)">${esc(p.name)} · ${eur(p.amount)}</div><div style="font-size:11px;color:var(--faint)">${(METHODS[p.method]||METHODS.bizum).label} · ${p.date||''}</div></div>
+        <button class="btn-accent" style="font-size:9px;padding:7px 10px" onclick="confirmPago(${p.id})">✓</button>
+        <button class="btn-ghost" style="font-size:9px;padding:6px 9px;border-color:var(--neg);color:var(--neg)" onclick="rejectPago(${p.id})">×</button>
+      </div>`;
+    });
+  }
+
+  // ── Quién debe
+  html += `<span class="lbl" style="margin-top:8px">Quién debe</span>`;
+  if(L.deudores.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Nadie debe nada.</div>`;
+  L.deudores.forEach(x=>{
+    const open = expandedConsum.has(x.name);
+    const isMe = x.name===ME;
+    html += `<div class="card" style="padding:0;overflow:hidden;border-left:4px solid ${isMe?'var(--warn)':'var(--border)'}">
+      <div style="padding:13px 16px;cursor:pointer;touch-action:manipulation" onclick="toggleConsumExpand('${esc(x.name)}')">
+        <div style="display:flex;align-items:center;gap:10px;pointer-events:none">
+          ${av(x.name,'av av-md '+(isMe?'av-on':'av-off'))}
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;color:var(--text)">${esc(x.name)}${isMe?' <span style="font-size:9px;color:var(--faint)">(tú)</span>':''}</div>
+            <div style="font-size:11px;color:var(--faint)">${x.charges.length} hoja${x.charges.length>1?'s':''}${x.pagado>0?` · ya pagado ${eur(x.pagado)}`:''}</div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--warn)">${eur(x.saldo)}</div>
+        </div>
+        ${mgr?`<div style="display:flex;gap:6px;margin-top:10px">
+          <button class="btn-accent" style="flex:1;font-size:9px;padding:9px 8px" onclick="event.stopPropagation();cobrarPersona('${esc(x.name)}','efectivo')">Cobrado · efectivo</button>
+          <button class="btn-accent" style="flex:1;font-size:9px;padding:9px 8px;background:#5a6ea8;color:#fff" onclick="event.stopPropagation();cobrarPersona('${esc(x.name)}','bizum')">Cobrado · Bizum</button>
+        </div>`:''}
+      </div>
+      ${open?`<div style="border-top:1px solid var(--line);padding:4px 16px 8px">
+        ${x.charges.map(i=>`<div class="quota-row">
+          <div><div style="font-size:13px;color:var(--text)">${esc(i.period||'Sin periodo')}</div><div style="font-size:11px;color:var(--faint)">Pasado el ${i.date||''}</div></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="font-family:'Bebas Neue',sans-serif;font-size:20px">${eur(i.amount)}</span>
+          ${mgr?`<button class="shop-del" onclick="deleteConsum(${i.id})" title="Eliminar">×</button>`:''}</div>
+        </div>`).join('')}
+      </div>`:''}
+    </div>`;
+  });
+
+  // ── Resumen del mes
+  const inMonth = d => (d||'').startsWith(ym);
+  const apMes = sum(L.charges.filter(c=>inMonth(c.date)));
+  const coMes = L.confirmed.filter(p=>inMonth(p.confirmedAt||p.date));
+  const efMes = sum(coMes.filter(p=>p.method==='efectivo')) + sum(L.guests.filter(g=>inMonth(g.date)));
+  const bzMes = sum(coMes.filter(p=>p.method!=='efectivo'));
+  const row = (l,v,col) => `<div class="quota-row"><span style="font-size:13px;color:var(--muted)">${l}</span><span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:${col||'var(--text)'}">${v}</span></div>`;
+  html += `<span class="lbl" style="margin-top:18px">Resumen · <span style="text-transform:capitalize">${mesTxt}</span></span>
+  <div class="card" style="padding:4px 16px">
+    ${row('Pasado de la hoja', eur(apMes))}
+    ${row('Cobrado en efectivo', eur(efMes), METHODS.efectivo.color)}
+    ${row('Cobrado por Bizum', eur(bzMes), METHODS.bizum.color)}
+    ${row('Falta por cobrar', eur(L.pendienteTotal), 'var(--warn)')}
+  </div>`;
+
+  // ── Últimos cobros
+  const moves = L.confirmed.map(p=>({o:p, at:p.confirmedAt||p.date||''})).sort((a,b)=>b.at.localeCompare(a.at)).slice(0,20);
+  if(moves.length){
+    html += `<span class="lbl" style="margin-top:12px">Últimos cobros</span><div class="card" style="padding:4px 16px">`;
+    moves.forEach(({o})=>{
+      const m = METHODS[o.method]||METHODS.bizum;
+      html += `<div class="quota-row" style="gap:10px">
+        <div style="min-width:0"><div style="font-size:13px;color:var(--text)">${esc(o.name)}</div><div style="margin-top:3px;display:flex;gap:6px;align-items:center;flex-wrap:wrap">${tag(m.label,m.color)}<span style="font-size:11px;color:var(--faint)">${o.confirmedBy?esc(o.confirmedBy)+' · ':''}${shortDT(o.confirmedAt)||o.date||''}</span></div></div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--accentD)">+ ${eur(o.amount)}</span>
+          ${mgr?`<button class="btn-ghost" style="font-size:9px;padding:4px 8px" onclick="undoCobro(${o.id},${o.legacy?1:0})">Deshacer</button>`:''}
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  }
+  document.getElementById('body-consum').innerHTML = html;
+}
+
+const nextConsumId = () => consum.reduce((m,c)=>Math.max(m,c.id||0),0)+1;
+
+function cobrarPersona(name, method){
+  if(!canConsum()) return;
+  const x = consumLedger().people.find(p=>p.name===name); if(!x || x.saldo<=0) return;
+  if(!confirm(`${name} paga ${eur(x.saldo)} ${method==='efectivo'?'en efectivo':'por Bizum / transferencia'}.\n\n¿Marcar como cobrado?`)) return;
+  fbSet('consum', {id:nextConsumId(), kind:'pay', name, amount:x.saldo, method, date:todayISO(), by:ME,
+    confirmed:true, confirmedBy:ME, confirmedAt:new Date().toISOString(), deleted:false});
+}
+function undoCobro(id, legacy){
+  if(!canConsum()) return;
+  const o = consum.find(x=>x.id===id); if(!o) return;
+  if(!confirm(`¿Deshacer el cobro de ${o.name}?\n\nVolverá a aparecer como pendiente.`)) return;
+  if(legacy){ const n=clone(o); n.paid=false; n.method=null; n.paidAt=null; n.paidBy=null; fbSet('consum', n); return; }
+  softDelete('consum', o);
+}
+function confirmPago(id){
+  if(!canConsum()) return;
+  const p = consum.find(x=>x.id===id); if(!p) return;
+  const n = clone(p); n.confirmed = true; n.confirmedBy = ME; n.confirmedAt = new Date().toISOString();
+  fbSet('consum', n);
+}
+function rejectPago(id){
+  if(!canConsum()) return;
+  const p = consum.find(x=>x.id===id); if(!p) return;
+  if(!confirm(`¿Descartar el pago de ${p.name} (${eur(p.amount)})?`)) return;
+  softDelete('consum', p);
+}
+function deleteConsum(id){
+  if(!canConsum()) return;
+  const c = consum.find(x=>x.id===id); if(!c) return;
+  if(!confirm(`¿Eliminar ${c.name} · ${c.period||''} · ${eur(c.amount)}?\n\nSe mueve a la Papelera.`)) return;
+  softDelete('consum', c);
+}
+
+// — Pasar la hoja —
+function openGraella(){
+  if(!canConsum()) return;
+  const d = new Date();
+  const mes = d.toLocaleDateString("es-ES",{month:"long"});
+  document.getElementById('graPeriod').value = d.getDate()<=15 ? `2ª quincena ${new Date(d.getFullYear(),d.getMonth()-1,1).toLocaleDateString("es-ES",{month:"long"})}` : `1–15 ${mes}`;
+  document.getElementById('graRows').innerHTML = MEMBERS.map(m=>`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)">
+    ${av(m.name,'av av-md av-off')}
+    <span style="flex:1;font-size:14px;color:var(--text)">${esc(m.name)}</span>
+    <input class="inp gra-inp" data-name="${esc(m.name)}" type="text" inputmode="decimal" placeholder="0" style="width:90px;text-align:right;padding:8px 10px" oninput="graTotal()"/>
+  </div>`).join('');
+  graTotal();
+  openModal('modalGraella');
+}
+function graTotal(){
+  const t = [...document.querySelectorAll('.gra-inp')].reduce((s,i)=>s+parseEur(i.value),0);
+  document.getElementById('graTotal').textContent = eur(t);
+}
+function saveGraella(){
+  if(!canConsum()) return;
+  const period = document.getElementById('graPeriod').value.trim();
+  if(!period){ alert("Pon el periodo de la hoja (ej: 1–15 octubre)."); return; }
+  const rows = [...document.querySelectorAll('.gra-inp')].map(i=>({name:i.dataset.name, amount:parseEur(i.value)}));
+  if(rows.some(r=>r.amount<0)){ alert("Hay algún importe negativo."); return; }
+  const valid = rows.filter(r=>r.amount>0);
+  if(!valid.length){ alert("No hay ningún importe."); return; }
+  const total = valid.reduce((s,r)=>s+r.amount,0);
+  if(!confirm(`Guardar "${period}"\n\n${valid.length} personas · ${eur(total)}`)) return;
+  let id = nextConsumId();
+  const date = todayISO();
+  valid.forEach(r=>{
+    fbSet('consum', {id:id++, kind:'charge', name:r.name, amount:r.amount, period, date, by:ME, deleted:false});
+  });
+  closeModal('modalGraella');
+}
+
+// ═══════════════════════════════ TAREAS Y MEJORAS ════════════════════
+// Lista compartida de cosas por hacer en el local. Cualquiera añade, se
+// apunta como encargado y marca hecho. Lo borrado va a la Papelera.
+const TASK_IDEAS = ["Recoger sillas","Comprar nevera","Grifo para la cocina","Adaptar el paellero a la cocina","2 mesas","Sillas","Percheros","Acondicionar la cocina"];
+let editTaskId = null;
+let taskWho = null;
+let tasksDoneOpen = false;
+const normTxt = t => String(t||'').trim().toLowerCase();
+
+function renderTareas(){
+  const act = tasks.filter(t=>!t.deleted);
+  const pend = act.filter(t=>!t.done).sort((a,b)=>a.id-b.id);
+  const done = act.filter(t=>t.done).sort((a,b)=>(b.doneAt||'').localeCompare(a.doneAt||''));
+  const total = act.length;
+  const pct = total ? Math.round(done.length/total*100) : 0;
+  const costPend = pend.reduce((s,t)=>s+(Number(t.cost)||0),0);
+
+  let html = `<div class="card card-dark" style="margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px">
+      <div>
+        <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Por hacer</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:52px;color:var(--accent);line-height:1">${pend.length}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:var(--faint)">${done.length} de ${total} hechas</div>
+        ${costPend>0?`<div style="font-size:11px;color:var(--faint);margin-top:3px">Pendiente aprox. <b style="color:#fff">${eur(costPend)}</b></div>`:''}
+      </div>
+    </div>
+    <div class="progress-wrap" style="background:rgba(255,255,255,.1);margin-top:12px"><div class="progress-bar" style="width:${pct}%"></div></div>
+  </div>`;
+
+  const ideas = TASK_IDEAS.filter(i=>!act.some(t=>normTxt(t.text)===normTxt(i)));
+  if(ideas.length){
+    html += `<span class="lbl">Del acta · toca para añadir</span>
+    <div class="pill-row" style="margin-bottom:16px">${ideas.map(i=>`<span class="pill" onclick="quickTask('${esc(i)}')">+ ${esc(i)}</span>`).join('')}</div>`;
+  }
+
+  html += `<span class="lbl">Pendientes</span>`;
+  if(pend.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Nada pendiente. Añade una tarea con el botón +.</div>`;
+  pend.forEach(t=>{
+    const mine = t.who===ME;
+    html += `<div class="shop-item" style="align-items:flex-start;${mine?'border-color:var(--accentD)':''}">
+      <button class="shop-check" style="margin-top:2px" onclick="toggleTask(${t.id})" aria-label="Marcar hecha"></button>
+      <div style="flex:1;min-width:0;cursor:pointer" onclick="openTaskModal(${t.id})">
+        <div style="font-size:15px;color:var(--text);line-height:1.35">${esc(t.text)}</div>
+        <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:6px">
+          ${t.who?tag('Se encarga '+esc(t.who), mine?'#3d8000':'#5a6ea8'):''}
+          ${Number(t.cost)>0?tag('≈ '+eur(t.cost),'#c07800'):''}
+          <span style="font-size:11px;color:var(--faint)">Añadida por ${esc(t.addedBy||'?')}</span>
+        </div>
+        ${!t.who?`<button class="btn-ghost" style="font-size:9px;padding:5px 10px;margin-top:8px;border-color:var(--accentD);color:var(--accentD)" onclick="event.stopPropagation();takeTask(${t.id})">Me encargo yo</button>`:''}
+      </div>
+      <button class="shop-del" onclick="removeTask(${t.id})" aria-label="Eliminar">×</button>
+    </div>`;
+  });
+
+  if(done.length){
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;margin-top:22px;cursor:pointer" onclick="tasksDoneOpen=!tasksDoneOpen;renderTareas()">
+      <span class="lbl" style="margin:0">Hechas (${done.length})</span>
+      <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--faint);transform:rotate(${tasksDoneOpen?'180deg':'0deg'});display:inline-block">⌄</span>
+    </div>`;
+    if(tasksDoneOpen){
+      html += `<div style="margin-top:8px">`;
+      done.forEach(t=>{
+        html += `<div class="shop-item" style="opacity:.6;border-color:var(--line)">
+          <button class="shop-check done" onclick="toggleTask(${t.id})" aria-label="Reabrir">✓</button>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:14px;color:var(--muted);text-decoration:line-through">${esc(t.text)}</div>
+            <div style="font-size:11px;color:var(--faint);margin-top:2px">Hecha por ${esc(t.doneBy||'?')} · ${shortDT(t.doneAt)}</div>
+          </div>
+          <button class="shop-del" onclick="removeTask(${t.id})" aria-label="Eliminar">×</button>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+  }
+  document.getElementById('body-tareas').innerHTML = html;
+}
+
+function renderTaskWhoPills(){
+  document.getElementById('taskWhoPills').innerHTML =
+    `<span class="pill${!taskWho?' on':''}" onclick="setTaskWho('')">Nadie aún</span>` +
+    MEMBERS.map(m=>`<span class="pill${m.name===taskWho?' on':''}" onclick="setTaskWho('${esc(m.name)}')">${av(m.name,'av '+(m.name===taskWho?'av-on':'av-off'))} ${esc(m.name)}</span>`).join('');
+}
+function setTaskWho(n){ taskWho = n || null; renderTaskWhoPills(); }
+function openTaskModal(id){
+  const t = id ? tasks.find(x=>x.id===id) : null;
+  editTaskId = t ? t.id : null;
+  taskWho = t ? (t.who||null) : null;
+  document.getElementById('taskModalTitle').textContent = t ? 'Editar tarea' : 'Nueva tarea';
+  document.getElementById('taskText').value = t ? t.text : '';
+  document.getElementById('taskCost').value = t && Number(t.cost)>0 ? t.cost : '';
+  renderTaskWhoPills();
+  openModal('modalTask');
+}
+function saveTask(){
+  const text = document.getElementById('taskText').value.trim();
+  if(!text){ alert("Escribe qué hay que hacer."); return; }
+  const cost = parseFloat(document.getElementById('taskCost').value.trim().replace(',', '.'));
+  const costVal = isNaN(cost)||cost<=0 ? null : Math.round(cost*100)/100;
+  if(editTaskId){
+    const t = tasks.find(x=>x.id===editTaskId); if(!t) return;
+    const n = clone(t); n.text = text; n.who = taskWho; n.cost = costVal;
+    fbSet('tasks', n);
+  } else {
+    const nextId = tasks.reduce((m,t)=>Math.max(m,t.id||0),0)+1;
+    fbSet('tasks', {id:nextId, text, who:taskWho, cost:costVal, done:false, doneBy:null, doneAt:null, addedBy:ME, createdAt:new Date().toISOString(), deleted:false});
+  }
+  closeModal('modalTask'); editTaskId = null;
+}
+function quickTask(text){
+  if(tasks.some(t=>!t.deleted && normTxt(t.text)===normTxt(text))) return;
+  const nextId = tasks.reduce((m,t)=>Math.max(m,t.id||0),0)+1;
+  fbSet('tasks', {id:nextId, text, who:null, cost:null, done:false, doneBy:null, doneAt:null, addedBy:ME, createdAt:new Date().toISOString(), deleted:false});
+}
+function toggleTask(id){
+  const t = tasks.find(x=>x.id===id); if(!t) return;
+  const n = clone(t);
+  n.done = !n.done;
+  n.doneBy = n.done ? ME : null;
+  n.doneAt = n.done ? new Date().toISOString() : null;
+  fbSet('tasks', n);
+}
+function takeTask(id){
+  const t = tasks.find(x=>x.id===id); if(!t) return;
+  const n = clone(t); n.who = ME; fbSet('tasks', n);
+}
+function removeTask(id){
+  const t = tasks.find(x=>x.id===id); if(!t) return;
+  if(!confirm(`¿Eliminar "${t.text}"?\n\nSe mueve a la Papelera (Colla).`)) return;
+  softDelete('tasks', t);
+}
+
+// ═══════════════════════════════ TURNOS ══════════════════════════════
+const MONTHS_ES = ["ene","feb","mar","abr","may","jun","jul","ago","sep","oct","nov","dic"];
+const teamOf = name => TEAMS.find(t=>t.members.includes(name));
+const dayStart = d => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+// Genera los turnos desde el inicio de la rueda hasta dentro de ~14 meses
+function turnPeriods(){
+  const out = [];
+  const today = dayStart(new Date());
+  const limit = new Date(today.getFullYear(), today.getMonth()+14, 1);
+  for(let y=ROTA_START.getFullYear(); y<=limit.getFullYear(); y++){
+    TEAMS.forEach(t=>{
+      const start = new Date(y, t.months[0], 1);
+      const end = new Date(y, t.months[1]+1, 0); // último día del 2º mes
+      if(start < ROTA_START || start > limit) return;
+      out.push({id: y*10+t.id, team: t, start, end,
+        label: `${MONTHS_ES[t.months[0]]} – ${MONTHS_ES[t.months[1]]} ${y}`});
+    });
+  }
+  return out.sort((a,b)=>a.start-b.start);
+}
+function currentTurn(){
+  const today = dayStart(new Date());
+  return turnPeriods().find(p=>today>=p.start && today<=p.end) || null;
+}
+function turnRecord(id){
+  const r = turns.find(t=>t.id===id);
+  return r ? clone(r) : {id, team: Math.round(id%10), checks:{}, note:"", closed:false, closedBy:null, closedAt:null};
+}
+const canEditTurn = p => !!ME && (p.team.members.includes(ME) || TURN_SUPERVISORS.includes(ME));
+const daysBetween = (a,b) => Math.round((dayStart(b)-dayStart(a))/86400000);
+const shortDT = iso => { if(!iso) return ''; const d=new Date(iso); return `${d.getDate()} ${MONTHS_ES[d.getMonth()]}`; };
+
+let expandedTurns = new Set();
+function toggleTurnExpand(id){ expandedTurns.has(id) ? expandedTurns.delete(id) : expandedTurns.add(id); renderTurnos(); }
+
+function teamAvatars(team, dark){
+  return team.members.map((n,i)=>`<span style="margin-left:${i>0?'-8px':'0'};position:relative;z-index:${i}">${av(n,'av av-md '+(n===ME?'av-on':(dark?'av-on':'av-off')))}</span>`).join('');
+}
+
+function checklistHTML(p, rec, dark){
+  const editable = canEditTurn(p) && !rec.closed && dayStart(new Date())>=p.start;
+  const txt = dark ? '#fff' : 'var(--text)';
+  const sub = dark ? 'var(--faint)' : 'var(--muted)';
+  const line = dark ? 'rgba(255,255,255,.12)' : 'var(--line)';
+  return CLEAN_CHECKS.map(c=>{
+    const done = rec.checks && rec.checks[c.key];
+    return `<div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid ${line}">
+      <button class="shop-check${done?' done':''}" style="${dark&&!done?'border-color:#6e6860;':''}${editable?'':'cursor:default;opacity:.75'}" ${editable?`onclick="toggleCheck(${p.id},'${c.key}')"`:'disabled'} aria-label="${c.label}">${done?'✓':''}</button>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:14px;color:${txt};${done?'text-decoration:line-through;opacity:.7':''}">${c.label}</div>
+        <div style="font-size:11px;color:${sub};margin-top:1px">${done?`Hecho por ${esc(done.by)} · ${shortDT(done.at)}`:c.sub}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function turnActionsHTML(p, rec, dark){
+  if(!canEditTurn(p)) return '';
+  const started = dayStart(new Date())>=p.start;
+  if(!started) return '';
+  const nDone = CLEAN_CHECKS.filter(c=>rec.checks && rec.checks[c.key]).length;
+  const complete = nDone===CLEAN_CHECKS.length;
+  let h = `<div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap">`;
+  if(rec.closed){
+    h += `<button class="btn-ghost" style="${dark?'color:var(--faint);border-color:#4a4a44':''}" onclick="reopenTurn(${p.id})">Reabrir turno</button>`;
+  } else {
+    h += complete
+      ? `<button class="btn-accent" style="flex:1" onclick="closeTurn(${p.id})">Cerrar turno</button>`
+      : `<button class="btn-ghost" style="flex:1;cursor:default;${dark?'color:#6e6860;border-color:#4a4a44':''}" disabled>Faltan ${CLEAN_CHECKS.length-nDone} para cerrar</button>`;
+  }
+  h += `<button class="btn-ghost" style="${dark?'color:var(--faint);border-color:#4a4a44':''}" onclick="openTurnNote(${p.id})">${rec.note?'Editar nota':'+ Nota'}</button></div>`;
+  return h;
+}
+
+function noteHTML(rec, dark){
+  if(!rec.note) return '';
+  return `<div style="font-size:13px;color:${dark?'#d8d0c0':'var(--muted)'};background:${dark?'rgba(255,255,255,.06)':'var(--bg)'};border-radius:5px;padding:10px 12px;line-height:1.5;font-style:italic;margin-top:12px">${esc(rec.note)}</div>`;
+}
+
+function renderTurnos(){
+  const periods = turnPeriods();
+  const today = dayStart(new Date());
+  const cur = periods.find(p=>today>=p.start && today<=p.end) || null;
+  const upcoming = periods.filter(p=>p.start>today);
+  const past = periods.filter(p=>p.end<today).reverse();
+  const myTeam = teamOf(ME);
+
+  let html = `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:10px 12px;margin-bottom:14px;line-height:1.5">Cada equipo se encarga durante 2 meses de la <b>limpieza a fondo</b> y de <b>comprar bebida y básicos</b>. El turno se cierra con los 4 puntos marcados. Después de cada uso, el local se deja recogido.</div>`;
+
+  // ── Turno en curso
+  if(cur){
+    const rec = turnRecord(cur.id);
+    const nDone = CLEAN_CHECKS.filter(c=>rec.checks[c.key]).length;
+    const left = daysBetween(today, cur.end);
+    const mine = cur.team.members.includes(ME);
+    html += `<div class="card card-dark" style="margin-bottom:18px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+        <div>
+          <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">De turno ahora</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:40px;color:var(--accent);line-height:1;letter-spacing:1px">Equipo ${cur.team.id}</div>
+          <div style="font-size:12px;color:#fff;margin-top:3px;text-transform:capitalize">${cur.label}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          ${mine?tag('Tu equipo','#7fff00','rgba(127,255,0,.14)'):''}
+          <div style="font-size:11px;color:var(--faint);margin-top:6px">${rec.closed?'Cerrado':`Quedan ${left} día${left===1?'':'s'}`}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin:14px 0 4px">
+        <div class="turn-avs">${teamAvatars(cur.team,true)}</div>
+      </div>
+      <div style="font-size:12px;color:var(--faint);margin-bottom:12px">${cur.team.members.map(esc).join(', ')}</div>
+      <div class="progress-wrap" style="background:rgba(255,255,255,.1)"><div class="progress-bar" style="width:${Math.round(nDone/CLEAN_CHECKS.length*100)}%"></div></div>
+      <div style="font-size:10px;color:var(--faint);letter-spacing:.5px;margin-bottom:4px">${rec.closed?`Cerrado por ${esc(rec.closedBy)} · ${shortDT(rec.closedAt)}`:`Limpieza a fondo · ${nDone} de ${CLEAN_CHECKS.length}`}</div>
+      ${checklistHTML(cur, rec, true)}
+      ${turnActionsHTML(cur, rec, true)}
+      ${noteHTML(rec, true)}
+    </div>`;
+  } else {
+    const nxt = upcoming[0];
+    const inDays = nxt ? daysBetween(today, nxt.start) : null;
+    html += `<div class="card card-dark" style="margin-bottom:18px">
+      <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">${today<ROTA_START?'La rueda empieza en noviembre':'Este mes no hay turno'}</div>
+      ${nxt?`<div style="font-family:'Bebas Neue',sans-serif;font-size:34px;color:#fff;line-height:1.05;letter-spacing:1px">Siguiente: <span style="color:var(--accent)">Equipo ${nxt.team.id}</span></div>
+      <div style="font-size:12px;color:var(--faint);margin-top:4px"><span style="text-transform:capitalize">${nxt.label}</span> · empieza en ${inDays} día${inDays===1?'':'s'}</div>
+      <div class="turn-avs" style="margin-top:12px">${teamAvatars(nxt.team,true)}</div>
+      <div style="font-size:12px;color:var(--faint);margin-top:6px">${nxt.team.members.map(esc).join(', ')}</div>`:''}
+    </div>`;
+  }
+
+  // ── Tu equipo (recordatorio)
+  if(myTeam){
+    const myNext = periods.find(p=>p.team.id===myTeam.id && p.end>=today);
+    const heroId = cur ? cur.id : (upcoming[0] ? upcoming[0].id : null);
+    if(myNext && myNext.id!==heroId){
+      html += `<div style="font-size:12px;color:var(--accentD);background:rgba(127,255,0,.13);border:1px solid rgba(127,255,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:16px">Estás en el <b>equipo ${myTeam.id}</b> · tu turno: <span style="text-transform:capitalize">${myNext.label}</span></div>`;
+    }
+  }
+
+  // ── Próximos
+  html += `<span class="lbl">Próximos turnos</span>`;
+  upcoming.slice(cur?0:1, (cur?0:1)+4).forEach(p=>{
+    const mine = p.team.members.includes(ME);
+    html += `<div class="card" style="border-left:4px solid ${mine?'var(--accent)':'var(--border)'}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div style="min-width:0">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <span class="card-title">Equipo ${p.team.id}</span>
+            ${mine?tag('Tu equipo','#3d8000'):''}
+          </div>
+          <div style="font-size:12px;color:var(--accentD);font-weight:500;text-transform:capitalize;margin-top:2px">${p.label}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.4">${p.team.members.map(esc).join(', ')}</div>
+        </div>
+        <div class="turn-avs" style="flex-shrink:0">${teamAvatars(p.team,false)}</div>
+      </div>
+    </div>`;
+  });
+  if(!cur && upcoming.length<=1) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin más turnos programados.</div>`;
+
+  // ── Anteriores
+  if(past.length>0){
+    html += `<span class="lbl" style="margin-top:18px">Turnos anteriores</span>`;
+    past.forEach(p=>{
+      const rec = turnRecord(p.id);
+      const nDone = CLEAN_CHECKS.filter(c=>rec.checks[c.key]).length;
+      const open = expandedTurns.has(p.id);
+      html += `<div class="card" style="padding:0;overflow:hidden">
+        <div style="padding:14px 16px;cursor:pointer;touch-action:manipulation" onclick="toggleTurnExpand(${p.id})">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;pointer-events:none">
+            <div>
+              <div class="card-title">Equipo ${p.team.id}</div>
+              <div style="font-size:12px;color:var(--muted);text-transform:capitalize">${p.label}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              ${rec.closed?tag('Cerrado','#3d8000'):tag(`Sin cerrar · ${nDone}/${CLEAN_CHECKS.length}`,'#c0392b')}
+              <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--faint);transform:rotate(${open?'180deg':'0deg'});transition:transform .18s;display:inline-block">⌄</span>
+            </div>
+          </div>
+        </div>
+        ${open?`<div style="border-top:1px solid var(--line);padding:4px 16px 16px">
+          ${checklistHTML(p, rec, false)}
+          ${turnActionsHTML(p, rec, false)}
+          ${noteHTML(rec, false)}
+        </div>`:''}
+      </div>`;
+    });
+  }
+
+  document.getElementById('body-turnos').innerHTML = html;
+}
+
+// — Mutaciones de turnos → Firestore —
+function findPeriod(id){ return turnPeriods().find(p=>p.id===id); }
+function toggleCheck(id, key){
+  const p = findPeriod(id); if(!p || !canEditTurn(p)) return;
+  const rec = turnRecord(id);
+  if(rec.closed) return;
+  rec.checks = rec.checks || {};
+  if(rec.checks[key]) delete rec.checks[key];
+  else rec.checks[key] = {by: ME, at: new Date().toISOString()};
+  fbSet('turns', rec);
+}
+function closeTurn(id){
+  const p = findPeriod(id); if(!p || !canEditTurn(p)) return;
+  const rec = turnRecord(id);
+  const missing = CLEAN_CHECKS.filter(c=>!rec.checks[c.key]);
+  if(missing.length){ alert("Falta por marcar:\n\n" + missing.map(c=>"· "+c.label).join("\n")); return; }
+  if(!confirm(`¿Cerrar el turno del equipo ${p.team.id} (${p.label})?\n\nQueda como hecho para toda la colla.`)) return;
+  rec.closed = true; rec.closedBy = ME; rec.closedAt = new Date().toISOString();
+  fbSet('turns', rec);
+}
+function reopenTurn(id){
+  const p = findPeriod(id); if(!p || !canEditTurn(p)) return;
+  if(!confirm("¿Reabrir este turno?")) return;
+  const rec = turnRecord(id);
+  rec.closed = false; rec.closedBy = null; rec.closedAt = null;
+  fbSet('turns', rec);
+}
+function openTurnNote(id){
+  const p = findPeriod(id); if(!p || !canEditTurn(p)) return;
+  editTurnId = id;
+  document.getElementById('turnNoteText').value = turnRecord(id).note || '';
+  openModal('modalTurnNote');
+}
+function saveTurnNote(){
+  if(editTurnId===null){ closeModal('modalTurnNote'); return; }
+  const rec = turnRecord(editTurnId);
+  rec.note = document.getElementById('turnNoteText').value.trim();
+  fbSet('turns', rec);
+  closeModal('modalTurnNote'); editTurnId = null;
+}
+
+// ═══════════════════════════════ CUOTAS ══════════════════════════════
+function toggleQuota(qid){
+  if(expandedQuotas.has(qid)) expandedQuotas.delete(qid); else expandedQuotas.add(qid);
+  renderCuotas();
+}
+function renderCuotas(){
+  // Más reciente primero (mayor id = creada más tarde)
+  // Más reciente primero (mayor id = creada más tarde). Las cuotas "Inicial"
+  // (saldo inicial de caja metido como cuota) van siempre al final.
+  const isInicial = q => (q.month||'').toLowerCase().includes('inicial');
+  const ordered = quotas.filter(q=>!q.deleted).sort((a,b)=>{
+    const aI = isInicial(a), bI = isInicial(b);
+    if(aI!==bI) return aI ? 1 : -1;
+    return b.id-a.id;
+  });
+  // Por defecto solo la más reciente aparece abierta
+  if(expandedQuotas===null){
+    expandedQuotas = new Set();
+    if(ordered.length>0) expandedQuotas.add(ordered[0].id);
+  }
+  const mostRecentId = ordered.find(q=>!isInicial(q))?.id ?? null;
+
+  let html = '';
+  if(ME===TREASURER) html += `<div style="font-size:12px;color:var(--accentD);background:rgba(127,255,0,.13);border:1px solid rgba(127,255,0,.33);border-radius:6px;padding:8px 12px;margin-bottom:16px">Eres el tesorero · solo tú puedes confirmar los pagos</div>`;
+  else html += `<div style="font-size:12px;color:var(--muted);background:var(--paper);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-bottom:16px">Marca a quien haya pagado. Edu confirma cuando reciba el dinero.</div>`;
+  if(ordered.length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:14px">${ME===TREASURER?'No hay cuotas todavía. Crea la primera con el botón de abajo.':'No hay cuotas activas. El tesorero las creará cuando toque.'}</div>`;
+
+  ordered.forEach(q=>{
+    const confirmed = q.payments.filter(p=>p.confirmedByTreasurer).length;
+    const paid = q.payments.filter(p=>p.selfDeclared && !p.confirmedByTreasurer).length;
+    const pending = MEMBERS.length - confirmed - paid;
+    const pct = Math.round((confirmed/MEMBERS.length)*100);
+    const recaudado = (confirmed * q.amount);
+    const total = (MEMBERS.length * q.amount);
+    const isOpen = expandedQuotas.has(q.id);
+    const isCurrent = q.id===mostRecentId;
+
+    html += `<div class="card" style="margin-bottom:14px;padding:0;overflow:hidden">
+      <div style="padding:16px 16px 14px;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:rgba(127,255,0,.15)" onclick="toggleQuota(${q.id})">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;pointer-events:none">
+          <div style="min-width:0;flex:1">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+              <span class="lbl" style="margin-bottom:2px">${q.month}</span>
+              ${isCurrent?tag('Mes actual','#3d8000'):''}
+              ${pending===0 && confirmed===MEMBERS.length?tag('Cerrada','#a8a098'):''}
+            </div>
+            <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--text);line-height:1.15">${q.concept}${ME===TREASURER?` · ${q.amount} €`:''}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+            ${ME===TREASURER?`<button class="btn-ghost" style="font-size:9px;padding:5px 10px;pointer-events:auto" onclick="event.stopPropagation();editQuota(${q.id})" title="Editar cuota">Editar</button><button class="shop-del" style="font-size:18px;color:var(--neg);pointer-events:auto" onclick="event.stopPropagation();deleteQuota(${q.id})" title="Eliminar cuota">×</button>`:''}
+            <span style="font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--faint);transform:rotate(${isOpen?'180deg':'0deg'});transition:transform .18s;display:inline-block">⌄</span>
+          </div>
+        </div>
+        <div style="pointer-events:none">
+        <div class="progress-wrap" style="margin-top:10px"><div class="progress-bar" style="width:${pct}%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--faint);margin-top:4px;letter-spacing:.5px">
+          <span>${ME===TREASURER?`<b style="color:var(--accentD)">${recaudado} €</b> de ${total} € recaudados`:`<b style="color:var(--accentD)">${confirmed+paid}</b> de ${MEMBERS.length} han pagado`}</span>
+          <span>${confirmed} confirmados · ${paid} por confirmar · ${pending} pendientes</span>
+        </div>
+        </div>
+      </div>
+      ${isOpen ? `<div style="border-top:1px solid var(--line);padding:6px 16px 4px">
+        ${q.payments.map((p)=>{
+          const isTr = ME===TREASURER;
+          let badge='', action='';
+          const isMoroso = isCurrent && !p.selfDeclared && !p.confirmedByTreasurer;
+          if(p.confirmedByTreasurer){
+            badge = tag('Confirmado por Edu','#3d8000');
+            if(isTr) action = `<button class="btn-ghost" style="font-size:9px;padding:4px 9px" onclick="cuotaConfirm(${q.id},'${p.name}',false)">Deshacer</button>`;
+          } else if(p.selfDeclared){
+            badge = tag('Pagado','#c07800');
+            if(isTr) action = `<button class="btn-accent" style="font-size:9px;padding:5px 11px" onclick="cuotaConfirm(${q.id},'${p.name}',true)">✓ Confirmar</button>`;
+            else action = `<button class="btn-ghost" style="font-size:9px;padding:4px 9px" onclick="cuotaPaid(${q.id},'${p.name}',false)">Quitar</button>`;
+          } else {
+            badge = tag(isMoroso?'🐌 Moroso':'Pendiente','#c0392b');
+            action = `<button class="btn-ghost" style="font-size:9px;padding:5px 11px;border-color:var(--accentD);color:var(--accentD)" onclick="cuotaPaid(${q.id},'${p.name}',true)">Marcar pagado</button>`;
+          }
+          const st = p.confirmedByTreasurer?'av-on':(p.selfDeclared?'av-on':'av-off');
+          return `<div class="quota-row">
+            <div style="display:flex;align-items:center;gap:10px;min-width:0">
+              ${av(p.name,'av av-md '+st)}
+              <div style="min-width:0">
+                <div style="font-size:14px;color:${p.confirmedByTreasurer?'var(--text)':'var(--muted)'}">${p.name}${p.name===ME?' <span style="font-size:9px;color:var(--faint)">(tú)</span>':''}</div>
+                <div style="margin-top:2px">${badge}</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">${action}</div>
+          </div>`;
+        }).join('')}
+      </div>` : ''}
+    </div>`;
+  });
+  if(ME===TREASURER){
+    html += `<button class="btn-dashed" onclick="addQuota()">+ Crear cuota mensual</button>`;
+  }
+  document.getElementById('body-cuotas').innerHTML = html;
+}
+function addQuota(){
+  const month = prompt("¿De qué mes es la cuota?", new Date().toLocaleDateString("es-ES",{month:"long",year:"numeric"}));
+  if(month===null) return;
+  const amountStr = prompt("Importe en € por miembro:", "30");
+  if(amountStr===null) return;
+  const amount = parseFloat(amountStr); if(isNaN(amount)) return;
+  const nextId = (quotas.reduce((m,q)=>Math.max(m,q.id),0))+1;
+  fbSet('quotas', {
+    id: nextId, concept: "Cuota mensual", amount, month: month.trim()||"Cuota",
+    payments: MEMBERS.map(m=>({name:m.name,selfDeclared:false,confirmedByTreasurer:false})),
+  });
+  if(expandedQuotas) expandedQuotas.add(nextId);
+}
+// Corrige el mes o el importe de una cuota sin tocar quién ha pagado
+function editQuota(qid){
+  if(ME!==TREASURER) return;
+  const q = quotas.find(x=>x.id===qid); if(!q) return;
+  const month = prompt("Mes de la cuota (los pagos ya marcados se mantienen):", q.month);
+  if(month===null) return;
+  const m = month.trim();
+  if(!m){ alert("El mes no puede quedar vacío."); return; }
+  const amountStr = prompt("Importe en € por miembro:", String(q.amount));
+  if(amountStr===null) return;
+  const amount = parseFloat(String(amountStr).trim().replace(',', '.'));
+  if(isNaN(amount) || amount<=0){ alert("Pon un importe válido."); return; }
+  if(m===q.month && amount===q.amount) return;
+  const paid = (q.payments||[]).filter(p=>p.selfDeclared||p.confirmedByTreasurer).length;
+  if(!confirm(`Cambiar "${q.month} · ${q.amount} €" por "${m} · ${amount} €"?\n\nLos ${paid} pagos ya marcados se mantienen.`)) return;
+  const n = clone(q); n.month = m; n.amount = amount;
+  fbSet('quotas', n);
+}
+function deleteQuota(qid){
+  const q=quotas.find(x=>x.id===qid); if(!q) return;
+  if(!confirm(`¿Eliminar la cuota "${q.concept} · ${q.month}"?\n\nSe mueve a la Papelera (Colla) por si hay que recuperarla.`)) return;
+  softDelete('quotas', q);
+}
+// Cualquiera marca/desmarca "pagado". Si lo desmarca, también quita confirmación.
+function cuotaPaid(qid,name,val){
+  const q=quotas.find(x=>x.id===qid); if(!q) return;
+  const n=clone(q); const p=n.payments.find(x=>x.name===name);
+  if(p){ p.selfDeclared=val; if(!val) p.confirmedByTreasurer=false; }
+  fbSet('quotas', n);
+}
+// Solo Edu confirma/deshace.
+function cuotaConfirm(qid,name,val){
+  if(ME!==TREASURER) return;
+  const q=quotas.find(x=>x.id===qid); if(!q) return;
+  const n=clone(q); const p=n.payments.find(x=>x.name===name);
+  if(p){ p.confirmedByTreasurer=val; if(val) p.selfDeclared=true; }
+  fbSet('quotas', n);
+}
+
+// ═══════════════════════════════ COLLA ═══════════════════════════════
+function renderColla(){
+  let html = `<div class="card card-dark" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+    <div><div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Total</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:36px;color:var(--accent)">${MEMBERS.length} miembros</div></div>
+    <div style="text-align:right"><div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Tesorero</div>
+    <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:#fff">${TREASURER}</div></div>
+  </div>
+  <span class="lbl">Junta · càrrecs</span>
+  <div class="card" style="padding:4px 16px;margin-bottom:20px">
+    ${CARGOS.map(c=>`<div class="quota-row" style="align-items:flex-start;gap:12px">
+      <div style="font-size:12px;color:var(--muted);line-height:1.4;flex:1;min-width:0">${esc(c.role)}</div>
+      <div style="font-family:'Bebas Neue',sans-serif;font-size:19px;color:var(--text);letter-spacing:.5px;text-align:right;line-height:1.15">${esc(c.who)}</div>
+    </div>`).join('')}
+  </div>
+  <span class="lbl">Membres (${MEMBERS.length})</span>`;
+  // Lista plana en orden alfabético. localeCompare('es') coloca bien acentos y Ñ.
+  const sortedMembers = [...MEMBERS].sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  html += `<div class="card" style="padding:12px">
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px 10px">
+      ${sortedMembers.map(m=>{
+        const isMe = m.name===ME;
+        return `<div style="display:flex;align-items:center;gap:8px;min-width:0">
+          ${av(m.name,'av av-md '+(isMe?'av-on':'av-off'))}
+          <span style="font-size:13px;color:var(--${isMe?'text':'muted'});font-weight:${isMe?600:400};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}${isMe?' <span style="font-size:9px;color:var(--faint);font-weight:400">(tú)</span>':''}</span>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+  html += renderDocsHTML();
+
+  const trash = getTrashItems();
+  trashCache = trash;
+  html += `<div class="divider"></div>
+  <div class="card" style="padding:0;overflow:hidden">
+    <div style="padding:16px;cursor:pointer;touch-action:manipulation" onclick="toggleTrash()">
+      <div style="display:flex;justify-content:space-between;align-items:center;pointer-events:none">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="lbl" style="margin-bottom:0">Papelera</span>
+          ${trash.length>0?tag(trash.length,'#6e6860'):tag('Vacía','#a8a098')}
+        </div>
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--faint);transform:rotate(${trashOpen?'180deg':'0deg'});transition:transform .18s;display:inline-block">⌄</span>
+      </div>
+    </div>
+    ${trashOpen ? `<div style="border-top:1px solid var(--line);padding:12px 16px 16px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Nada se borra para siempre al pulsar "×" — todo pasa por aquí primero. Cualquiera puede restaurar; solo ${TREASURER} puede eliminar definitivamente.</div>
+      ${trash.length===0?`<div style="font-size:13px;color:var(--faint);font-style:italic">No hay nada en la papelera.</div>`:''}
+      ${trash.map((t,i)=>`<div class="card" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">${tag(t.sub,'#6e6860')}</div>
+            <div style="font-size:14px;color:var(--text)">${t.label}</div>
+            <div style="font-size:11px;color:var(--faint);margin-top:2px">Eliminado por ${t.deletedBy||'?'} · ${trashLabel(t.deletedAt)}</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:10px">
+          <button class="btn-ghost" style="border-color:var(--accentD);color:var(--accentD)" onclick="restoreTrashItem(${i})">Restaurar</button>
+          ${ME===TREASURER?`<button class="btn-ghost" style="border-color:var(--neg);color:var(--neg)" onclick="permanentDeleteTrashItem(${i})">Eliminar definitivamente</button>`:''}
+        </div>
+      </div>`).join('')}
+    </div>` : ''}
+  </div>`;
+
+  if(ME===TREASURER){
+    html += `<div class="divider"></div>
+    <span class="lbl" style="color:var(--neg)">Administración · solo tesorero</span>
+    <div class="warn-card" style="background:#fbeae8;border-color:rgba(192,57,43,.3)">
+      <div style="font-size:13px;color:var(--text);margin-bottom:4px;font-weight:500">Vaciar todos los datos</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.5">Borra eventos, caja, consumiciones, lista de la compra, tareas, turnos y cuotas para toda la colla. Los documentos se conservan. Úsalo solo para empezar de cero. No se puede deshacer.</div>
+      <button class="btn-accent" style="background:var(--neg);color:#fff;width:100%" onclick="resetAllData()">Vaciar y reiniciar la app</button>
+    </div>`;
+  }
+  document.getElementById('body-colla').innerHTML = html;
+}
+
+// ── Documentos (actas, estatutos) ──
+let docType = "Acta";
+const canEditDocs = () => DOC_EDITORS.includes(ME);
+const fmtDocDate = d => d ? new Date(d+"T12:00:00").toLocaleDateString("es-ES",{day:'numeric',month:'short',year:'numeric'}) : '';
+function renderDocsHTML(){
+  const order = {Estatutos:0, Acta:1, Otro:2};
+  const list = docs.filter(d=>!d.deleted).sort((a,b)=>{
+    const t = (order[a.type]??9)-(order[b.type]??9);
+    return t!==0 ? t : (b.date||'').localeCompare(a.date||'');
+  });
+  let h = `<div class="divider"></div><span class="lbl">Carpetas de la colla</span>`;
+  DRIVE_FOLDERS.forEach(f=>{
+    h += `<a class="card card-click" href="${esc(f.url)}" target="_blank" rel="noopener noreferrer"
+      style="display:flex;align-items:center;gap:12px;text-decoration:none;border-left:4px solid ${f.color}">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:15px;color:var(--text);font-weight:500;line-height:1.3">${esc(f.label)}</div>
+        <div style="font-size:11px;color:var(--faint);margin-top:3px">${esc(f.desc)} · Google Drive</div>
+      </div>
+      <span style="color:var(--faint);font-size:20px;flex-shrink:0">›</span>
+    </a>`;
+  });
+  h += `<div style="font-size:11px;color:var(--faint);margin:2px 0 4px;line-height:1.5">Todo lo que ${DOC_EDITORS.join(' y ')} suban a estas carpetas aparece aquí solo.</div>`;
+
+  h += `<div class="divider"></div><span class="lbl">Documentos sueltos (${list.length})</span>`;
+  if(list.length===0){
+    h += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">${canEditDocs()?'Aún no hay documentos. Añade los estatutos o la última acta.':`Aún no hay documentos. Los suben ${DOC_EDITORS.join(' y ')}.`}</div>`;
+  }
+  list.forEach(d=>{
+    const dt = DOC_TYPES[d.type]||DOC_TYPES.Otro;
+    h += `<div class="card" style="display:flex;align-items:center;gap:12px">
+      <div style="flex:1;min-width:0">
+        <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">${tag(esc(d.type||'Otro'),dt.color)}${d.date?`<span style="font-size:11px;color:var(--faint)">${fmtDocDate(d.date)}</span>`:''}</div>
+        <div style="font-size:14px;color:var(--text);line-height:1.35">${esc(d.title)}</div>
+        <div style="font-size:11px;color:var(--faint);margin-top:2px">Subido por ${esc(d.addedBy||'?')}</div>
+      </div>
+      <a class="btn-accent" style="text-decoration:none;flex-shrink:0;font-size:9px;padding:9px 13px" href="${esc(d.url)}" target="_blank" rel="noopener noreferrer">Abrir PDF</a>
+      ${canEditDocs()?`<button class="shop-del" style="font-size:20px" onclick="deleteDoc(${d.id})" title="Retirar">×</button>`:''}
+    </div>`;
+  });
+  if(canEditDocs()) h += `<button class="btn-dashed" onclick="openDocModal()">+ Añadir documento</button>`;
+  return h;
+}
+function openDocModal(){
+  if(!canEditDocs()) return;
+  docType = "Acta";
+  document.getElementById('docTypePills').innerHTML = Object.keys(DOC_TYPES).map(k=>
+    `<span class="pill${k===docType?' on':''}" onclick="setDocType('${k}',this)">${k}</span>`
+  ).join('');
+  ['docTitle','docUrl'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('docDate').value = todayISO();
+  openModal('modalDoc');
+}
+function setDocType(k,el){ docType=k; document.querySelectorAll('#docTypePills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
+function addDoc(){
+  if(!canEditDocs()){ alert(`Solo ${DOC_EDITORS.join(' y ')} pueden añadir documentos.`); return; }
+  const title = document.getElementById('docTitle').value.trim();
+  const url = document.getElementById('docUrl').value.trim();
+  const date = document.getElementById('docDate').value;
+  if(!title){ alert("Ponle un título al documento."); return; }
+  if(!/^https:\/\/\S+$/i.test(url)){ alert("Pega un enlace válido que empiece por https://"); return; }
+  const nextId = (docs.reduce((m,d)=>Math.max(m,d.id||0),0))+1;
+  fbSet('docs', {id:nextId,title,type:docType,date,url,addedBy:ME,deleted:false});
+  closeModal('modalDoc');
+}
+function deleteDoc(id){
+  if(!canEditDocs()) return;
+  const d = docs.find(x=>x.id===id); if(!d) return;
+  if(!confirm(`¿Retirar "${d.title}"?\n\nSe mueve a la Papelera (Colla) por si hay que recuperarlo.`)) return;
+  softDelete('docs', d);
+}
+
+// Reset total: borra todas las colecciones y sube la versión (obliga a todos
+// los móviles a recargar la versión nueva → mata las apps zombi con seed viejo).
+async function resetAllData(){
+  if(!confirm("¿VACIAR TODOS LOS DATOS de la colla?\n\nSe borra todo (eventos, caja, compra, turnos, cuotas) para los 23 miembros y todas las apps se actualizarán.\n\nEsto NO se puede deshacer.")) return;
+  if(!confirm("Última confirmación.\n\n¿Seguro que quieres vaciar la app por completo?")) return;
+  showSync("Vaciando…");
+  try{
+    // 1) Borra todos los documentos de todas las colecciones
+    for(const coll of RESET_COLLECTIONS){
+      const snap = await DB.getDocs(DB.collection(DB.db, coll));
+      for(const d of snap.docs){ await DB.deleteDoc(DB.doc(DB.db, coll, d.id)); }
+    }
+    // 2) Sube la versión mínima → toda app con versión < APP_VERSION+1 se recargará
+    await DB.setDoc(DB.doc(DB.db,"meta","app"), { minVersion: APP_VERSION });
+    showSync("Hecho · todo limpio");
+    setTimeout(()=>{ alert("Datos vaciados. La app se recargará limpia en todos los móviles."); location.reload(true); }, 600);
+  }catch(e){
+    console.error(e);
+    alert("Hubo un error al vaciar. Revisa la conexión e inténtalo de nuevo.");
+  }
+}
+
+// ═══════════════════════════════ MODALS ══════════════════════════════
+function openModal(id){ document.getElementById(id).classList.add('open'); }
+function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function closeModalBg(e,id){ if(e.target===document.getElementById(id)) closeModal(id); }
+
+function initEvTypePills(){
+  evType = 'comida';
+  document.getElementById('evTypePills').innerHTML = Object.entries(EVENT_TYPES).map(([key,val])=>
+    `<span class="pill${key==='comida'?' on':''}" onclick="setEvType('${key}',this)">${val.label}</span>`
+  ).join('');
+  document.getElementById('evAgendaWrap').style.display='none';
+}
+function setEvType(type,el){
+  evType=type;
+  document.querySelectorAll('#evTypePills .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('evAgendaWrap').style.display = type==='reunion'?'block':'none';
+}
+</script>
+</body>
+</html>
