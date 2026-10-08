@@ -429,10 +429,32 @@ textarea.inp{height:100px;}
     <div class="modal-title">Gasto del Evento</div>
     <div class="inp-wrap"><label class="inp-label">Qué se compró</label><input class="inp" id="evExpWhat" placeholder="Ej: Arroz y verduras"/></div>
     <div class="inp-wrap"><label class="inp-label">Importe (€)</label><input class="inp" type="number" id="evExpAmt" placeholder="0.00"/></div>
+    <div class="inp-wrap">
+      <label class="inp-label">¿Menjar o begudes?</label>
+      <div class="pill-row" id="evExpKindPills"></div>
+      <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.45">El menjar se reparte entre los adultos. Las bebidas, entre todos los que estén en la mesa.</div>
+    </div>
     <div class="inp-wrap"><label class="inp-label">Quién pagó</label><div class="pill-row" id="evExpWhoPills"></div></div>
     <div class="modal-footer">
       <button class="btn-ghost" onclick="closeModal('modalEvExp')">Cancelar</button>
       <button class="btn-accent" onclick="addEvExp()">Añadir</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalGuest" onclick="closeModalBg(event,'modalGuest')">
+  <div class="modal-box">
+    <div class="modal-title">Xiquet/a o convidat/da</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Apunta ací qui portes que no estiga a l'app. Quedarà a nom teu.</div>
+    <div class="inp-wrap"><label class="inp-label">Nom</label><input class="inp" id="guestName" placeholder="Ex: Lucía"/></div>
+    <div class="inp-wrap">
+      <label class="inp-label">Què menja</label>
+      <div class="pill-row" id="guestRacioPills"></div>
+      <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.45">Això li diu a qui va a comprar quants plats fan falta.</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalGuest')">Cancel·lar</button>
+      <button class="btn-accent" onclick="addGuest()">Afegir</button>
     </div>
   </div>
 </div>
@@ -515,7 +537,20 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 24; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 25; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+
+// ─────────────────────── ACOMPANYANTS (xiquets i convidats) ───────────────
+// No són usuaris de l'app: pengen del membre que els apunta. El tipus de ració
+// serveix sobretot a qui va a comprar — diu quants plats fan falta.
+// Pagaments (acord de junta): els acompanyants no paguen menjar, sí begudes.
+// "No menja" no paga res.
+const RACIONS = {
+  full: {label:"Ració completa", short:"completa", racions:1,   pagaBeguda:true,  color:"#3d8000"},
+  half: {label:"Mitja ració",    short:"mitja",    racions:0.5, pagaBeguda:true,  color:"#c07800"},
+  none: {label:"No menja",       short:"no menja", racions:0,   pagaBeguda:false, color:"#a8a098"},
+};
+// Tipus d'esdeveniment on es poden apuntar acompanyants
+const TIPUS_AMB_ACOMPANYANTS = ["comida","cena"];
 const TREASURER = "Edu";
 let ME = null; // se define en el login
 
@@ -1017,6 +1052,7 @@ function renderEventos(){
             ${ev.description ? `<div style="font-size:12px;color:var(--muted);font-style:italic;margin-bottom:8px">${ev.description}</div>` : ''}
             <div style="display:flex;gap:6px;flex-wrap:wrap">
               ${tag(ev.attendees.length+' apuntados','#6e6860')}
+              ${evGuests(ev).length>0 ? tag('+'+evGuests(ev).length+(evGuests(ev).length>1?' acompanyants':' acompanyant'),'#5a6ea8') : ''}
               ${total>0 ? tag(total.toFixed(2)+' €','#3d8000') : ''}
               ${openP>0 ? tag(openP+' votación'+(openP>1?'es':''),'#5a6ea8') : ''}
               ${ev.type==='reunion'&&ev.agenda ? tag('Orden del día','#c07800') : ''}
@@ -1045,7 +1081,8 @@ function renderEvDetail(){
   const et = EVENT_TYPES[ev.type]||EVENT_TYPES.otro;
   const isReu = ev.type==='reunion';
   const total = (ev.expenses||[]).reduce((s,x)=>s+x.amount,0);
-  const perHead = ev.attendees.length>0&&total>0 ? (total/ev.attendees.length).toFixed(2) : null;
+  const ambAcomp = TIPUS_AMB_ACOMPANYANTS.includes(ev.type);
+  const S = evSplit(ev);
 
   document.getElementById('evdetail-header').innerHTML = `
     <div>${tag(et.label,et.color)}</div>
@@ -1075,24 +1112,114 @@ function renderEvDetail(){
     }).join('')}
   </div></div>`;
 
+  // ── Acompanyants: xiquets i convidats, només en menjars i sopars ────────
+  if(ambAcomp){
+    const guests = evGuests(ev);
+    html += `<span class="lbl" style="margin-top:18px">Xiquets i convidats (${guests.length})</span>`;
+    if(guests.length===0){
+      html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Ningú de moment. Si portes xiquets o algú de fora, apunta'ls ací.</div>`;
+    } else {
+      html += `<div class="card" style="padding:6px 16px">`;
+      guests.forEach(g=>{
+        const r = racioOf(g);
+        const meu = g.by===ME;
+        html += `<div class="quota-row">
+          <div style="display:flex;align-items:center;gap:10px;min-width:0">
+            ${av(g.name,'av av-md '+(meu?'av-on':'av-off'))}
+            <div style="min-width:0">
+              <div style="font-size:14px;color:var(--text)">${esc(g.name)}</div>
+              <div style="font-size:11px;color:var(--faint);margin-top:2px">El porta ${esc(g.by||'?')}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+            <button class="btn-ghost" style="font-size:9px;padding:5px 10px;border-color:${r.color};color:${r.color}" onclick="cycleGuestRacio(${ev.id},${g.id})">${r.label}</button>
+            <button class="shop-del" style="font-size:18px" onclick="removeGuest(${ev.id},${g.id})" title="Traure">×</button>
+          </div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+    html += `<button class="btn-dashed" onclick="openGuestModal()">+ Afegir xiquet/a o convidat/da</button>`;
+
+    // Resum per a qui va a comprar
+    if(S.persones>0){
+      html += `<div class="card" style="border-left:4px solid var(--accentD);display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div style="min-width:0">
+          <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);margin-bottom:4px">Per a la compra</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--text);line-height:1">${S.racions % 1 === 0 ? S.racions : S.racions.toFixed(1)} racions</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px">${S.completes} completes${S.mitges>0?` · ${S.mitges} mitges`:''}${S.senseMenjar>0?` · ${S.senseMenjar} sense menjar`:''}</div>
+        </div>
+        <div style="text-align:right;flex-shrink:0">
+          <div style="font-size:9px;letter-spacing:3px;text-transform:uppercase;color:var(--faint);margin-bottom:4px">A taula</div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:30px;color:var(--accentD);line-height:1">${S.persones}</div>
+        </div>
+      </div>`;
+    }
+  }
+
   if(!isReu){
     html += `<span class="lbl" style="margin-top:18px">Gastos del evento</span>`;
     if((ev.expenses||[]).length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin gastos registrados.</div>`;
     (ev.expenses||[]).forEach(x=>{
-      html += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center">
-        <div><div style="font-size:14px;color:var(--text);margin-bottom:3px">${x.what}</div><div style="font-size:12px;color:var(--muted)">Pagó ${x.who}</div></div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text)">${x.amount.toFixed(2)} €</div>
+      const esBeguda = x.kind==='begudes';
+      const etiqueta = x.kind==='menjar' ? tag('Menjar','#3d8000') : (esBeguda ? tag('Begudes','#5a6ea8') : tag('Sense classificar','#c07800'));
+      html += `<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:4px;flex-wrap:wrap">${etiqueta}<span style="font-size:14px;color:var(--text)">${esc(x.what)}</span></div>
+          <div style="font-size:12px;color:var(--muted)">Pagó ${esc(x.who)}</div>
+        </div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;color:var(--text);flex-shrink:0">${x.amount.toFixed(2)} €</div>
       </div></div>`;
     });
     html += `<button class="btn-dashed" onclick="openModal('modalEvExp');initEvExpPills()">+ Añadir gasto</button>`;
-    if(perHead){
-      html += `<div class="card card-dark" style="display:flex;justify-content:space-between;align-items:center">
-        <div><div style="font-size:9px;letter-spacing:3px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Total evento</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:#fff">${total.toFixed(2)} €</div></div>
-        <div style="text-align:right"><div style="font-size:9px;letter-spacing:3px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Por persona</div>
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--accent)">${perHead} €</div></div>
-      </div>
-      <div style="font-size:11px;color:var(--faint);margin-top:4px">Entre ${ev.attendees.length} asistentes</div>`;
+
+    if(S.total>0){
+      if(S.senseClassificar>0){
+        html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:9px 12px;margin-bottom:10px;line-height:1.5">Hi ha ${S.senseClassificar.toFixed(2)} € sense classificar. Van a menjar i es reparteixen entre els adults, com sempre.</div>`;
+      }
+      html += `<div class="card card-dark">
+        <div style="font-size:9px;letter-spacing:4px;color:var(--faint);text-transform:uppercase;margin-bottom:4px">Total de l'esdeveniment</div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:42px;color:#fff;line-height:1">${S.total.toFixed(2)} €</div>
+        <div style="height:1px;background:rgba(255,255,255,.14);margin:14px 0"></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="min-width:0">
+            <div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Menjar</div>
+            <div style="font-size:11px;color:var(--faint);margin-top:2px">${S.menjar.toFixed(2)} € entre ${S.paguenMenjar} adults</div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent);flex-shrink:0">${S.perMenjar.toFixed(2)} €</div>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="min-width:0">
+            <div style="font-size:9px;letter-spacing:2px;color:var(--faint);text-transform:uppercase">Begudes</div>
+            <div style="font-size:11px;color:var(--faint);margin-top:2px">${S.begudes.toFixed(2)} € entre ${S.paguenBegudes} persones</div>
+          </div>
+          <div style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accent);flex-shrink:0">${S.perBeguda.toFixed(2)} €</div>
+        </div>
+      </div>`;
+
+      if(S.adults>0){
+        html += `<span class="lbl" style="margin-top:14px">Què paga cadascú</span>
+        <div class="card" style="padding:6px 16px">
+          ${ev.attendees.map(id=>{
+            const m = gm(id); if(!m) return '';
+            const meus = evGuests(ev).filter(g=>g.by===m.name);
+            const beuen = meus.filter(g=>racioOf(g).pagaBeguda).length;
+            const q = quotaDe(ev, id);
+            const jo = m.name===ME;
+            return `<div class="quota-row">
+              <div style="display:flex;align-items:center;gap:10px;min-width:0">
+                ${av(m.name,'av av-md '+(jo?'av-on':'av-off'))}
+                <div style="min-width:0">
+                  <div style="font-size:14px;color:${jo?'var(--text)':'var(--muted)'};font-weight:${jo?600:400}">${esc(m.name)}${jo?' <span style="font-size:9px;color:var(--faint);font-weight:400">(tu)</span>':''}</div>
+                  <div style="font-size:11px;color:var(--faint);margin-top:2px">1 adult${meus.length>0?` + ${meus.map(g=>esc(g.name)).join(', ')}`:''}${beuen>0?` · ${beuen} beguda${beuen>1?'es':''} més`:''}</div>
+                </div>
+              </div>
+              <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text);flex-shrink:0">${q.toFixed(2)} €</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.5">Els xiquets i convidats no paguen menjar. Sí paguen begudes, excepte els marcats com a "No menja".</div>`;
+      }
     }
   }
   html += `<div class="divider" style="margin-top:24px"></div>
@@ -1151,6 +1278,105 @@ function renderPollHTML(p, evId){
 }
 
 // — Mutaciones de eventos → Firestore —
+// ── Helpers d'acompanyants i de repartiment ──────────────────────────────
+function evGuests(ev){ return (ev && Array.isArray(ev.guests)) ? ev.guests : []; }
+function racioOf(g){ return RACIONS[g && g.racio] ? RACIONS[g.racio] : RACIONS.full; }
+
+// Compta el que necessita qui va a comprar i qui paga cada bossa.
+function evCounts(ev){
+  const guests = evGuests(ev);
+  const adults = ev.attendees.length;
+  let racionsGuests = 0, guestsQueBeuen = 0, completes = 0, mitges = 0, senseMenjar = 0;
+  guests.forEach(g=>{
+    const r = racioOf(g);
+    racionsGuests += r.racions;
+    if(r.pagaBeguda) guestsQueBeuen++;
+    if(r.racions===1) completes++; else if(r.racions>0) mitges++; else senseMenjar++;
+  });
+  return {
+    adults, guests: guests.length,
+    persones: adults + guests.length,
+    racions: adults + racionsGuests,   // plats a comprar
+    completes: adults + completes, mitges, senseMenjar,
+    paguenMenjar: adults,              // acord de junta: els xiquets no paguen menjar
+    paguenBegudes: adults + guestsQueBeuen,
+  };
+}
+
+// Reparteix els gastos en dues bosses. Els gastos antics sense classificar
+// cauen a "menjar", que és com es repartia fins ara: res no canvia sol.
+function evSplit(ev){
+  const xs = ev.expenses||[];
+  const c = evCounts(ev);
+  let menjar = 0, begudes = 0, senseClassificar = 0;
+  xs.forEach(x=>{
+    if(x.kind==='begudes') begudes += x.amount;
+    else { menjar += x.amount; if(x.kind!=='menjar') senseClassificar += x.amount; }
+  });
+  return {
+    ...c, menjar, begudes, senseClassificar,
+    total: menjar + begudes,
+    perMenjar: c.paguenMenjar>0 ? menjar/c.paguenMenjar : 0,
+    perBeguda: c.paguenBegudes>0 ? begudes/c.paguenBegudes : 0,
+  };
+}
+
+// El que li toca pagar a un membre: la seua part de menjar + les begudes
+// seues i de qui porta.
+function quotaDe(ev, memberId){
+  const s = evSplit(ev);
+  if(!ev.attendees.includes(memberId)) return 0;
+  const m = gm(memberId);
+  const meus = evGuests(ev).filter(g=>g.by===(m&&m.name) && racioOf(g).pagaBeguda).length;
+  return s.perMenjar + s.perBeguda*(1+meus);
+}
+
+// ── Mutacions d'acompanyants ─────────────────────────────────────────────
+let guestRacio = 'full';
+function openGuestModal(){
+  guestRacio = 'full';
+  document.getElementById('guestName').value = '';
+  document.getElementById('guestRacioPills').innerHTML = Object.entries(RACIONS).map(([k,v])=>
+    `<span class="pill${k==='full'?' on':''}" onclick="setGuestRacio('${k}',this)">${v.label}</span>`
+  ).join('');
+  openModal('modalGuest');
+}
+function setGuestRacio(k,el){
+  guestRacio = k;
+  document.querySelectorAll('#guestRacioPills .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
+function addGuest(){
+  const ev = events.find(e=>e.id===activeEvId); if(!ev) return;
+  const name = document.getElementById('guestName').value.trim();
+  if(!name){ alert("Posa el nom de l'acompanyant."); return; }
+  const next = clone(ev);
+  if(!Array.isArray(next.guests)) next.guests = [];
+  const gid = next.guests.reduce((m,g)=>Math.max(m,g.id||0),0)+1;
+  next.guests.push({id:gid, by:ME, name, racio:guestRacio});
+  // Qui porta acompanyants s'apunta sol: no té sentit portar algú i no vindre.
+  const me = MEMBERS.find(m=>m.name===ME);
+  if(me && !next.attendees.includes(me.id)) next.attendees.push(me.id);
+  fbSet('events', next);
+  closeModal('modalGuest');
+}
+function removeGuest(evId, gid){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const g = evGuests(ev).find(x=>x.id===gid); if(!g) return;
+  if(!confirm(`Traure a ${g.name} de l'esdeveniment?`)) return;
+  const next = clone(ev);
+  next.guests = evGuests(next).filter(x=>x.id!==gid);
+  fbSet('events', next);
+}
+function cycleGuestRacio(evId, gid){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const next = clone(ev);
+  const g = evGuests(next).find(x=>x.id===gid); if(!g) return;
+  const keys = Object.keys(RACIONS);
+  g.racio = keys[(keys.indexOf(g.racio in RACIONS ? g.racio : 'full')+1)%keys.length];
+  fbSet('events', next);
+}
+
 function toggleAtt(evId,mid){
   const ev = events.find(e=>e.id===evId); if(!ev) return;
   const next = clone(ev);
@@ -1192,7 +1418,7 @@ function addEvento(){
     time: document.getElementById('evTime').value,
     description: document.getElementById('evDesc').value,
     agenda: document.getElementById('evAgenda').value,
-    attendees:[], expenses:[], polls:[],
+    attendees:[], guests:[], expenses:[], polls:[],
   });
   closeModal('modalEvento');
   ['evTitle','evDate','evTime','evDesc','evAgenda'].forEach(id=>document.getElementById(id).value='');
@@ -1204,7 +1430,7 @@ function addEvExp(){
   if(!what||!amt) return;
   const next = clone(ev);
   const eid = (next.expenses.reduce((m,x)=>Math.max(m,x.id),0))+1;
-  next.expenses.push({id:eid,who:evExpWho,what,amount:amt});
+  next.expenses.push({id:eid,who:evExpWho,what,amount:amt,kind:evExpKind});
   fbSet('events', next);
   closeModal('modalEvExp');
   document.getElementById('evExpWhat').value=''; document.getElementById('evExpAmt').value='';
@@ -1503,8 +1729,18 @@ function updateCajaHint(){
       : 'Sale de lo que <b style="color:var(--accentD)">se puede gastar</b>';
 }
 function setCompraWho(name,el){ compraWho=name; document.querySelectorAll('#compraWhoPills .pill').forEach(p=>p.classList.remove('on')); el.classList.add('on'); }
+let evExpKind = 'menjar';
+function setEvExpKind(k,el){
+  evExpKind = k;
+  document.querySelectorAll('#evExpKindPills .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+}
 function initEvExpPills(){
   evExpWho = ME;
+  evExpKind = 'menjar';
+  document.getElementById('evExpKindPills').innerHTML =
+    `<span class="pill on" onclick="setEvExpKind('menjar',this)">Menjar</span>
+     <span class="pill" onclick="setEvExpKind('begudes',this)">Begudes</span>`;
   document.getElementById('evExpWhoPills').innerHTML = MEMBERS.map(m=>
     `<span class="pill${m.name===evExpWho?' on':''}" onclick="setEvExpWho('${m.name}',this)">${av(m.name,'av '+(m.name===evExpWho?'av-on':'av-off'))} ${m.name}</span>`
   ).join('');
