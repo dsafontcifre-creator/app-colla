@@ -537,7 +537,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 28; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 29; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 
 // ─────────────────────── ACOMPANYANTS (xiquets i convidats) ───────────────
 // No són usuaris de l'app: pengen del membre que els apunta. El tipus de ració
@@ -1206,6 +1206,9 @@ function renderEvDetail(){
 
       // Qui paga a qui — el mínim de moviments per a quadrar-ho tot
       const pendentCents = B.pagaments.reduce((a,p)=>a+p.cents,0);
+      if(B.recalculat){
+        html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:9px 12px;margin:10px 0;line-height:1.5">S'han canviat els gastos després de començar a pagar. Els pagaments fets es mantenen, però el que queda s'ha tornat a repartir.</div>`;
+      }
       if(B.pagaments.length>0){
         html += `<span class="lbl" style="margin-top:14px">Qui paga a qui</span>
         <div class="card" style="padding:6px 16px;border-left:4px solid var(--accentD)">
@@ -1424,17 +1427,37 @@ function evBalances(ev){
                  pagatCents:pagatCents[w], saldoCents:pagatCents[w], foraLlista:true});
     }
   });
-  // Deutes ja saldats: no són una casella, són moviments de diners de veritat.
-  // Es resten del saldo, així el deute desapareix sol del "qui paga a qui" i
-  // tot continua quadrant encara que després s'afigga un gasto nou.
+  // 1) El pla de pagaments es calcula SEMPRE sobre els gastos, sense mirar
+  //    què s'ha pagat ja. Així és fix: marcar "Ja pagat" només tatxa una línia
+  //    i les altres no es mouen (com Tricount).
+  const pla = planPagaments(rows);
+  // 2) Cada pagament marcat es casa amb una línia del pla.
   const saldats = evSettlements(ev);
+  const usat = pla.map(()=>false);
+  let totCasa = true;
+  saldats.forEach(s=>{
+    const k = pla.findIndex((p,i)=>!usat[i] && p.de===s.de && p.a===s.a && p.cents===s.cents);
+    if(k<0) totCasa = false; else usat[k] = true;
+  });
+  // 3) El detall de cada persona reflecteix el que ja ha pagat o cobrat.
   saldats.forEach(s=>{
     const de = rows.find(r=>r.name===s.de), a = rows.find(r=>r.name===s.a);
     if(de) de.saldoCents += s.cents;
     if(a)  a.saldoCents  -= s.cents;
   });
-  // Greedy: el que més deu paga al que més li deuen. Dona el mínim de moviments
-  // en la pràctica i sempre quadra, perquè la suma dels saldos és zero.
+  // 4) Si després de començar a pagar algú ha afegit un gasto, el pla vell ja
+  //    no serveix: es refà amb el que queda pendent de veritat, i s'avisa.
+  let pagaments, recalculat = false;
+  if(totCasa) pagaments = pla.filter((p,i)=>!usat[i]);
+  else { pagaments = planPagaments(rows); recalculat = true; }
+  rows.sort((a,b)=>a.name.localeCompare(b.name,'es'));
+  return {rows, pagaments, saldats, recalculat};
+}
+
+// Greedy: el que més deu paga al que més li deuen. Dona el mínim de moviments
+// en la pràctica i sempre quadra, perquè la suma dels saldos és zero.
+// Determinista: amb les mateixes dades, sempre el mateix pla en tots els mòbils.
+function planPagaments(rows){
   const etiq = r => r.convidat && r.by ? `${r.name} (convidat de ${r.by})` : r.name;
   const deutors   = rows.filter(r=>r.saldoCents<0)
                         .map(r=>({name:r.name, lbl:etiq(r), c:-r.saldoCents}))
@@ -1442,18 +1465,17 @@ function evBalances(ev){
   const creditors = rows.filter(r=>r.saldoCents>0)
                         .map(r=>({name:r.name, lbl:etiq(r), c:r.saldoCents}))
                         .sort((a,b)=>b.c-a.c || a.name.localeCompare(b.name,'es'));
-  const pagaments = [];
+  const out = [];
   let i=0, j=0;
   while(i<deutors.length && j<creditors.length){
     const q = Math.min(deutors[i].c, creditors[j].c);
-    if(q>0) pagaments.push({de:deutors[i].name, deLbl:deutors[i].lbl,
-                            a:creditors[j].name, aLbl:creditors[j].lbl, cents:q});
+    if(q>0) out.push({de:deutors[i].name, deLbl:deutors[i].lbl,
+                      a:creditors[j].name, aLbl:creditors[j].lbl, cents:q});
     deutors[i].c -= q; creditors[j].c -= q;
     if(deutors[i].c===0) i++;
     if(creditors[j].c===0) j++;
   }
-  rows.sort((a,b)=>a.name.localeCompare(b.name,'es'));
-  return {rows, pagaments, saldats};
+  return out;
 }
 
 // ── Deutes saldats ───────────────────────────────────────────────────────
