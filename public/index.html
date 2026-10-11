@@ -437,6 +437,20 @@ textarea.inp{height:100px;}
   </div>
 </div>
 
+<div class="modal-overlay" id="modalPag" onclick="closeModalBg(event,'modalPag')">
+  <div class="modal-box">
+    <div class="modal-title">Apuntar un pagament fet</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">Apunta un pagament tal com s'ha fet. L'app repartirà només el que quede pendent.</div>
+    <div class="inp-wrap"><label class="inp-label">Qui paga</label><div class="pill-row" id="pagDePills"></div></div>
+    <div class="inp-wrap"><label class="inp-label">A qui</label><div class="pill-row" id="pagAPills"></div></div>
+    <div class="inp-wrap"><label class="inp-label">Import (€)</label><input class="inp" id="pagAmt" type="number" step="0.01" inputmode="decimal" placeholder="0.00"/></div>
+    <div class="modal-footer">
+      <button class="btn-ghost" onclick="closeModal('modalPag')">Cancel·lar</button>
+      <button class="btn-accent" onclick="guardarPagament()">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalGuest" onclick="closeModalBg(event,'modalGuest')">
   <div class="modal-box">
     <div class="modal-title">Xiquet/a o convidat/da</div>
@@ -537,7 +551,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 31; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 32; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 
 // ─────────────────────── ACOMPANYANTS (xiquets i convidats) ───────────────
 // No són usuaris de l'app: pengen del membre que els apunta. El tipus de ració
@@ -1031,7 +1045,7 @@ function renderMenu(){
       <span class="menu-arrow">›</span>
     </div>`;
   }).join('');
-  document.getElementById('menuFooter').textContent = `${MEMBERS.length} miembros · Tesorero: ${TREASURER}`;
+  document.getElementById('menuFooter').textContent = `${MEMBERS.length} miembros · Tesorero: ${TREASURER} · v${APP_VERSION}`;
 }
 </script>
 <script>
@@ -1229,7 +1243,8 @@ function renderEvDetail(){
             </div>`;
           }).join('')}
         </div>
-        <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.5">Queden ${eur(pendentCents)} € per saldar en ${B.pagaments.length} moviment${B.pagaments.length>1?'s':''}. Quan algú pague, toca "Ja pagat" i desapareix d'ací.</div>`;
+        <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.5">Queden ${eur(pendentCents)} € per saldar en ${B.pagaments.length} moviment${B.pagaments.length>1?'s':''}. Quan algú pague, toca "Ja pagat" i desapareix d'ací.</div>
+        <button class="btn-dashed" onclick="openPagModal()">+ Apuntar un pagament que ja s'ha fet</button>`;
       } else if(S.parts>0){
         html += `<div class="card" style="border-left:4px solid var(--accentD);display:flex;align-items:center;gap:10px">
           <span style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accentD)">✓</span>
@@ -1260,8 +1275,8 @@ function renderEvDetail(){
           ${B.rows.map(r=>{
             const jo = !r.convidat && r.name===ME;
             const sal = r.saldoCents;
-            const col = sal>0 ? 'var(--accentD)' : (sal<0 ? 'var(--neg)' : 'var(--faint)');
-            const txt = sal>0 ? `li deuen ${eur(sal)} €` : (sal<0 ? `deu ${eur(-sal)} €` : 'quadrat');
+            const col = Math.abs(sal)<=2 ? 'var(--faint)' : (sal>0 ? 'var(--accentD)' : 'var(--neg)');
+            const txt = Math.abs(sal)<=2 ? 'quadrat' : (sal>0 ? `li deuen ${eur(sal)} €` : `deu ${eur(-sal)} €`);
             const sub = r.foraLlista ? `no apuntat · ha pagat ${eur(r.pagatCents)} €`
                       : (r.convidat ? `convidat de ${esc(r.by||'?')} · li toca ${eur(r.deuCents)} €`
                                     : `ha pagat ${eur(r.pagatCents)} € · li toca ${eur(r.deuCents)} €`);
@@ -1433,6 +1448,7 @@ function evBalances(ev){
   // gastos després de començar a pagar), el que queda es reparteix de nou a
   // partir d'eixe moment, i el pla nou torna a quedar fix.
   const saldats = evSettlements(ev).slice().sort((a,b)=>(a.id||0)-(b.id||0));
+  const totalAra = evSplit(ev).totalCents;
   let pla = planComplet(rows);
   let usat = pla.map(()=>false);
   let recalculat = false;
@@ -1440,13 +1456,22 @@ function evBalances(ev){
     const de = rows.find(r=>r.name===s.de), a = rows.find(r=>r.name===s.a);
     if(de) de.saldoCents += s.cents;
     if(a)  a.saldoCents  -= s.cents;
-    const k = pla.findIndex((p,i)=>!usat[i] && p.de===s.de && p.a===s.a && p.cents===s.cents);
+    // Un pagament apuntat a mà és el que ha passat de veritat: el que queda es
+    // reparteix de nou des d'ahí. "Ja pagat" només tatxa la seua línia.
+    const k = s.manual ? -1 : pla.findIndex((p,i)=>!usat[i] && p.de===s.de && p.a===s.a && p.cents===s.cents);
     if(k>=0) usat[k] = true;
-    else { pla = planComplet(rows); usat = pla.map(()=>false); recalculat = true; }
+    else {
+      pla = planComplet(rows); usat = pla.map(()=>false);
+      // Només s'avisa si els gastos han canviat des que es va marcar el pagament.
+      if(!s.manual && typeof s.totalCents==='number' && s.totalCents!==totalAra) recalculat = true;
+    }
   });
-  const pagaments = pla.filter((p,i)=>!usat[i]);
+  // Les línies de 1 o 2 cèntims són soroll del redondeig: no es demanen.
+  const pendents = pla.filter((p,i)=>!usat[i]);
+  const pagaments = pendents.filter(p=>p.cents>2);
+  const centimsArrod = pendents.filter(p=>p.cents<=2).reduce((a,p)=>a+p.cents,0);
   rows.sort((a,b)=>a.name.localeCompare(b.name,'es'));
-  return {rows, pagaments, saldats, recalculat};
+  return {rows, pagaments, saldats, recalculat, centimsArrod};
 }
 
 // Pla de pagaments amb el MÍNIM de moviments possible.
@@ -1540,8 +1565,48 @@ function marcarPagat(evId, idx){
   const next = clone(ev);
   if(!Array.isArray(next.settlements)) next.settlements = [];
   const sid = next.settlements.reduce((m,s)=>Math.max(m,s.id||0),0)+1;
-  next.settlements.push({id:sid, de:p.de, a:p.a, cents:p.cents, at:Date.now(), by:ME});
+  next.settlements.push({id:sid, de:p.de, a:p.a, cents:p.cents, at:Date.now(), by:ME, totalCents:evSplit(ev).totalCents});
   fbSet('events', next);
+}
+// ── Pagament manual: apuntar un pagament tal com ha passat ─────────────────
+// Es treballa per posició dins de la llista, no per nom (apòstrofs, etc.).
+let pagGent = [], pagDe = -1, pagA = -1;
+function openPagModal(){
+  const ev = events.find(e=>e.id===activeEvId); if(!ev) return;
+  const B = evBalances(ev);
+  pagGent = B.rows.map(r=>({name:r.name, saldo:r.saldoCents}));
+  pagDe = -1; pagA = -1;
+  document.getElementById('pagAmt').value = '';
+  renderPagPills();
+  openModal('modalPag');
+}
+function renderPagPills(){
+  const pill = (r,i,sel,fn)=>`<span class="pill${sel===i?' on':''}" onclick="${fn}(${i})">${av(r.name,'av '+(sel===i?'av-on':'av-off'))} ${esc(r.name)}</span>`;
+  // Qui paga: primer els que deuen; a qui: primer els que han de cobrar
+  const idx = pagGent.map((r,i)=>i);
+  const deus = idx.filter(i=>pagGent[i].saldo<0).concat(idx.filter(i=>pagGent[i].saldo>=0));
+  const cobren = idx.filter(i=>pagGent[i].saldo>0).concat(idx.filter(i=>pagGent[i].saldo<=0));
+  document.getElementById('pagDePills').innerHTML = deus.map(i=>pill(pagGent[i],i,pagDe,'setPagDe')).join('');
+  document.getElementById('pagAPills').innerHTML = cobren.filter(i=>i!==pagDe).map(i=>pill(pagGent[i],i,pagA,'setPagA')).join('');
+}
+function suggereixImport(){
+  if(pagDe<0 || pagA<0) return;
+  const deu = -pagGent[pagDe].saldo, cobra = pagGent[pagA].saldo;
+  if(deu>0 && cobra>0) document.getElementById('pagAmt').value = (Math.min(deu,cobra)/100).toFixed(2);
+}
+function setPagDe(i){ pagDe = i; if(pagA===i) pagA = -1; renderPagPills(); suggereixImport(); }
+function setPagA(i){ pagA = i; renderPagPills(); suggereixImport(); }
+function guardarPagament(){
+  const ev = events.find(e=>e.id===activeEvId); if(!ev) return;
+  if(pagDe<0 || pagA<0){ alert("Tria qui paga i a qui."); return; }
+  const cents = Math.round(parseFloat(String(document.getElementById('pagAmt').value).replace(',','.'))*100);
+  if(!(cents>0)){ alert("Posa un import."); return; }
+  const next = clone(ev);
+  if(!Array.isArray(next.settlements)) next.settlements = [];
+  const sid = next.settlements.reduce((m,s)=>Math.max(m,s.id||0),0)+1;
+  next.settlements.push({id:sid, de:pagGent[pagDe].name, a:pagGent[pagA].name, cents, at:Date.now(), by:ME, manual:true, totalCents:evSplit(ev).totalCents});
+  fbSet('events', next);
+  closeModal('modalPag');
 }
 function desferPagat(evId, sid){
   const ev = events.find(e=>e.id===evId); if(!ev) return;
