@@ -537,7 +537,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 26; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 27; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 
 // ─────────────────────── ACOMPANYANTS (xiquets i convidats) ───────────────
 // No són usuaris de l'app: pengen del membre que els apunta. El tipus de ració
@@ -1213,10 +1213,10 @@ function renderEvDetail(){
             return `<div class="quota-row">
               <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap">
                 ${av(p.de,'av av-sm '+(p.de===ME?'av-on':'av-off'))}
-                <span style="font-size:13px;color:${p.de===ME?'var(--text)':'var(--muted)'};font-weight:${p.de===ME?600:400}">${esc(p.de)}</span>
+                <span style="font-size:13px;color:${p.de===ME?'var(--text)':'var(--muted)'};font-weight:${p.de===ME?600:400}">${esc(p.deLbl||p.de)}</span>
                 <span style="color:var(--faint);font-size:13px">→</span>
                 ${av(p.a,'av av-sm '+(p.a===ME?'av-on':'av-off'))}
-                <span style="font-size:13px;color:${p.a===ME?'var(--text)':'var(--muted)'};font-weight:${p.a===ME?600:400}">${esc(p.a)}</span>
+                <span style="font-size:13px;color:${p.a===ME?'var(--text)':'var(--muted)'};font-weight:${p.a===ME?600:400}">${esc(p.aLbl||p.a)}</span>
               </div>
               <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${jo?'var(--accentD)':'var(--text)'};flex-shrink:0">${eur(p.cents)} €</div>
             </div>`;
@@ -1232,24 +1232,26 @@ function renderEvDetail(){
         html += `<span class="lbl" style="margin-top:14px">El detall</span>
         <div class="card" style="padding:6px 16px">
           ${B.rows.map(r=>{
-            const jo = r.name===ME;
+            const jo = !r.convidat && r.name===ME;
             const sal = r.saldoCents;
             const col = sal>0 ? 'var(--accentD)' : (sal<0 ? 'var(--neg)' : 'var(--faint)');
             const txt = sal>0 ? `li deuen ${eur(sal)} €` : (sal<0 ? `deu ${eur(-sal)} €` : 'quadrat');
-            const extra = r.convidats.length>0 ? ` + ${r.convidats.map(g=>esc(g.name)).join(', ')}` : '';
-            return `<div class="quota-row">
+            const sub = r.foraLlista ? `no apuntat · ha pagat ${eur(r.pagatCents)} €`
+                      : (r.convidat ? `convidat de ${esc(r.by||'?')} · li toca ${eur(r.deuCents)} €`
+                                    : `ha pagat ${eur(r.pagatCents)} € · li toca ${eur(r.deuCents)} €`);
+            return `<div class="quota-row"${r.convidat?' style="padding-left:14px;border-left:2px solid var(--line)"':''}>
               <div style="display:flex;align-items:center;gap:10px;min-width:0">
                 ${av(r.name,'av av-md '+(jo?'av-on':'av-off'))}
                 <div style="min-width:0">
-                  <div style="font-size:14px;color:${jo?'var(--text)':'var(--muted)'};font-weight:${jo?600:400}">${esc(r.name)}${jo?' <span style="font-size:9px;color:var(--faint);font-weight:400">(tu)</span>':''}${extra?`<span style="font-size:11px;color:var(--faint);font-weight:400">${extra}</span>`:''}</div>
-                  <div style="font-size:11px;color:var(--faint);margin-top:2px">${r.foraLlista?'no apuntat · ':''}ha pagat ${eur(r.pagatCents)} €${r.parts>0?` · li toca ${eur(r.deuCents)} €`:''}</div>
+                  <div style="font-size:14px;color:${jo?'var(--text)':'var(--muted)'};font-weight:${jo?600:400}">${esc(r.name)}${jo?' <span style="font-size:9px;color:var(--faint);font-weight:400">(tu)</span>':''}</div>
+                  <div style="font-size:11px;color:var(--faint);margin-top:2px">${sub}</div>
                 </div>
               </div>
               <div style="font-size:12px;color:${col};flex-shrink:0;text-align:right;font-weight:500">${txt}</div>
             </div>`;
           }).join('')}
         </div>
-        <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.5">Els xiquets no paguen res. Els convidats adults paguen la seua part, i se li carrega a qui els porta.</div>`;
+        <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.5">Els xiquets no paguen res. Els convidats adults paguen la seua part ells mateixos.</div>`;
       }
     }
   }
@@ -1352,26 +1354,29 @@ function evSplit(ev){
 // Quan la divisió no és exacta sobren uns cèntims. Es donen rotant segons
 // l'esdeveniment, per a que no li toquen sempre al mateix, i de manera fixa,
 // per a que tots els mòbils calculen igual.
-function partsPerMembre(ev){
+function partsPagadores(ev){
   const S = evSplit(ev);
-  const out = [];
-  const off = S.parts>0 ? ((ev.id||0) % S.parts) : 0;
-  let idx = 0;
+  const unitats = [];
   ev.attendees.forEach(id=>{
     const m = gm(id); if(!m) return;
-    const meus = evGuests(ev).filter(g=>g.by===m.name && gPaga(g));
-    const n = 1 + meus.length;
-    let cents = 0;
-    for(let k=0;k<n;k++){
-      cents += S.baseCents + (((idx+off) % S.parts) < S.sobren ? 1 : 0);
-      idx++;
-    }
-    out.push({id, name:m.name, convidats:meus, parts:n, deuCents:cents});
+    unitats.push({key:'m'+id, id, name:m.name});
+    evGuests(ev).filter(g=>g.by===m.name && gPaga(g)).forEach(g=>{
+      unitats.push({key:'g'+g.id, name:g.name, convidat:true, by:m.name});
+    });
   });
-  return out;
+  // Un convidat de qui no s'ha apuntat també paga: no es pot colar ningú.
+  evGuests(ev).filter(g=>gPaga(g)).forEach(g=>{
+    if(!unitats.some(u=>u.key==='g'+g.id))
+      unitats.push({key:'g'+g.id, name:g.name, convidat:true, by:g.by});
+  });
+  const off = S.parts>0 ? ((ev.id||0) % S.parts) : 0;
+  return unitats.map((u,i)=>({
+    ...u,
+    deuCents: S.baseCents + (((i+off) % Math.max(1,S.parts)) < S.sobren ? 1 : 0),
+  }));
 }
 function quotaDe(ev, memberId){
-  const r = partsPerMembre(ev).find(x=>x.id===memberId);
+  const r = partsPagadores(ev).find(x=>x.id===memberId);
   return r ? r.deuCents/100 : 0;
 }
 
@@ -1383,29 +1388,34 @@ function evBalances(ev){
     const w = x.who||'?';
     pagatCents[w] = (pagatCents[w]||0) + Math.round((x.amount||0)*100);
   });
-  const rows = partsPerMembre(ev).map(r=>({
-    name:r.name, convidats:r.convidats, parts:r.parts,
-    deuCents:r.deuCents, pagatCents:pagatCents[r.name]||0,
-    saldoCents:(pagatCents[r.name]||0) - r.deuCents,
-  }));
+  const rows = partsPagadores(ev).map(u=>{
+    // Només els membres poden haver pagat un gasto; els convidats, no.
+    const pagat = u.convidat ? 0 : (pagatCents[u.name]||0);
+    return {key:u.key, name:u.name, convidat:!!u.convidat, by:u.by,
+            deuCents:u.deuCents, pagatCents:pagat, saldoCents:pagat - u.deuCents};
+  });
   // Algú que ha pagat però no s'ha apuntat: no deu res, però se li deu tot.
   Object.keys(pagatCents).forEach(w=>{
-    if(!rows.some(r=>r.name===w)){
-      rows.push({name:w, convidats:[], parts:0, deuCents:0,
+    if(!rows.some(r=>!r.convidat && r.name===w)){
+      rows.push({key:'x'+w, name:w, convidat:false, deuCents:0,
                  pagatCents:pagatCents[w], saldoCents:pagatCents[w], foraLlista:true});
     }
   });
   // Greedy: el que més deu paga al que més li deuen. Dona el mínim de moviments
   // en la pràctica i sempre quadra, perquè la suma dels saldos és zero.
-  const deutors   = rows.filter(r=>r.saldoCents<0).map(r=>({name:r.name, c:-r.saldoCents}))
+  const etiq = r => r.convidat && r.by ? `${r.name} (convidat de ${r.by})` : r.name;
+  const deutors   = rows.filter(r=>r.saldoCents<0)
+                        .map(r=>({name:r.name, lbl:etiq(r), c:-r.saldoCents}))
                         .sort((a,b)=>b.c-a.c || a.name.localeCompare(b.name,'es'));
-  const creditors = rows.filter(r=>r.saldoCents>0).map(r=>({name:r.name, c:r.saldoCents}))
+  const creditors = rows.filter(r=>r.saldoCents>0)
+                        .map(r=>({name:r.name, lbl:etiq(r), c:r.saldoCents}))
                         .sort((a,b)=>b.c-a.c || a.name.localeCompare(b.name,'es'));
   const pagaments = [];
   let i=0, j=0;
   while(i<deutors.length && j<creditors.length){
     const q = Math.min(deutors[i].c, creditors[j].c);
-    if(q>0) pagaments.push({de:deutors[i].name, a:creditors[j].name, cents:q});
+    if(q>0) pagaments.push({de:deutors[i].name, deLbl:deutors[i].lbl,
+                            a:creditors[j].name, aLbl:creditors[j].lbl, cents:q});
     deutors[i].c -= q; creditors[j].c -= q;
     if(deutors[i].c===0) i++;
     if(creditors[j].c===0) j++;
@@ -1433,7 +1443,7 @@ function openGuestModal(){
 function renderGuestHint(){
   const el = document.getElementById('guestHint'); if(!el) return;
   el.innerHTML = TIPUS_ACOMP[guestTipus].paga
-    ? `Pagarà la seua part del gasto, i te la carregue a tu.`
+    ? `Pagarà la seua part ell mateix, com un més.`
     : `No pagarà res. Només compta per a saber quants plats comprar.`;
 }
 function setGuestTipus(k,el){
@@ -1485,7 +1495,7 @@ function cycleGuestTipus(evId, gid){
   const actual = g.tipus in TIPUS_ACOMP ? g.tipus : 'xiquet';
   const nou = actual==='xiquet' ? 'convidat' : 'xiquet';
   const msg = nou==='convidat'
-    ? `Marcar ${g.name} com a convidat/da adult?\n\nPagarà la seua part i se li carregarà a ${g.by||'qui el porta'}.`
+    ? `Marcar ${g.name} com a convidat/da adult?\n\nPagarà la seua part, com un més.`
     : `Marcar ${g.name} com a xiquet/a?\n\nDeixarà de pagar: la seua part la cobriran els demés.`;
   if(!confirm(msg)) return;
   g.tipus = nou;
