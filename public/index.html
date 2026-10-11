@@ -537,7 +537,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 27; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 28; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 
 // ─────────────────────── ACOMPANYANTS (xiquets i convidats) ───────────────
 // No són usuaris de l'app: pengen del membre que els apunta. El tipus de ració
@@ -1205,26 +1205,49 @@ function renderEvDetail(){
       }
 
       // Qui paga a qui — el mínim de moviments per a quadrar-ho tot
+      const pendentCents = B.pagaments.reduce((a,p)=>a+p.cents,0);
       if(B.pagaments.length>0){
         html += `<span class="lbl" style="margin-top:14px">Qui paga a qui</span>
         <div class="card" style="padding:6px 16px;border-left:4px solid var(--accentD)">
-          ${B.pagaments.map(p=>{
+          ${B.pagaments.map((p,i)=>{
             const jo = p.de===ME || p.a===ME;
-            return `<div class="quota-row">
-              <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap">
+            return `<div class="quota-row" style="flex-wrap:wrap;gap:8px">
+              <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap;flex:1">
                 ${av(p.de,'av av-sm '+(p.de===ME?'av-on':'av-off'))}
                 <span style="font-size:13px;color:${p.de===ME?'var(--text)':'var(--muted)'};font-weight:${p.de===ME?600:400}">${esc(p.deLbl||p.de)}</span>
                 <span style="color:var(--faint);font-size:13px">→</span>
                 ${av(p.a,'av av-sm '+(p.a===ME?'av-on':'av-off'))}
                 <span style="font-size:13px;color:${p.a===ME?'var(--text)':'var(--muted)'};font-weight:${p.a===ME?600:400}">${esc(p.aLbl||p.a)}</span>
               </div>
-              <div style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${jo?'var(--accentD)':'var(--text)'};flex-shrink:0">${eur(p.cents)} €</div>
+              <div style="display:flex;align-items:center;gap:10px;flex-shrink:0">
+                <span style="font-family:'Bebas Neue',sans-serif;font-size:22px;color:${jo?'var(--accentD)':'var(--text)'}">${eur(p.cents)} €</span>
+                <button class="btn-ghost" style="font-size:9px;padding:6px 11px;border-color:var(--accentD);color:var(--accentD)" onclick="marcarPagat(${ev.id},${i})">Ja pagat</button>
+              </div>
             </div>`;
           }).join('')}
         </div>
-        <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.5">Amb estos ${B.pagaments.length} moviment${B.pagaments.length>1?'s':''} queda tot quadrat.</div>`;
+        <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.5">Queden ${eur(pendentCents)} € per saldar en ${B.pagaments.length} moviment${B.pagaments.length>1?'s':''}. Quan algú pague, toca "Ja pagat" i desapareix d'ací.</div>`;
       } else if(S.parts>0){
-        html += `<div class="card" style="border-left:4px solid var(--accentD);font-size:13px;color:var(--muted);line-height:1.5">Tot quadrat, ningú deu res.</div>`;
+        html += `<div class="card" style="border-left:4px solid var(--accentD);display:flex;align-items:center;gap:10px">
+          <span style="font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--accentD)">✓</span>
+          <span style="font-size:13px;color:var(--muted);line-height:1.5">${B.saldats.length>0?'Tot saldat. Ningú deu res.':'Tot quadrat, ningú deu res.'}</span>
+        </div>`;
+      }
+
+      // Deutes ja saldats, per si cal desfer algun
+      if(B.saldats.length>0){
+        const totalSaldat = B.saldats.reduce((a,s)=>a+s.cents,0);
+        html += `<span class="lbl" style="margin-top:14px">Ja pagat (${eur(totalSaldat)} €)</span>
+        <div class="card" style="padding:6px 16px;opacity:.75">
+          ${B.saldats.map(s=>`<div class="quota-row">
+            <div style="display:flex;align-items:center;gap:8px;min-width:0;flex-wrap:wrap">
+              <span style="color:var(--accentD);font-size:14px;flex-shrink:0">✓</span>
+              <span style="font-size:13px;color:var(--muted);text-decoration:line-through">${esc(s.de)} → ${esc(s.a)}</span>
+              <span style="font-size:13px;color:var(--muted);text-decoration:line-through">${eur(s.cents)} €</span>
+            </div>
+            <button class="btn-ghost" style="font-size:9px;padding:5px 10px;flex-shrink:0" onclick="desferPagat(${ev.id},${s.id})">Desfer</button>
+          </div>`).join('')}
+        </div>`;
       }
 
       // Detall: què ha pagat i què li toca a cadascú
@@ -1401,6 +1424,15 @@ function evBalances(ev){
                  pagatCents:pagatCents[w], saldoCents:pagatCents[w], foraLlista:true});
     }
   });
+  // Deutes ja saldats: no són una casella, són moviments de diners de veritat.
+  // Es resten del saldo, així el deute desapareix sol del "qui paga a qui" i
+  // tot continua quadrant encara que després s'afigga un gasto nou.
+  const saldats = evSettlements(ev);
+  saldats.forEach(s=>{
+    const de = rows.find(r=>r.name===s.de), a = rows.find(r=>r.name===s.a);
+    if(de) de.saldoCents += s.cents;
+    if(a)  a.saldoCents  -= s.cents;
+  });
   // Greedy: el que més deu paga al que més li deuen. Dona el mínim de moviments
   // en la pràctica i sempre quadra, perquè la suma dels saldos és zero.
   const etiq = r => r.convidat && r.by ? `${r.name} (convidat de ${r.by})` : r.name;
@@ -1421,7 +1453,32 @@ function evBalances(ev){
     if(creditors[j].c===0) j++;
   }
   rows.sort((a,b)=>a.name.localeCompare(b.name,'es'));
-  return {rows, pagaments};
+  return {rows, pagaments, saldats};
+}
+
+// ── Deutes saldats ───────────────────────────────────────────────────────
+function evSettlements(ev){ return (ev && Array.isArray(ev.settlements)) ? ev.settlements : []; }
+
+// Es passa la posició dins del pla, no els noms: així un nom amb apòstrof
+// (N'Aina) no trenca res. El càlcul és determinista, dona sempre el mateix.
+function marcarPagat(evId, idx){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const p = evBalances(ev).pagaments[idx]; if(!p) return;
+  const eur = (p.cents/100).toFixed(2);
+  if(!confirm(`Marcar com a pagat?\n\n${p.deLbl||p.de} li ha donat ${eur} € a ${p.aLbl||p.a}.\n\nQueda apuntat i es pot desfer.`)) return;
+  const next = clone(ev);
+  if(!Array.isArray(next.settlements)) next.settlements = [];
+  const sid = next.settlements.reduce((m,s)=>Math.max(m,s.id||0),0)+1;
+  next.settlements.push({id:sid, de:p.de, a:p.a, cents:p.cents, at:Date.now(), by:ME});
+  fbSet('events', next);
+}
+function desferPagat(evId, sid){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const s = evSettlements(ev).find(x=>x.id===sid); if(!s) return;
+  if(!confirm(`Desfer el pagament de ${(s.cents/100).toFixed(2)} € de ${s.de} a ${s.a}?\n\nTornarà a eixir com a pendent.`)) return;
+  const next = clone(ev);
+  next.settlements = evSettlements(next).filter(x=>x.id!==sid);
+  fbSet('events', next);
 }
 
 // ── Mutacions d'acompanyants ─────────────────────────────────────────────
@@ -1543,7 +1600,7 @@ function addEvento(){
     time: document.getElementById('evTime').value,
     description: document.getElementById('evDesc').value,
     agenda: document.getElementById('evAgenda').value,
-    attendees:[], guests:[], expenses:[], polls:[],
+    attendees:[], guests:[], expenses:[], settlements:[], polls:[],
   });
   closeModal('modalEvento');
   ['evTitle','evDate','evTime','evDesc','evAgenda'].forEach(id=>document.getElementById(id).value='');
