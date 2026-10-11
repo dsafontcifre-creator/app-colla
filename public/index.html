@@ -537,7 +537,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 30; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 31; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 
 // ─────────────────────── ACOMPANYANTS (xiquets i convidats) ───────────────
 // No són usuaris de l'app: pengen del membre que els apunta. El tipus de ració
@@ -1207,7 +1207,7 @@ function renderEvDetail(){
       // Qui paga a qui — el mínim de moviments per a quadrar-ho tot
       const pendentCents = B.pagaments.reduce((a,p)=>a+p.cents,0);
       if(B.recalculat){
-        html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:9px 12px;margin:10px 0;line-height:1.5">S'han canviat els gastos després de començar a pagar. Els pagaments fets es mantenen, però el que queda s'ha tornat a repartir.</div>`;
+        html += `<div style="font-size:12px;color:var(--warn);background:var(--warnL);border:1px solid rgba(192,120,0,.33);border-radius:6px;padding:9px 12px;margin:10px 0;line-height:1.5">Algun pagament ja fet no coincidia amb el repartiment actual (per exemple, perquè s'ha afegit un gasto després). Els pagaments fets es mantenen i el que queda s'ha repartit de nou.</div>`;
       }
       if(B.pagaments.length>0){
         html += `<span class="lbl" style="margin-top:14px">Qui paga a qui</span>
@@ -1427,29 +1427,24 @@ function evBalances(ev){
                  pagatCents:pagatCents[w], saldoCents:pagatCents[w], foraLlista:true});
     }
   });
-  // 1) El pla de pagaments es calcula SEMPRE sobre els gastos, sense mirar
-  //    què s'ha pagat ja. Així és fix: marcar "Ja pagat" només tatxa una línia
-  //    i les altres no es mouen (com Tricount).
-  const pla = planPagaments(rows);
-  // 2) Cada pagament marcat es casa amb una línia del pla.
-  const saldats = evSettlements(ev);
-  const usat = pla.map(()=>false);
-  let totCasa = true;
-  saldats.forEach(s=>{
-    const k = pla.findIndex((p,i)=>!usat[i] && p.de===s.de && p.a===s.a && p.cents===s.cents);
-    if(k<0) totCasa = false; else usat[k] = true;
-  });
-  // 3) El detall de cada persona reflecteix el que ja ha pagat o cobrat.
+  // El pla es fa sobre els gastos i es reprodueixen els pagaments marcats, per
+  // ordre. Un pagament que coincidix amb una línia del pla només la tatxa: les
+  // altres no es mouen (com Tricount). Si un no coincidix (algú ha canviat els
+  // gastos després de començar a pagar), el que queda es reparteix de nou a
+  // partir d'eixe moment, i el pla nou torna a quedar fix.
+  const saldats = evSettlements(ev).slice().sort((a,b)=>(a.id||0)-(b.id||0));
+  let pla = planComplet(rows);
+  let usat = pla.map(()=>false);
+  let recalculat = false;
   saldats.forEach(s=>{
     const de = rows.find(r=>r.name===s.de), a = rows.find(r=>r.name===s.a);
     if(de) de.saldoCents += s.cents;
     if(a)  a.saldoCents  -= s.cents;
+    const k = pla.findIndex((p,i)=>!usat[i] && p.de===s.de && p.a===s.a && p.cents===s.cents);
+    if(k>=0) usat[k] = true;
+    else { pla = planComplet(rows); usat = pla.map(()=>false); recalculat = true; }
   });
-  // 4) Si després de començar a pagar algú ha afegit un gasto, el pla vell ja
-  //    no serveix: es refà amb el que queda pendent de veritat, i s'avisa.
-  let pagaments, recalculat = false;
-  if(totCasa) pagaments = pla.filter((p,i)=>!usat[i]);
-  else { pagaments = planPagaments(rows); recalculat = true; }
+  const pagaments = pla.filter((p,i)=>!usat[i]);
   rows.sort((a,b)=>a.name.localeCompare(b.name,'es'));
   return {rows, pagaments, saldats, recalculat};
 }
@@ -1515,6 +1510,21 @@ function planPagaments(rows){
   if(actual.length) grups.push(actual); // no hauria de passar mai: el total suma zero
 
   return grups.flatMap(g=>greedyGrup(g));
+}
+
+// Pla complet: primer, cada convidat li paga la seua part a qui l'ha portat
+// (és amb qui té la relació). Després, entre els membres, el mínim de pagaments.
+function planComplet(rows){
+  const work = rows.map(r=>({...r}));
+  const linies = [];
+  work.filter(r=>r.convidat && r.saldoCents<0).forEach(g=>{
+    const amfitrio = work.find(r=>!r.convidat && r.name===g.by);
+    if(!amfitrio) return; // convidat de algú que no està: paga com un més
+    linies.push({de:g.name, deLbl:etiqPersona(g), a:amfitrio.name, aLbl:amfitrio.name, cents:-g.saldoCents});
+    amfitrio.saldoCents += g.saldoCents;
+    g.saldoCents = 0;
+  });
+  return linies.concat(planPagaments(work));
 }
 
 // ── Deutes saldats ───────────────────────────────────────────────────────
