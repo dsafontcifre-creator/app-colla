@@ -537,7 +537,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 29; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 30; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 
 // ─────────────────────── ACOMPANYANTS (xiquets i convidats) ───────────────
 // No són usuaris de l'app: pengen del membre que els apunta. El tipus de ració
@@ -1454,16 +1454,20 @@ function evBalances(ev){
   return {rows, pagaments, saldats, recalculat};
 }
 
-// Greedy: el que més deu paga al que més li deuen. Dona el mínim de moviments
-// en la pràctica i sempre quadra, perquè la suma dels saldos és zero.
-// Determinista: amb les mateixes dades, sempre el mateix pla en tots els mòbils.
-function planPagaments(rows){
-  const etiq = r => r.convidat && r.by ? `${r.name} (convidat de ${r.by})` : r.name;
-  const deutors   = rows.filter(r=>r.saldoCents<0)
-                        .map(r=>({name:r.name, lbl:etiq(r), c:-r.saldoCents}))
+// Pla de pagaments amb el MÍNIM de moviments possible.
+// La idea: si un grup de persones es pot quadrar entre elles (els seus saldos
+// sumen zero), es salda a part. Un grup de k persones necessita k−1 pagaments,
+// així que com més grups es troben, menys pagaments fan falta en total:
+//   mínim = persones amb saldo − nombre màxim de grups que sumen zero.
+// Es busca de manera exacta (programació dinàmica sobre subconjunts) fins a
+// 18 persones amb saldo; per damunt, el mètode ràpid, que gairebé sempre empata.
+// Determinista: les mateixes dades donen el mateix pla en tots els mòbils.
+function etiqPersona(r){ return r.convidat && r.by ? `${r.name} (convidat de ${r.by})` : r.name; }
+
+function greedyGrup(gent){
+  const deutors   = gent.filter(x=>x.c<0).map(x=>({...x, c:-x.c}))
                         .sort((a,b)=>b.c-a.c || a.name.localeCompare(b.name,'es'));
-  const creditors = rows.filter(r=>r.saldoCents>0)
-                        .map(r=>({name:r.name, lbl:etiq(r), c:r.saldoCents}))
+  const creditors = gent.filter(x=>x.c>0).map(x=>({...x}))
                         .sort((a,b)=>b.c-a.c || a.name.localeCompare(b.name,'es'));
   const out = [];
   let i=0, j=0;
@@ -1476,6 +1480,41 @@ function planPagaments(rows){
     if(creditors[j].c===0) j++;
   }
   return out;
+}
+
+function planPagaments(rows){
+  const gent = rows.filter(r=>r.saldoCents!==0)
+                   .map(r=>({name:r.name, lbl:etiqPersona(r), c:r.saldoCents}))
+                   .sort((a,b)=>a.name.localeCompare(b.name,'es') || a.lbl.localeCompare(b.lbl,'es'));
+  const n = gent.length;
+  if(n===0) return [];
+  if(n>18) return greedyGrup(gent);
+
+  // suma de cada subconjunt i màxim de grups que sumen zero
+  const N = 1<<n;
+  const suma = new Int32Array(N);
+  for(let m=1;m<N;m++){ const low = m & -m; suma[m] = suma[m^low] + gent[31-Math.clz32(low)].c; }
+  const dp = new Int16Array(N);
+  for(let m=1;m<N;m++){
+    let best = 0;
+    for(let i=0;i<n;i++) if(m>>i & 1){ const v = dp[m^(1<<i)]; if(v>best) best=v; }
+    dp[m] = best + (suma[m]===0 ? 1 : 0);
+  }
+  // reconstruir l'ordre i tallar en grups on la suma acumulada torna a zero
+  const ordre = [];
+  let m = N-1;
+  while(m){
+    const extra = suma[m]===0 ? 1 : 0;
+    let tria = -1;
+    for(let i=0;i<n;i++) if(m>>i & 1 && dp[m^(1<<i)]+extra===dp[m]){ tria=i; break; }
+    ordre.push(tria); m ^= (1<<tria);
+  }
+  ordre.reverse();
+  const grups = []; let actual = [], acc = 0;
+  ordre.forEach(i=>{ actual.push(gent[i]); acc += gent[i].c; if(acc===0){ grups.push(actual); actual=[]; } });
+  if(actual.length) grups.push(actual); // no hauria de passar mai: el total suma zero
+
+  return grups.flatMap(g=>greedyGrup(g));
 }
 
 // ── Deutes saldats ───────────────────────────────────────────────────────
