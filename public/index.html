@@ -551,7 +551,7 @@ window.addEventListener('firebase-ready', () => { window.__startApp(); });
 // ═══════════════════════════════════════════════════════════════════════
 
 // ───────────────────────── CONFIG ESTÁTICA ─────────────────────────────
-const APP_VERSION = 32; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
+const APP_VERSION = 34; // ↑ Súbelo en cada despliegue para forzar actualización en todos los móviles
 
 // ─────────────────────── ACOMPANYANTS (xiquets i convidats) ───────────────
 // No són usuaris de l'app: pengen del membre que els apunta. El tipus de ració
@@ -642,6 +642,7 @@ const EVENT_TYPES = {
   comida:{label:"Comida",color:"#3d8000"},
   cena:{label:"Cena",color:"#5a6ea8"},
   reunion:{label:"Reunión",color:"#c07800"},
+  treballs:{label:"Treballs",color:"#8a5a2b"},
   otro:{label:"Evento",color:"#6e6860"},
 };
 
@@ -1104,7 +1105,9 @@ function renderEvDetail(){
   const et = EVENT_TYPES[ev.type]||EVENT_TYPES.otro;
   const isReu = ev.type==='reunion';
   const total = (ev.expenses||[]).reduce((s,x)=>s+x.amount,0);
-  const ambAcomp = TIPUS_AMB_ACOMPANYANTS.includes(ev.type);
+  const ambMenjar = evAmbMenjar(ev);
+  const ambTreb = evAmbTreballs(ev);
+  const ambAcomp = ambMenjar;
   const S = evSplit(ev);
 
   document.getElementById('evdetail-header').innerHTML = `
@@ -1134,6 +1137,56 @@ function renderEvDetail(){
       </span>`;
     }).join('')}
   </div></div>`;
+
+  // ── Es queda a menjar? (només en reunió, treballs i evento) ───────────
+  if(!(ev.type==='comida'||ev.type==='cena')){
+    html += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+      <div style="min-width:0">
+        <div style="font-size:14px;color:var(--text)">🍽 Després es queda a menjar?</div>
+        <div style="font-size:11px;color:var(--faint);margin-top:2px">${ambMenjar?'Sí: es reparteixen els gastos entre els que mengen.':'No: no hi ha gastos per repartir.'}</div>
+      </div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <span class="pill${ambMenjar?' on':''}" onclick="setAmbMenjar(${ev.id},true)">Sí</span>
+        <span class="pill${!ambMenjar?' on':''}" onclick="setAmbMenjar(${ev.id},false)">No</span>
+      </div>
+    </div>`;
+  }
+
+  // ── Qui fa què: cadascú marca si treballa i/o menja ───────────────────
+  // Lo normal és que tots mengen: el panell va plegat en una línia i només
+  // s'obri si es toca, si l'event és de treballs o si ja hi ha algú marcat.
+  const hiHaMarques = (ev.noMenja||[]).length>0 || (ev.treballa||[]).length>0;
+  const obert = ev.type==='treballs' || hiHaMarques || quiFaQueObert[ev.id];
+  if(ev.attendees.length>0 && (ambTreb || ambMenjar) && !obert){
+    html += `<div class="card" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;padding:12px 16px" onclick="obrirQuiFaQue(${ev.id})">
+      <span style="font-size:13px;color:var(--muted)">${ambMenjar?'Algú no es queda a menjar?':'Algú ve a treballar?'}${ambTreb&&ambMenjar?' · treballs':''}</span>
+      <span style="color:var(--faint);font-size:18px">›</span>
+    </div>`;
+  }
+  if(ev.attendees.length>0 && (ambTreb || ambMenjar) && obert){
+    const ids = ev.attendees.slice().sort((a,b)=>(gm(a)?.name||'').localeCompare(gm(b)?.name||'','es'));
+    const nT = ev.attendees.filter(id=>treballa(ev,id)).length;
+    const nM = evMengen(ev).length;
+    const boto = (on,txt,fn)=>`<button class="btn-ghost" style="font-size:9px;padding:6px 9px;${on?'border-color:var(--accentD);color:var(--accentD);background:rgba(127,255,0,.10)':'opacity:.55'}" onclick="${fn}">${on?'✓ ':''}${txt}</button>`;
+    html += `<span class="lbl" style="margin-top:14px">Qui fa què${ambTreb?` · ${nT} treballen`:''}${ambMenjar?` · ${nM} mengen`:''}</span>
+    <div class="card" style="padding:6px 16px">
+      ${ids.map(id=>{
+        const m = gm(id); if(!m) return '';
+        const jo = m.name===ME;
+        return `<div class="quota-row" style="gap:8px">
+          <div style="display:flex;align-items:center;gap:8px;min-width:0">
+            ${av(m.name,'av av-sm '+(jo?'av-on':'av-off'))}
+            <span style="font-size:13px;color:${jo?'var(--text)':'var(--muted)'};font-weight:${jo?600:400};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(m.name)}</span>
+          </div>
+          <div style="display:flex;gap:5px;flex-shrink:0">
+            ${ambTreb?boto(treballa(ev,id),'🔨 Treballa',`toggleTreballa(${ev.id},${id})`):''}
+            ${ambMenjar?boto(menja(ev,id),'🍽 Menja',`toggleMenja(${ev.id},${id})`):''}
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:11px;color:var(--faint);margin-top:4px;line-height:1.5">${ambMenjar?'Qui no menja no paga el menjar ni compta per a la compra.':'Marca qui ve a treballar.'}</div>`;
+  }
 
   // ── Acompanyants: xiquets i convidats, només en menjars i sopars ────────
   if(ambAcomp){
@@ -1182,7 +1235,7 @@ function renderEvDetail(){
     }
   }
 
-  if(!isReu){
+  if(ambMenjar){
     html += `<span class="lbl" style="margin-top:18px">Gastos del evento</span>`;
     if((ev.expenses||[]).length===0) html += `<div style="font-size:13px;color:var(--faint);font-style:italic;margin-bottom:10px">Sin gastos registrados.</div>`;
     (ev.expenses||[]).forEach(x=>{
@@ -1277,7 +1330,7 @@ function renderEvDetail(){
             const sal = r.saldoCents;
             const col = Math.abs(sal)<=2 ? 'var(--faint)' : (sal>0 ? 'var(--accentD)' : 'var(--neg)');
             const txt = Math.abs(sal)<=2 ? 'quadrat' : (sal>0 ? `li deuen ${eur(sal)} €` : `deu ${eur(-sal)} €`);
-            const sub = r.foraLlista ? `no apuntat · ha pagat ${eur(r.pagatCents)} €`
+            const sub = r.foraLlista ? `${ev.attendees.some(id=>gm(id)?.name===r.name)?'no menja':'no apuntat'} · ha pagat ${eur(r.pagatCents)} €`
                       : (r.convidat ? `convidat de ${esc(r.by||'?')} · li toca ${eur(r.deuCents)} €`
                                     : `ha pagat ${eur(r.pagatCents)} € · li toca ${eur(r.deuCents)} €`);
             return `<div class="quota-row"${r.convidat?' style="padding-left:14px;border-left:2px solid var(--line)"':''}>
@@ -1352,6 +1405,21 @@ function renderPollHTML(p, evId){
 }
 
 // — Mutaciones de eventos → Firestore —
+// ── Participació: qui treballa i qui menja ──────────────────────────────
+// Comida i sopar sempre porten menjar. En reunió, treballs i "evento" es tria
+// si després es queda a menjar. Els events vells de tipus "evento" ja
+// repartien gastos, així que per defecte sí; reunió i treballs, per defecte no.
+function evAmbMenjar(ev){
+  if(ev.type==='comida' || ev.type==='cena') return true;
+  if(typeof ev.ambMenjar==='boolean') return ev.ambMenjar;
+  return ev.type==='otro' || !ev.type;
+}
+function evAmbTreballs(ev){ return ev.type==='treballs' || ev.type==='otro' || !ev.type; }
+// Per defecte, tot apuntat menja (així era abans) i ningú consta com que treballa.
+function menja(ev, id){ return !(Array.isArray(ev.noMenja) && ev.noMenja.includes(id)); }
+function treballa(ev, id){ return Array.isArray(ev.treballa) && ev.treballa.includes(id); }
+function evMengen(ev){ return evAmbMenjar(ev) ? ev.attendees.filter(id=>menja(ev,id)) : []; }
+
 // ── Helpers d'acompanyants i de repartiment ──────────────────────────────
 function evGuests(ev){ return (ev && Array.isArray(ev.guests)) ? ev.guests : []; }
 function racioOf(g){ return RACIONS[g && g.racio] ? RACIONS[g.racio] : RACIONS.full; }
@@ -1362,8 +1430,8 @@ function gPaga(g){ return tipusOf(g).paga; }
 
 // Qui necessita plat (compra) i quantes parts hi ha per a repartir (diners).
 function evCounts(ev){
-  const guests = evGuests(ev);
-  const adults = ev.attendees.length;
+  const guests = evAmbMenjar(ev) ? evGuests(ev) : [];
+  const adults = evMengen(ev).length;
   let racionsG = 0, completes = 0, mitges = 0, senseMenjar = 0, convidats = 0, xiquets = 0;
   guests.forEach(g=>{
     const r = racioOf(g);
@@ -1384,7 +1452,7 @@ function evCounts(ev){
 // el total, sense cap cèntim perdut pel redondeig.
 function evSplit(ev){
   const c = evCounts(ev);
-  const totalCents = Math.round((ev.expenses||[]).reduce((s,x)=>s+(x.amount||0),0)*100);
+  const totalCents = evAmbMenjar(ev) ? Math.round((ev.expenses||[]).reduce((s,x)=>s+(x.amount||0),0)*100) : 0;
   const base = c.parts>0 ? Math.floor(totalCents/c.parts) : 0;
   const sobren = c.parts>0 ? totalCents - base*c.parts : 0; // cèntims a repartir
   return {...c, totalCents, total: totalCents/100,
@@ -1398,7 +1466,7 @@ function evSplit(ev){
 function partsPagadores(ev){
   const S = evSplit(ev);
   const unitats = [];
-  ev.attendees.forEach(id=>{
+  evMengen(ev).forEach(id=>{
     const m = gm(id); if(!m) return;
     unitats.push({key:'m'+id, id, name:m.name});
     evGuests(ev).filter(g=>g.by===m.name && gPaga(g)).forEach(g=>{
@@ -1406,7 +1474,7 @@ function partsPagadores(ev){
     });
   });
   // Un convidat de qui no s'ha apuntat també paga: no es pot colar ningú.
-  evGuests(ev).filter(g=>gPaga(g)).forEach(g=>{
+  (evAmbMenjar(ev)?evGuests(ev):[]).filter(g=>gPaga(g)).forEach(g=>{
     if(!unitats.some(u=>u.key==='g'+g.id))
       unitats.push({key:'g'+g.id, name:g.name, convidat:true, by:g.by});
   });
@@ -1425,7 +1493,7 @@ function quotaDe(ev, memberId){
 // Qui ha pagat algo sense estar apuntat també ix: li han de tornar els diners.
 function evBalances(ev){
   const pagatCents = {};
-  (ev.expenses||[]).forEach(x=>{
+  (evAmbMenjar(ev)?(ev.expenses||[]):[]).forEach(x=>{
     const w = x.who||'?';
     pagatCents[w] = (pagatCents[w]||0) + Math.round((x.amount||0)*100);
   });
@@ -1699,7 +1767,30 @@ function toggleAtt(evId,mid){
   const ev = events.find(e=>e.id===evId); if(!ev) return;
   const next = clone(ev);
   const idx = next.attendees.indexOf(mid);
-  if(idx>-1) next.attendees.splice(idx,1); else next.attendees.push(mid);
+  if(idx>-1){
+    next.attendees.splice(idx,1);
+    if(Array.isArray(next.noMenja))  next.noMenja  = next.noMenja.filter(x=>x!==mid);
+    if(Array.isArray(next.treballa)) next.treballa = next.treballa.filter(x=>x!==mid);
+  } else next.attendees.push(mid);
+  fbSet('events', next);
+}
+// Marcar treballa / menja. Si encara no estava apuntat, l'apunta.
+function toggleFlag(evId, mid, camp){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const next = clone(ev);
+  if(!next.attendees.includes(mid)) next.attendees.push(mid);
+  if(!Array.isArray(next[camp])) next[camp] = [];
+  const i = next[camp].indexOf(mid);
+  if(i>-1) next[camp].splice(i,1); else next[camp].push(mid);
+  fbSet('events', next);
+}
+const quiFaQueObert = {};
+function obrirQuiFaQue(evId){ quiFaQueObert[evId] = true; renderEvDetail(); }
+function toggleTreballa(evId, mid){ toggleFlag(evId, mid, 'treballa'); }
+function toggleMenja(evId, mid){ toggleFlag(evId, mid, 'noMenja'); }
+function setAmbMenjar(evId, v){
+  const ev = events.find(e=>e.id===evId); if(!ev) return;
+  const next = clone(ev); next.ambMenjar = !!v;
   fbSet('events', next);
 }
 function castVote(evId,pollId,optId,multi){
